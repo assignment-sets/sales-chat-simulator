@@ -1,64 +1,89 @@
+"use client";
+
 import Link from "next/link";
+import { useTransition } from "react";
 import { login } from "@/app/auth/actions";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { MessageSquare, ArrowRight } from "lucide-react";
 
-interface Props {
-  searchParams: Promise<{
-    error?: string;
-    message?: string;
-  }>;
-}
+import { Suspense } from "react";
+import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
 
-export default async function LoginPage({ searchParams }: Props) {
-  const params = await searchParams;
+export default function LoginPage() {
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      await login(formData);
+    });
+  };
 
   return (
-    <main style={{ maxWidth: "400px", margin: "40px auto", padding: "20px", fontFamily: "sans-serif" }}>
-      <h1>Sales Chat Simulator</h1>
-      <h2>Login</h2>
+    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+      <Suspense fallback={null}>
+        <AuthToastWatcher />
+      </Suspense>
 
-      {params.error && (
-        <div style={{ padding: "10px", marginBottom: "15px", backgroundColor: "#ffebee", color: "#c62828", border: "1px solid #ef9a9a" }}>
-          {params.error}
+      <div className="w-full max-w-sm bg-white border border-zinc-200 rounded-3xl p-8 shadow-xs">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
+            <MessageSquare className="w-4 h-4" />
+          </div>
+          <span className="font-semibold text-zinc-900 text-base tracking-tight">
+            SalesChat
+          </span>
         </div>
-      )}
 
-      {params.message && (
-        <div style={{ padding: "10px", marginBottom: "15px", backgroundColor: "#e8f5e9", color: "#2e7d32", border: "1px solid #a5d6a7" }}>
-          {params.message}
-        </div>
-      )}
+        <h1 className="text-xl font-bold text-zinc-900 mb-1">Welcome back</h1>
+        <p className="text-xs text-zinc-500 mb-6">
+          Sign in to your account to continue your sales simulation practice.
+        </p>
 
-      <form action={login} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <div>
-          <label htmlFor="email" style={{ display: "block", marginBottom: "4px" }}>Email:</label>
-          <input
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Input
             id="email"
             name="email"
             type="email"
+            label="Email Address"
+            placeholder="name@company.com"
             required
-            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            disabled={isPending}
           />
-        </div>
 
-        <div>
-          <label htmlFor="password" style={{ display: "block", marginBottom: "4px" }}>Password:</label>
-          <input
+          <Input
             id="password"
             name="password"
             type="password"
+            label="Password"
+            placeholder="••••••••"
             required
-            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            disabled={isPending}
           />
-        </div>
 
-        <button type="submit" style={{ padding: "10px", marginTop: "10px", cursor: "pointer", fontWeight: "bold" }}>
-          Sign In
-        </button>
-      </form>
+          <Button
+            type="submit"
+            size="md"
+            className="w-full mt-2 font-semibold"
+            isLoading={isPending}
+            rightIcon={<ArrowRight className="w-4 h-4" />}
+          >
+            {isPending ? "Signing in..." : "Sign In"}
+          </Button>
+        </form>
 
-      <p style={{ marginTop: "20px", fontSize: "14px" }}>
-        Don't have an account? <Link href="/register">Register here</Link>
-      </p>
-    </main>
+        <p className="mt-6 text-center text-xs text-zinc-500">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="font-semibold text-zinc-900 hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 }

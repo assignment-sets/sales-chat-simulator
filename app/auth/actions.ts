@@ -9,7 +9,7 @@ export async function login(formData: FormData) {
   const password = formData.get("password") as string;
 
   if (!email || !password) {
-    redirect("/login?error=Please provide both email and password");
+    redirect("/login?error=" + encodeURIComponent("Please enter email and password"));
   }
 
   const supabase = await createServerSupabaseClient();
@@ -19,7 +19,11 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    let msg = "Invalid email or password";
+    if (error.message.toLowerCase().includes("email not confirmed")) {
+      msg = "Please verify your email address";
+    }
+    redirect(`/login?error=${encodeURIComponent(msg)}`);
   }
 
   revalidatePath("/", "layout");
@@ -31,7 +35,7 @@ export async function signup(formData: FormData) {
   const password = formData.get("password") as string;
 
   if (!email || !password) {
-    redirect("/register?error=Please provide both email and password");
+    redirect("/register?error=" + encodeURIComponent("Please enter email and password"));
   }
 
   const supabase = await createServerSupabaseClient();
@@ -41,7 +45,13 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/register?error=${encodeURIComponent(error.message)}`);
+    let msg = error.message;
+    if (msg.toLowerCase().includes("already registered")) {
+      msg = "Account already exists for this email";
+    } else if (msg.toLowerCase().includes("at least 6 characters")) {
+      msg = "Password must be at least 6 characters";
+    }
+    redirect(`/register?error=${encodeURIComponent(msg)}`);
   }
 
   // If user session is created immediately (e.g. autoconfirm enabled)
@@ -51,7 +61,7 @@ export async function signup(formData: FormData) {
   }
 
   // If email confirmation is required
-  redirect("/login?message=Registration successful! If required, please verify your email or proceed to log in.");
+  redirect("/login?message=" + encodeURIComponent("Account created! You can now sign in."));
 }
 
 export async function logout() {
