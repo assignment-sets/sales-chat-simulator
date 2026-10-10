@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { X, Sparkles } from "lucide-react";
+import { notify } from "@/lib/toast";
 
 export interface NewChatDialogProps {
   isOpen: boolean;
@@ -16,20 +17,18 @@ export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps)
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productName.trim() || !productDescription.trim()) {
-      setError("Please provide both product name and details.");
+      notify.error("Please enter both product name and context");
       return;
     }
 
     try {
       setIsLoading(true);
-      setError(null);
       await onSubmit({
         productName: productName.trim(),
         productDescription: productDescription.trim(),
@@ -38,7 +37,7 @@ export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps)
       setProductDescription("");
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create simulation");
+      notify.error(err instanceof Error ? err.message : "Failed to create simulation");
     } finally {
       setIsLoading(false);
     }
@@ -58,33 +57,27 @@ export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps)
           <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
           </div>
-          <h2 className="text-lg font-bold text-zinc-900">New Sales Simulation</h2>
+          <h2 className="text-lg font-bold text-zinc-900">New Simulation</h2>
         </div>
         <p className="text-xs text-zinc-500 mb-5">
-          Specify what you are selling. The AI will adopt the role of a realistic prospect evaluating this offering.
+          Enter what you are pitching to start the practice session.
         </p>
-
-        {error && (
-          <div className="p-3 mb-4 text-xs bg-red-50 text-red-700 border border-red-200 rounded-xl">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            label="Product or Service Name"
-            placeholder="e.g. Acme SaaS CRM, Custom SEO Audit, Luxury Noise-Cancelling Headphones"
+            label="Product or Service"
+            placeholder="e.g. Acme CRM"
             value={productName}
             onChange={(e) => setProductName(e.target.value)}
             required
           />
 
           <Textarea
-            label="Pitch, Pricing, Policies & Objections Context"
-            placeholder="e.g. B2B software for marketing agencies starting at $99/mo. 14-day trial without credit card. Common objections: cost compared to HubSpot, migration effort, onboarding duration."
+            label="Context & Common Objections"
+            placeholder="e.g. $99/mo B2B CRM. Common objections: pricing and migration time."
             value={productDescription}
             onChange={(e) => setProductDescription(e.target.value)}
-            rows={4}
+            rows={3}
             required
           />
 

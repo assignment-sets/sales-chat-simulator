@@ -1,14 +1,30 @@
 import React from "react";
 import { Avatar } from "@/components/ui/Avatar";
+import { Loader } from "@/components/ui/Loader";
 
 export interface ChatBubbleProps {
   role: "user" | "assistant" | "system";
   content: string;
+  createdAt?: string;
   isStreaming?: boolean;
 }
 
-export function ChatBubble({ role, content, isStreaming }: ChatBubbleProps) {
+function formatTime(isoString?: string) {
+  if (!isoString) return "";
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
+
+export function ChatBubble({ role, content, createdAt, isStreaming }: ChatBubbleProps) {
   const isUser = role === "user";
+  const formattedTime = formatTime(createdAt);
 
   return (
     <div
@@ -27,9 +43,15 @@ export function ChatBubble({ role, content, isStreaming }: ChatBubbleProps) {
           isUser ? "items-end" : "items-start"
         }`}
       >
-        <span className="text-[11px] font-medium text-zinc-400 mb-1 px-1 select-none">
-          {isUser ? "You (Sales Rep)" : "Potential Customer"}
-        </span>
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 mb-1 px-1 select-none">
+          <span>{isUser ? "You (Sales Rep)" : "Potential Customer"}</span>
+          {formattedTime && (
+            <>
+              <span className="text-zinc-300">·</span>
+              <span className="text-zinc-400 font-normal">{formattedTime}</span>
+            </>
+          )}
+        </div>
 
         <div
           className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${
@@ -38,9 +60,17 @@ export function ChatBubble({ role, content, isStreaming }: ChatBubbleProps) {
               : "bg-zinc-100 text-zinc-900 border border-zinc-200/80 rounded-2xl rounded-tl-xs"
           }`}
         >
-          {content}
-          {isStreaming && (
-            <span className="inline-block w-1.5 h-3.5 ml-1 bg-zinc-900 animate-pulse align-middle" />
+          {isStreaming && !content ? (
+            <div className="py-1 px-0.5">
+              <Loader size="sm" dotClassName="bg-zinc-500" />
+            </div>
+          ) : (
+            <>
+              {content}
+              {isStreaming && (
+                <span className="inline-block w-1.5 h-3.5 ml-1 bg-zinc-900 animate-pulse align-middle" />
+              )}
+            </>
           )}
         </div>
       </div>
