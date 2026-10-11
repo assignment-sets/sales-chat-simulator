@@ -83,7 +83,7 @@ export function Sidebar({
         }`}
       >
         {/* Top Header / Actions */}
-        <div className="p-3 border-b border-zinc-200/80 flex items-center justify-between gap-2 shrink-0">
+        <div className="p-3 pb-1 flex items-center justify-between gap-2 shrink-0">
           <Button
             onClick={onNewChat}
             variant="primary"
@@ -97,7 +97,7 @@ export function Sidebar({
           {onCloseMobile && (
             <button
               onClick={onCloseMobile}
-              className="p-1.5 text-zinc-400 hover:text-zinc-700 lg:hidden rounded-lg hover:bg-zinc-100"
+              className="p-1.5 text-zinc-400 hover:text-zinc-700 lg:hidden rounded-lg hover:bg-zinc-100 cursor-pointer"
               aria-label="Close sidebar"
             >
               <X className="w-5 h-5" />
@@ -106,8 +106,8 @@ export function Sidebar({
         </div>
 
         {/* Chat Threads List */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-0.5 min-h-0">
-          <div className="px-2 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider select-none">
+        <div className="flex-1 overflow-y-auto px-2 pt-2 pb-2 space-y-0.5 min-h-0">
+          <div className="px-2 pt-1 pb-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider select-none">
             Simulations
           </div>
 

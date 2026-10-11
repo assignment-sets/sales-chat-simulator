@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar, ChatSummary } from "@/components/layout/Sidebar";
 import { NewChatDialog } from "@/components/chat/NewChatDialog";
+import { SidebarProvider, useSidebar } from "@/components/layout/SidebarContext";
 
 export interface AppShellProps {
   userEmail?: string;
@@ -12,8 +13,8 @@ export interface AppShellProps {
   children: React.ReactNode;
 }
 
-export function AppShell({ userEmail, chats, children }: AppShellProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+function AppShellContent({ userEmail, chats, children }: AppShellProps) {
+  const { isOpen, toggleSidebar, closeMobile } = useSidebar();
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const router = useRouter();
 
@@ -45,15 +46,15 @@ export function AppShell({ userEmail, chats, children }: AppShellProps) {
     <div className="h-screen h-dvh max-h-screen bg-white text-zinc-900 flex flex-col font-sans overflow-hidden">
       <Navbar
         userEmail={userEmail}
-        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
-        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={toggleSidebar}
+        isSidebarOpen={isOpen}
       />
 
       <div className="flex-1 flex overflow-hidden min-h-0">
         <Sidebar
           chats={chats}
-          isOpen={isSidebarOpen}
-          onCloseMobile={() => setIsSidebarOpen(false)}
+          isOpen={isOpen}
+          onCloseMobile={closeMobile}
           onNewChat={() => setIsNewChatOpen(true)}
         />
 
@@ -68,5 +69,13 @@ export function AppShell({ userEmail, chats, children }: AppShellProps) {
         onSubmit={handleCreateChat}
       />
     </div>
+  );
+}
+
+export function AppShell(props: AppShellProps) {
+  return (
+    <SidebarProvider>
+      <AppShellContent {...props} />
+    </SidebarProvider>
   );
 }

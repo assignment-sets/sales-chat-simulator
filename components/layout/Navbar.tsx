@@ -16,6 +16,7 @@ export interface NavbarProps {
 export function Navbar({
   userEmail,
   onToggleSidebar,
+  isSidebarOpen,
 }: NavbarProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -33,8 +34,13 @@ export function Navbar({
           <button
             type="button"
             onClick={onToggleSidebar}
-            aria-label="Toggle sidebar"
-            className="p-1.5 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer flex items-center justify-center [&_svg]:shrink-0"
+            aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center [&_svg]:shrink-0 ${
+              isSidebarOpen
+                ? "text-zinc-900 bg-zinc-100 hover:bg-zinc-200/70"
+                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+            }`}
           >
             <PanelLeft className="w-5 h-5" />
           </button>
