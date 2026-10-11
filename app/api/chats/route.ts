@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data: chats, error } = await supabase
     .from("chats")
-    .select("*")
+    .select("id, product_name, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
