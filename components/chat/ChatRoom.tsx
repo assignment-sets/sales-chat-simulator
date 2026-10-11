@@ -24,19 +24,23 @@ export function ChatRoom({
 }: ChatRoomProps) {
   const [messages, setMessages] = useState<MessageItem[]>(initialMessages);
   const [isProspectTyping, setIsProspectTyping] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   // Turn management & typing cadence references
-  const turnTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const emptySettleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const typingTimeoutRefs = useRef<NodeJS.Timeout[]>([]);
   const pendingBubblesRef = useRef<MessageItem[]>([]);
   const isReplyInFlightRef = useRef(false);
+  const draftTextRef = useRef<string>("");
 
   // Clean up all pending timers on unmount
   useEffect(() => {
     return () => {
-      if (turnTimeoutRef.current) clearTimeout(turnTimeoutRef.current);
+      if (emptySettleTimerRef.current) clearTimeout(emptySettleTimerRef.current);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
       typingTimeoutRefs.current.forEach((t) => clearTimeout(t));
     };
   }, []);
@@ -116,6 +120,15 @@ export function ChatRoom({
 
   // Trigger AI prospect turn generation
   const triggerProspectTurn = useCallback(async () => {
+    if (emptySettleTimerRef.current) {
+      clearTimeout(emptySettleTimerRef.current);
+      emptySettleTimerRef.current = null;
+    }
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = null;
+    }
+
     if (isReplyInFlightRef.current) return;
 
     try {
@@ -150,12 +163,73 @@ export function ChatRoom({
     }
   }, [chat.id, scheduleStaggeredBubbles]);
 
-  // Handle salesperson sending messages (supports rapid fire burst messaging)
+  // Start 3-second empty settlement timer
+  const startEmptySettleTimer = useCallback(() => {
+    if (emptySettleTimerRef.current) {
+      clearTimeout(emptySettleTimerRef.current);
+    }
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = null;
+    }
+
+    emptySettleTimerRef.current = setTimeout(() => {
+      triggerProspectTurn();
+    }, 3000);
+  }, [triggerProspectTurn]);
+
+  // Handle draft change from input (detects active composition vs empty box)
+  const handleDraftChange = useCallback((text: string) => {
+    draftTextRef.current = text;
+    const isDirty = text.trim().length > 0;
+    setIsComposing(isDirty);
+
+    // Only adjust turn timers if the last message in chat is an unreplied user message
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg?.role !== "user" || isProspectTyping) {
+      return;
+    }
+
+    if (isDirty) {
+      // User is typing follow-up: CANCEL 3-second empty settle timer
+      if (emptySettleTimerRef.current) {
+        clearTimeout(emptySettleTimerRef.current);
+        emptySettleTimerRef.current = null;
+      }
+
+      // Reset 15-second inactivity fallback on each keystroke
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+      inactivityTimerRef.current = setTimeout(() => {
+        triggerProspectTurn();
+      }, 15000);
+    } else {
+      // Draft was cleared back to empty: reset 15s timer, start 3s empty timer
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = null;
+      }
+      if (!emptySettleTimerRef.current) {
+        emptySettleTimerRef.current = setTimeout(() => {
+          triggerProspectTurn();
+        }, 3000);
+      }
+    }
+  }, [messages, isProspectTyping, triggerProspectTurn]);
+
+  // Handle salesperson sending messages
   const handleSendMessage = async (content: string) => {
-    // 1. If prospect had unrevealed bubbles in progress, settle them immediately
+    // 1. Settle any unrevealed bubbles in progress
     flushPendingBubbles();
 
-    // 2. Optimistic instant user message append
+    // 2. Clear any active inactivity timer
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = null;
+    }
+
+    // 3. Optimistic instant user message append
     const userMsg: MessageItem = {
       role: "user",
       content,
@@ -163,7 +237,11 @@ export function ChatRoom({
     };
     setMessages((prev) => [...prev, userMsg]);
 
-    // 3. Atomically persist to DB in background
+    // 4. Reset draft state
+    draftTextRef.current = "";
+    setIsComposing(false);
+
+    // 5. Atomically persist to DB in background
     fetch(`/api/chats/${chat.id}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -180,15 +258,48 @@ export function ChatRoom({
         notify.error("Could not save message");
       });
 
-    // 4. Turn Debounce Window (1500ms): Reset timer with each message so bursts coalesce into one turn
-    if (turnTimeoutRef.current) {
-      clearTimeout(turnTimeoutRef.current);
-    }
-
-    turnTimeoutRef.current = setTimeout(() => {
-      triggerProspectTurn();
-    }, 1500);
+    // 6. Start 3-second empty settlement timer
+    startEmptySettleTimer();
   };
+
+  // Determine subtle turn status clue for UI
+  const lastMessage = messages[messages.length - 1];
+  const hasUnrepliedUserMessage = lastMessage?.role === "user";
+
+  let turnStatusHint: React.ReactNode = null;
+  if (hasUnrepliedUserMessage && !isProspectTyping) {
+    if (isComposing) {
+      turnStatusHint = (
+        <>
+          <span className="text-zinc-500 font-medium">
+            Composing follow-up... (AI reply paused)
+          </span>
+          <button
+            type="button"
+            onClick={() => triggerProspectTurn()}
+            className="text-zinc-500 hover:text-zinc-900 underline underline-offset-2 cursor-pointer transition-colors"
+          >
+            Reply now
+          </button>
+        </>
+      );
+    } else {
+      turnStatusHint = (
+        <>
+          <span className="text-zinc-400">
+            Waiting for prospect response...
+          </span>
+          <button
+            type="button"
+            onClick={() => triggerProspectTurn()}
+            className="text-zinc-500 hover:text-zinc-900 underline underline-offset-2 cursor-pointer transition-colors"
+          >
+            Reply now
+          </button>
+        </>
+      );
+    }
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-white min-h-0">
@@ -212,7 +323,11 @@ export function ChatRoom({
       {/* 3. Fixed Input Area (Permanently pinned at bottom of chat pane, never locked) */}
       <div className="p-4 sm:px-6 border-t border-zinc-200 bg-white shrink-0 z-10">
         <div className="max-w-3xl mx-auto">
-          <ChatInput onSend={handleSendMessage} />
+          <ChatInput
+            onSend={handleSendMessage}
+            onDraftChange={handleDraftChange}
+            turnStatusHint={turnStatusHint}
+          />
         </div>
       </div>
     </div>
