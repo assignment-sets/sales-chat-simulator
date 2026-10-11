@@ -5,25 +5,23 @@ import { ArrowUp } from "lucide-react";
 
 export interface ChatInputProps {
   onSend: (message: string) => void;
-  isStreaming?: boolean;
   disabled?: boolean;
   placeholder?: string;
 }
 
 export function ChatInput({
   onSend,
-  isStreaming = false,
   disabled = false,
-  placeholder = "Send a sales message or objection response...",
+  placeholder = "Type a message and press Enter...",
 }: ChatInputProps) {
   const [content, setContent] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (!isStreaming && textareaRef.current) {
+    if (!disabled && textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [isStreaming]);
+  }, [disabled]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -34,7 +32,7 @@ export function ChatInput({
 
   const handleSubmit = () => {
     const trimmed = content.trim();
-    if (!trimmed || isStreaming || disabled) return;
+    if (!trimmed || disabled) return;
     onSend(trimmed);
     setContent("");
     if (textareaRef.current) {
@@ -53,7 +51,7 @@ export function ChatInput({
     }
   };
 
-  const canSubmit = content.trim().length > 0 && !isStreaming && !disabled;
+  const canSubmit = content.trim().length > 0 && !disabled;
 
   return (
     <div className="w-full bg-white border border-zinc-200 rounded-2xl p-2 shadow-xs focus-within:border-zinc-900 focus-within:ring-2 focus-within:ring-zinc-900/10 transition-all flex items-end gap-2">
@@ -64,7 +62,7 @@ export function ChatInput({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        disabled={isStreaming || disabled}
+        disabled={disabled}
         className="flex-1 max-h-[140px] p-2 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none resize-none disabled:opacity-50"
       />
 

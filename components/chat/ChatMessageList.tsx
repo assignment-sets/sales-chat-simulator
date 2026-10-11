@@ -4,6 +4,7 @@ import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { ChatBubble } from "@/components/chat/ChatBubble";
 import { EmptyChatState } from "@/components/chat/EmptyChatState";
 import { Loader } from "@/components/ui/Loader";
+import { Avatar } from "@/components/ui/Avatar";
 
 export interface MessageItem {
   id?: string;
@@ -15,8 +16,7 @@ export interface MessageItem {
 export interface ChatMessageListProps {
   productName: string;
   messages: MessageItem[];
-  streamingContent?: string;
-  isStreaming?: boolean;
+  isProspectTyping?: boolean;
   hasMore?: boolean;
   isLoadingOlder?: boolean;
   onLoadOlder?: () => void;
@@ -25,8 +25,7 @@ export interface ChatMessageListProps {
 export function ChatMessageList({
   productName,
   messages,
-  streamingContent,
-  isStreaming,
+  isProspectTyping = false,
   hasMore = false,
   isLoadingOlder = false,
   onLoadOlder,
@@ -96,7 +95,7 @@ export function ChatMessageList({
     }
   }, [messages]);
 
-  // Handle initial scroll to bottom and auto-scrolling on new messages / streaming
+  // Handle initial scroll to bottom and auto-scrolling on new messages / typing
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -114,8 +113,8 @@ export function ChatMessageList({
       return;
     }
 
-    // Auto-scroll when assistant is streaming
-    if (isStreaming || streamingContent) {
+    // Auto-scroll when prospect is typing
+    if (isProspectTyping) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
     }
@@ -125,9 +124,9 @@ export function ChatMessageList({
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
       prevLastMsgKeyRef.current = lastMsgKey;
     }
-  }, [messages, streamingContent, isStreaming]);
+  }, [messages, isProspectTyping]);
 
-  if (messages.length === 0 && !isStreaming && !streamingContent) {
+  if (messages.length === 0 && !isProspectTyping) {
     return (
       <div
         ref={scrollContainerRef}
@@ -165,12 +164,23 @@ export function ChatMessageList({
           />
         ))}
 
-        {isStreaming && (
-          <ChatBubble
-            role="assistant"
-            content={streamingContent || ""}
-            isStreaming={true}
-          />
+        {/* Prospect Typing Indicator Bubble */}
+        {isProspectTyping && (
+          <div className="flex items-start gap-2.5 my-3 flex-row animate-in fade-in duration-150">
+            <Avatar
+              name="Prospect"
+              size="sm"
+              className="bg-white text-zinc-800 border-zinc-300"
+            />
+            <div className="max-w-[80%] sm:max-w-[70%] flex flex-col items-start">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 mb-1 px-1 select-none">
+                <span>Potential Customer is typing...</span>
+              </div>
+              <div className="px-4 py-2.5 bg-zinc-100 text-zinc-900 border border-zinc-200/80 rounded-2xl rounded-tl-xs">
+                <Loader size="sm" dotClassName="bg-zinc-500" />
+              </div>
+            </div>
+          </div>
         )}
 
         <div ref={bottomRef} className="h-2" />
