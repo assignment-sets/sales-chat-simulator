@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# saleschat
+
+Interactive sales chat simulator powered by Next.js, Supabase, and Groq LLMs. Reps practice sales conversations with an AI lead who evaluates objection handling, responds with conversational pacing, and delivers realistic multi-message interactions.
+
+## Features
+
+- **Realistic Conversation Flow**: Typing cadence delay, debounced multi-message bursts, and typing-aware turn settlement.
+- **AI Personas**: Lead persona simulation with objections, qualifying questions, and contextual responses.
+- **Turn Feedback**: Real-time evaluation of sales rep responses with scoring and critique.
+- **Full Chat Persistence**: Supabase authentication, session history, pagination, and transcripts export.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (Turbopack, App Router)
+- **UI**: React 19, Tailwind CSS v4, Lucide Icons, Sonner
+- **Database & Auth**: Supabase (@supabase/ssr)
+- **AI Inference**: Groq SDK
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- A Supabase project
+- A Groq API key
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/assignment-sets/saleschat.git
+cd saleschat
+npm install
+```
+
+### 2. Environment Variables
+
+Create a `.env.local` or `.env` file in the root directory:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=qwen/qwen3.8-27b
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_or_publishable_key
+```
+
+### 3. Database Setup
+
+Apply the SQL migrations located in `supabase/migrations/` to your Supabase project:
+
+```bash
+npx supabase db push
+# or run the SQL files directly in the Supabase SQL editor
+```
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev`: Start local development server with Turbopack.
+- `npm run build`: Build production bundle.
+- `npm run start`: Run production server.
+- `npm run lint`: Run Oxlint checks.
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](LICENSE)
