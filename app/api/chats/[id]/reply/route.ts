@@ -173,10 +173,18 @@ export async function POST(request: Request, context: RouteContext) {
         updatePayload.status = "LOST";
       }
 
-      await supabase
+      console.log(
+        `[Chat Reply] Simulation ${id} evaluation: ${evaluationResult.outcome} | score=${evaluationResult.score}/5 | leadLostProb=${evaluationResult.leadLostProbability.toFixed(2)}`
+      );
+
+      const { error: updateChatErr } = await supabase
         .from("chats")
         .update(updatePayload)
         .eq("id", id);
+
+      if (updateChatErr) {
+        console.warn("[Chat Reply] Could not update chat status with evaluation:", updateChatErr);
+      }
     } catch (evalErr) {
       console.warn("[Jev] Background turn evaluation error:", evalErr);
     }

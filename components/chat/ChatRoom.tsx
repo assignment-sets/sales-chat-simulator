@@ -69,6 +69,7 @@ export function ChatRoom({
   const pendingBubblesRef = useRef<MessageItem[]>([]);
   const isReplyInFlightRef = useRef(false);
   const draftTextRef = useRef<string>("");
+  const pendingEvaluationRef = useRef<{ outcome: string; score: number; confidence: number } | null>(null);
 
   // Clean up all pending timers on unmount
   useEffect(() => {
@@ -89,7 +90,25 @@ export function ChatRoom({
       pendingBubblesRef.current = [];
     }
     setIsProspectTyping(false);
-  }, []);
+
+    if (
+      pendingEvaluationRef.current &&
+      (pendingEvaluationRef.current.outcome === "deal_won" ||
+        pendingEvaluationRef.current.outcome === "deal_lost")
+    ) {
+      const evalOutcome = pendingEvaluationRef.current.outcome;
+      const isDealWon = evalOutcome === "deal_won";
+      setStatus(isDealWon ? "WON" : "LOST");
+      setEvaluationOutcome(evalOutcome);
+      if (typeof pendingEvaluationRef.current.score === "number") {
+        setScore(pendingEvaluationRef.current.score);
+      }
+      if (isDealWon) {
+        setTimeout(() => triggerCelebration(), 200);
+      }
+      pendingEvaluationRef.current = null;
+    }
+  }, [triggerCelebration]);
 
   // Load older messages for reverse infinite scroll
   const handleLoadOlder = async () => {
@@ -134,6 +153,7 @@ export function ChatRoom({
       typingTimeoutRefs.current.forEach((t) => clearTimeout(t));
       typingTimeoutRefs.current = [];
       pendingBubblesRef.current = [...bubbles];
+      pendingEvaluationRef.current = evaluation || null;
 
       let accumulatedDelay = 800; // Initial delay to simulate reading & starting to type
 
@@ -164,6 +184,7 @@ export function ChatRoom({
                   triggerCelebration();
                 }, 200);
               }
+              pendingEvaluationRef.current = null;
             }
           }
         }, accumulatedDelay);
@@ -207,6 +228,12 @@ export function ChatRoom({
       const data = await res.json();
       const newBubbles: MessageItem[] = data.messages || [];
       const evaluation = data.evaluation;
+
+      if (evaluation) {
+        console.log(
+          `[Simulation] Turn evaluation received: ${evaluation.outcome} | score=${evaluation.score}/5`
+        );
+      }
 
       if (newBubbles.length === 0) {
         setIsProspectTyping(false);
