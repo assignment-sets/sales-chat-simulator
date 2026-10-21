@@ -13,7 +13,7 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createServerSupabaseClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -24,6 +24,18 @@ export async function login(formData: FormData) {
       msg = "Please verify your email address";
     }
     redirect(`/login?error=${encodeURIComponent(msg)}`);
+  }
+
+  // Claim any pending organization invitations for this email
+  if (data?.user) {
+    try {
+      await supabase.rpc("claim_pending_org_invitations", {
+        user_id: data.user.id,
+        user_email: email,
+      });
+    } catch {
+      // Non-fatal if table or function is pending migration
+    }
   }
 
   revalidatePath("/", "layout");
@@ -55,7 +67,16 @@ export async function signup(formData: FormData) {
   }
 
   // If user session is created immediately (e.g. autoconfirm enabled)
-  if (data?.session) {
+  if (data?.session && data.user) {
+    try {
+      await supabase.rpc("claim_pending_org_invitations", {
+        user_id: data.user.id,
+        user_email: email,
+      });
+    } catch {
+      // Non-fatal
+    }
+
     revalidatePath("/", "layout");
     redirect("/chats");
   }

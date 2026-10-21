@@ -6,14 +6,25 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar, ChatSummary } from "@/components/layout/Sidebar";
 import { NewChatDialog } from "@/components/chat/NewChatDialog";
 import { SidebarProvider, useSidebar } from "@/components/layout/SidebarContext";
+import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 
 export interface AppShellProps {
   userEmail?: string;
   chats: ChatSummary[];
+  activeOrg?: Organization;
+  activeRole?: OrgRole;
+  organizations?: OrganizationMembership[];
   children: React.ReactNode;
 }
 
-function AppShellContent({ userEmail, chats, children }: AppShellProps) {
+function AppShellContent({
+  userEmail,
+  chats,
+  activeOrg,
+  activeRole,
+  organizations,
+  children,
+}: AppShellProps) {
   const { isOpen, toggleSidebar, closeMobile } = useSidebar();
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const router = useRouter();
@@ -48,6 +59,9 @@ function AppShellContent({ userEmail, chats, children }: AppShellProps) {
         userEmail={userEmail}
         onToggleSidebar={toggleSidebar}
         isSidebarOpen={isOpen}
+        activeOrg={activeOrg}
+        activeRole={activeRole}
+        organizations={organizations}
       />
 
       <div className="flex-1 flex overflow-hidden min-h-0">

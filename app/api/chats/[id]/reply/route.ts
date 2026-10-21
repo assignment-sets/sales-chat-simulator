@@ -1,7 +1,16 @@
-import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { groq, DEFAULT_GROQ_MODEL } from "@/lib/groq";
-import { formatGroqMessages, MessageItem, StructuredProspectResponse } from "@/lib/prompt";
+import {
+  formatGroqMessages,
+  MessageItem,
+  StructuredProspectResponse,
+} from "@/lib/prompt";
+import {
+  apiSuccess,
+  internalError,
+  unauthorized,
+} from "@/lib/api-response";
+import { validateChatAccess } from "@/lib/chat-auth";
 
 interface RouteContext {
   params: Promise<{
@@ -18,29 +27,45 @@ export async function POST(request: Request, context: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorized();
   }
 
-  // 1. Fetch chat metadata
-  const { data: chat, error: chatError } = await supabase
-    .from("chats")
-    .select("id, product_name, product_description")
-    .eq("id", id)
-    .single();
-
-  if (chatError || !chat) {
-    return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+  // 1. Dual-check: verify chat exists and belongs to the authenticated user
+  const chatCheck = await validateChatAccess<{
+    id: string;
+    product_name: string;
+    product_description: string;
+  }>(
+    supabase,
+    id,
+    user.id,
+    "id, product_name, product_description",
+    "POST /api/chats/[id]/reply:validateChat"
+  );
+  if (!chatCheck.ok) {
+    return chatCheck.response;
   }
+  const chat = chatCheck.chat;
 
-  // 2. Fetch full chronological history
-  const { data: historyRows, error: historyError } = await supabase
+  // 2. Fetch full chronological history with dual scoping
+  let historyQuery = supabase
     .from("messages")
     .select("id, role, content, created_at")
-    .eq("chat_id", id)
+    .eq("chat_id", id);
+
+  if (chatCheck.role === "member") {
+    historyQuery = historyQuery.eq("user_id", user.id);
+  }
+
+  const { data: historyRows, error: historyError } = await historyQuery
     .order("created_at", { ascending: true });
 
   if (historyError) {
-    return NextResponse.json({ error: historyError.message }, { status: 500 });
+    return internalError(
+      "Failed to fetch conversation history",
+      historyError,
+      "POST /api/chats/[id]/reply:history"
+    );
   }
 
   const history: MessageItem[] = (historyRows || []).map((row) => ({
@@ -52,13 +77,13 @@ export async function POST(request: Request, context: RouteContext) {
 
   // 3. Idempotency guard: only generate a reply if the latest message was from the user
   if (history.length === 0) {
-    return NextResponse.json({ messages: [] });
+    return apiSuccess({ messages: [] });
   }
 
   const lastMessage = history[history.length - 1];
   if (lastMessage.role !== "user") {
     // Prospect already replied to the latest turn
-    return NextResponse.json({ messages: [] });
+    return apiSuccess({ messages: [] });
   }
 
   // 4. Format prompt messages with coalesced turns for Groq
@@ -101,7 +126,11 @@ export async function POST(request: Request, context: RouteContext) {
       .select("id, role, content, created_at");
 
     if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      return internalError(
+        "Failed to persist prospect reply",
+        insertError,
+        "POST /api/chats/[id]/reply:persist"
+      );
     }
 
     const savedMessages: MessageItem[] = (insertedRows || []).map((row) => ({
@@ -111,7 +140,7 @@ export async function POST(request: Request, context: RouteContext) {
       created_at: row.created_at,
     }));
 
-    return NextResponse.json({
+    return apiSuccess({
       messages: savedMessages,
       sentiment,
       objection_type: objectionType,
@@ -140,7 +169,9 @@ export async function POST(request: Request, context: RouteContext) {
     let bubbles: string[] = [];
     if (Array.isArray(parsed.messages)) {
       bubbles = parsed.messages;
-    } else if (typeof (parsed as unknown as { message?: string }).message === "string") {
+    } else if (
+      typeof (parsed as unknown as { message?: string }).message === "string"
+    ) {
       bubbles = [(parsed as unknown as { message: string }).message];
     } else {
       bubbles = [rawContent];
@@ -179,7 +210,8 @@ export async function POST(request: Request, context: RouteContext) {
         max_completion_tokens: 300,
       });
 
-      const fallbackText = fallbackCompletion.choices[0]?.message?.content || "";
+      const fallbackText =
+        fallbackCompletion.choices[0]?.message?.content || "";
       const fallbackBubbles = fallbackText
         .split("\n")
         .map((s) => s.trim())
@@ -187,15 +219,10 @@ export async function POST(request: Request, context: RouteContext) {
 
       return await persistAndReturnBubbles(fallbackBubbles);
     } catch (fallbackErr) {
-      console.error("Critical AI generation failure:", fallbackErr);
-      return NextResponse.json(
-        {
-          error:
-            fallbackErr instanceof Error
-              ? fallbackErr.message
-              : "Failed to generate prospect reply",
-        },
-        { status: 500 }
+      return internalError(
+        "Failed to generate prospect reply",
+        fallbackErr,
+        "POST /api/chats/[id]/reply:groq"
       );
     }
   }

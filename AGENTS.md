@@ -14,3 +14,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 2. **Minimal & Clutter-Free UI**: Never overwhelm the user with walls of text, dense instructional paragraphs, duplicate buttons, bloated placeholders, or cramped spacing. Keep copy crisp, minimal, and non-intimidating.
 3. **Zero Layout Shifts**: Never render expanding inline error/message banners that alter container shapes or heights. Use the centralized toast utility (`lib/toast.ts`) for all user feedback.
 4. **Standard 3-Dot Loader**: Use the shared 3-dot loader component (`components/ui/Loader.tsx`) for loading states, async actions, and screen transitions (`loading.tsx`).
+
+## Backend & API Architecture Rules
+
+1. **Standardized API Responses & Sanitized Errors**: Always use `lib/api-response.ts` (`apiSuccess`, `apiError`, `badRequest`, `unauthorized`, `notFound`, `internalError`) for API routes. Never return raw internal error messages (`error.message`, database/PostgREST errors, or third-party SDK exceptions) to the client — log internal details on the server and return sanitized user-facing messages.
+2. **Dual-Check Tenant Scoping (Defense-in-Depth)**: Never rely solely on RLS. Always explicitly filter by `.eq("organization_id", orgId)` (and `.eq("user_id", user.id)` when role is `member`) on all database queries and use `validateChatAccess` (`lib/chat-auth.ts`) when accessing chat sub-resources. For deletions, select the deleted rows to verify affected count and return 404 if no rows were deleted.

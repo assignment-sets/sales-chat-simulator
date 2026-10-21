@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { NewChatDialog } from "@/components/chat/NewChatDialog";
 import {
   MessageSquarePlus,
-  Compass,
-  ShieldCheck,
-  Award,
   Zap,
 } from "lucide-react";
 

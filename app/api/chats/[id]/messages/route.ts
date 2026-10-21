@@ -1,5 +1,11 @@
-import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
+import {
+  apiSuccess,
+  badRequest,
+  internalError,
+  unauthorized,
+} from "@/lib/api-response";
+import { validateChatAccess } from "@/lib/chat-auth";
 
 interface RouteContext {
   params: Promise<{
@@ -16,7 +22,19 @@ export async function GET(request: Request, context: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorized();
+  }
+
+  // 1. Dual-check: verify chat exists and belongs to the authenticated user
+  const chatCheck = await validateChatAccess(
+    supabase,
+    id,
+    user.id,
+    "id",
+    "GET /api/chats/[id]/messages:validateChat"
+  );
+  if (!chatCheck.ok) {
+    return chatCheck.response;
   }
 
   const { searchParams } = new URL(request.url);
@@ -24,10 +42,17 @@ export async function GET(request: Request, context: RouteContext) {
   const limitParam = parseInt(searchParams.get("limit") || "50", 10);
   const limit = Math.min(Math.max(isNaN(limitParam) ? 50 : limitParam, 1), 100);
 
+  // 2. Fetch messages with dual scoping:
+  // - Regular members see their own simulation messages
+  // - Owners and admins see all simulation messages
   let query = supabase
     .from("messages")
     .select("id, role, content, created_at")
     .eq("chat_id", id);
+
+  if (chatCheck.role === "member") {
+    query = query.eq("user_id", user.id);
+  }
 
   if (before) {
     query = query.lt("created_at", before);
@@ -38,15 +63,20 @@ export async function GET(request: Request, context: RouteContext) {
   const { data: rows, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalError(
+      "Failed to fetch messages",
+      error,
+      "GET /api/chats/[id]/messages"
+    );
   }
 
   // Reverse to chronological order (oldest to newest)
   const messages = (rows || []).slice().reverse();
   const hasMore = (rows || []).length === limit;
-  const nextCursor = rows && rows.length > 0 ? rows[rows.length - 1].created_at : null;
+  const nextCursor =
+    rows && rows.length > 0 ? rows[rows.length - 1].created_at : null;
 
-  return NextResponse.json({
+  return apiSuccess({
     messages,
     hasMore,
     nextCursor,
@@ -62,29 +92,37 @@ export async function POST(request: Request, context: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthorized();
   }
 
-  // 1. Verify chat exists and belongs to user
-  const { data: chat, error: chatError } = await supabase
-    .from("chats")
-    .select("id")
-    .eq("id", id)
-    .single();
-
-  if (chatError || !chat) {
-    return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+  // 1. Dual-check: verify chat exists and belongs to user
+  const chatCheck = await validateChatAccess(
+    supabase,
+    id,
+    user.id,
+    "id",
+    "POST /api/chats/[id]/messages:validateChat"
+  );
+  if (!chatCheck.ok) {
+    return chatCheck.response;
   }
 
   // 2. Parse incoming message body
-  const body = await request.json().catch(() => ({}));
-  const content = (body.content || "").trim();
+  let body: { content?: unknown } = {};
+  try {
+    body = await request.json();
+  } catch (err) {
+    return badRequest(
+      "Invalid JSON request body",
+      err,
+      "POST /api/chats/[id]/messages:parse"
+    );
+  }
+
+  const content = typeof body?.content === "string" ? body.content.trim() : "";
 
   if (!content) {
-    return NextResponse.json(
-      { error: "Message content cannot be empty" },
-      { status: 400 }
-    );
+    return badRequest("Message content cannot be empty");
   }
 
   // 3. Atomically persist user message
@@ -100,11 +138,12 @@ export async function POST(request: Request, context: RouteContext) {
     .single();
 
   if (insertError) {
-    return NextResponse.json(
-      { error: insertError.message },
-      { status: 500 }
+    return internalError(
+      "Failed to save message",
+      insertError,
+      "POST /api/chats/[id]/messages:insert"
     );
   }
 
-  return NextResponse.json({ message }, { status: 201 });
+  return apiSuccess({ message }, 201);
 }
