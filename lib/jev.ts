@@ -1,4 +1,4 @@
-import { TypeSafeClient, choice, score, noul } from "@typesafe-ai/sdk";
+import { TypeSafeClient, choice, score } from "@typesafe-ai/sdk";
 import fs from "fs";
 import path from "path";
 
@@ -75,7 +75,7 @@ export function formatDialogueForJev(
 
 /**
  * Evaluates the current state of a sales simulation turn using TypeSafe AI's Jev model.
- * Returns structured classification, performance score (1-5), and rejection probability.
+ * Returns structured classification and performance score (1-5).
  */
 export async function evaluateSimulationTurn(params: {
   productName: string;
@@ -119,62 +119,63 @@ export async function evaluateSimulationTurn(params: {
       },
       questions: {
         outcome: choice(
-          "In this B2B/B2C sales practice simulation, has this conversation reached a conclusive outcome?",
+          "What is the current status of this sales conversation?",
           {
             deal_won:
-              "The customer agreed to purchase, start a trial or pilot program, sign a contract, schedule a closing call, or accepted handover to the onboarding/pilot team.",
+              "Success / Won: The prospect agreed to a meeting, demo, call, pilot, trial, or purchase, or confirmed next steps / calendar invite and wrapped up warmly.",
             deal_lost:
-              "The customer explicitly refused to buy, terminated the conversation, expressed severe hostility, reported/threatened legal or police action, or the sales rep used abusive profanity/threats ruining the opportunity.",
+              "Lost: The prospect explicitly refused, walked away, rejected the offer, or the conversation was terminated due to hostility, profanity, or impasse.",
             in_progress:
-              "The conversation is ongoing. The prospect has normal questions, is actively reviewing details, presenting objections to overcome, or exploring fit.",
+              "In Progress: The conversation is still actively going back and forth with questions, negotiations, or unresolved objections without agreement yet.",
           }
         ),
         rep_score: score(
-          "Rate the sales representative's professionalism, objection handling, and pitch quality (1 to 5)",
+          "Rate the sales representative's overall performance from 1 to 5",
           [
-            "1: Extremely poor, offensive, hostile, abusive, or complete failure",
-            "2: Struggling, missed objections, or defensive attitude",
-            "3: Competent, standard polite pitch with adequate explanation",
-            "4: Strong objection handling, persuasive value, and proactive closing",
-            "5: Masterful salesmanship, rapport building, and seamless close",
+            "1: Poor, rude, offensive, or unprofessional",
+            "2: Below average, struggled with basic objections",
+            "3: Good, answered questions and maintained professionalism",
+            "4: Great, effectively handled objections and demonstrated value",
+            "5: Excellent, closed the deal or secured next meeting seamlessly",
           ]
-        ),
-        lead_lost: noul(
-          "Has this sales opportunity fallen through, been terminated, or decisively rejected?"
         ),
       },
     });
 
     const choiceVal = answers.outcome.choice;
-    const confidence = answers.outcome.confidence ?? 0.8;
-    const repScoreIndex = answers.rep_score.score ?? 2; // 0-indexed (0 to 4)
-    const normalizedScore = Math.min(Math.max(Number((repScoreIndex + 1).toFixed(1)), 1), 5); // 1-5 scale
-    const leadLostProb = answers.lead_lost.noul ?? 0.0;
+    const confidence = answers.outcome.confidence ?? 0.5;
+    const probs = answers.outcome.probabilities;
+
+    const pWon = probs?.deal_won ?? (choiceVal === "deal_won" ? confidence : 0.0);
+    const pLost = probs?.deal_lost ?? (choiceVal === "deal_lost" ? confidence : 0.0);
+    const pProg = probs?.in_progress ?? (choiceVal === "in_progress" ? confidence : 0.0);
 
     let finalOutcome: "in_progress" | "deal_won" | "deal_lost" = "in_progress";
 
-    // Loosened decision logic: decisive choice with >=0.40 confidence or high lead_lost probability
-    if (choiceVal === "deal_won" && confidence >= 0.4) {
+    // Decisive resolution: inspect both choice and highest probability
+    if (choiceVal === "deal_won" || (pWon > pProg && pWon >= 0.35)) {
       finalOutcome = "deal_won";
-    } else if (
-      (choiceVal === "deal_lost" && confidence >= 0.4) ||
-      leadLostProb >= 0.7
-    ) {
+    } else if (choiceVal === "deal_lost" || (pLost > pProg && pLost >= 0.35) || pLost >= 0.6) {
       finalOutcome = "deal_lost";
     }
 
-    // Single-line console log for developer visibility and monitoring
-    const pWon = answers.outcome.probabilities?.deal_won?.toFixed(2) ?? "-";
-    const pLost = answers.outcome.probabilities?.deal_lost?.toFixed(2) ?? "-";
+    const repScoreIndex = answers.rep_score?.score ?? 2; // 0-indexed (0 to 4)
+    let normalizedScore = Math.min(Math.max(Number((repScoreIndex + 1).toFixed(1)), 1), 5);
+
+    // If deal is closed successfully, guarantee at least an above-average score
+    if (finalOutcome === "deal_won" && normalizedScore < 3.5) {
+      normalizedScore = 4.0;
+    }
+
     console.log(
-      `[Jev Eval] Outcome: ${finalOutcome} (choice: ${choiceVal}, conf: ${confidence.toFixed(2)}, p_won: ${pWon}, p_lost: ${pLost}) | Score: ${normalizedScore} | LeadLostProb: ${leadLostProb.toFixed(2)}`
+      `[Jev Eval] Outcome: ${finalOutcome} (choice: ${choiceVal}, conf: ${confidence.toFixed(2)}, p_won: ${pWon.toFixed(2)}, p_lost: ${pLost.toFixed(2)}, p_prog: ${pProg.toFixed(2)}) | Score: ${normalizedScore}`
     );
 
     return {
       outcome: finalOutcome,
       confidence,
       score: normalizedScore,
-      leadLostProbability: leadLostProb,
+      leadLostProbability: pLost,
     };
   } catch (err) {
     console.warn("[Jev] Evaluation request error (proceeding with in_progress):", err);
