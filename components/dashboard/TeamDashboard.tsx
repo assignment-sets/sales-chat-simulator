@@ -10,6 +10,8 @@ import {
   Search,
   ChevronRight,
   ShieldAlert,
+  Trophy,
+  Award,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -168,30 +170,59 @@ export function TeamDashboard() {
         </div>
 
         {/* Top Metric Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
-              <span className="text-xs font-medium">Total Simulations</span>
+              <span className="text-xs font-medium">Simulations</span>
               <Bot className="w-4 h-4 text-zinc-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-900 tracking-tight">
               {kpis.totalSimulations}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Created across organization
+              Created in organization
             </p>
           </div>
 
           <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
-              <span className="text-xs font-medium">Practice Exchanges</span>
+              <span className="text-xs font-medium">Exchanges</span>
               <MessageSquare className="w-4 h-4 text-zinc-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-900 tracking-tight">
               {kpis.totalMessages}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Total prompt & prospect messages
+              Prompt & prospect turns
+            </p>
+          </div>
+
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+            <div className="flex items-center justify-between text-zinc-500 mb-2">
+              <span className="text-xs font-medium">Team Win Rate</span>
+              <Trophy className="w-4 h-4 text-emerald-500" />
+            </div>
+            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
+              {kpis.winRate !== null ? `${kpis.winRate}%` : "—"}
+            </div>
+            <p className="text-[11px] text-zinc-400 mt-1">
+              Deals won vs leads lost
+            </p>
+          </div>
+
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+            <div className="flex items-center justify-between text-zinc-500 mb-2">
+              <span className="text-xs font-medium">Avg Evaluation</span>
+              <Award className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
+              {kpis.avgScore !== null ? `${kpis.avgScore}` : "—"}
+              {kpis.avgScore !== null && (
+                <span className="text-xs font-normal text-zinc-400"> / 5</span>
+              )}
+            </div>
+            <p className="text-[11px] text-zinc-400 mt-1">
+              Jev simulation score
             </p>
           </div>
 
@@ -204,13 +235,13 @@ export function TeamDashboard() {
               {kpis.totalTokens.toLocaleString()}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              LLM model token consumption
+              Model token volume
             </p>
           </div>
 
           <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
-              <span className="text-xs font-medium">Active Team Members</span>
+              <span className="text-xs font-medium">Active Members</span>
               <Users className="w-4 h-4 text-zinc-400" />
             </div>
             <div className="text-2xl font-bold text-zinc-900 tracking-tight">
@@ -220,7 +251,7 @@ export function TeamDashboard() {
               </span>
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Reps with at least 1 simulation
+              Reps with simulations
             </p>
           </div>
         </div>
@@ -257,6 +288,8 @@ export function TeamDashboard() {
                   <th className="py-3 px-4 sm:px-6">Team Member</th>
                   <th className="py-3 px-3">Role</th>
                   <th className="py-3 px-3 text-right">Simulations</th>
+                  <th className="py-3 px-3 text-right">Win Rate</th>
+                  <th className="py-3 px-3 text-right">Avg Score</th>
                   <th className="py-3 px-3 text-right">Messages</th>
                   <th className="py-3 px-3 text-right">Tokens</th>
                   <th className="py-3 px-4 sm:px-6">Last Active</th>
@@ -266,7 +299,7 @@ export function TeamDashboard() {
               <tbody className="divide-y divide-zinc-100">
                 {filteredMembers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-zinc-400">
+                    <td colSpan={9} className="py-12 text-center text-zinc-400">
                       No team members found matching your search.
                     </td>
                   </tr>
@@ -301,6 +334,37 @@ export function TeamDashboard() {
 
                       <td className="py-3.5 px-3 text-right font-medium text-zinc-800">
                         {member.simulationsCount}
+                      </td>
+
+                      <td className="py-3.5 px-3 text-right">
+                        {member.winRate !== null ? (
+                          <span
+                            className={`font-semibold ${
+                              member.winRate >= 70
+                                ? "text-emerald-600"
+                                : member.winRate >= 40
+                                ? "text-amber-600"
+                                : "text-rose-600"
+                            }`}
+                          >
+                            {member.winRate}%
+                          </span>
+                        ) : (
+                          <span className="text-zinc-300">—</span>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-3 text-right">
+                        {member.avgScore !== null ? (
+                          <span className="font-semibold text-zinc-800">
+                            {member.avgScore}{" "}
+                            <span className="text-[10px] text-zinc-400 font-normal">
+                              / 5
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-zinc-300">—</span>
+                        )}
                       </td>
 
                       <td className="py-3.5 px-3 text-right font-medium text-zinc-800">

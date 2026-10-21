@@ -12,6 +12,8 @@ export interface ChatRoomProps {
     product_name: string;
     product_description: string;
     status: string;
+    score?: number | null;
+    evaluation_outcome?: string | null;
   };
   initialMessages: MessageItem[];
   initialHasMore?: boolean;
@@ -27,6 +29,38 @@ export function ChatRoom({
   const [isComposing, setIsComposing] = useState(false);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+
+  // Simulation Evaluation & Status State
+  const [status, setStatus] = useState<string>(chat.status || "ACTIVE");
+  const [evaluationOutcome, setEvaluationOutcome] = useState<string>(
+    chat.evaluation_outcome ||
+      (chat.status === "WON" ? "deal_won" : chat.status === "LOST" ? "deal_lost" : "in_progress")
+  );
+  const [score, setScore] = useState<number | null>(chat.score ?? null);
+
+  const isConcluded =
+    status === "WON" ||
+    status === "LOST" ||
+    evaluationOutcome === "deal_won" ||
+    evaluationOutcome === "deal_lost";
+
+  // Tasteful confetti burst helper on deal won
+  const triggerCelebration = useCallback(() => {
+    try {
+      import("canvas-confetti").then((confettiModule) => {
+        const confetti = confettiModule.default;
+        confetti({
+          particleCount: 70,
+          spread: 60,
+          origin: { y: 0.7 },
+          colors: ["#10b981", "#34d399", "#059669", "#6ee7b7", "#1e293b"],
+          disableForReducedMotion: true,
+        });
+      });
+    } catch (err) {
+      console.warn("Could not trigger celebration confetti:", err);
+    }
+  }, []);
 
   // Turn management & typing cadence references
   const emptySettleTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -92,31 +126,56 @@ export function ChatRoom({
   };
 
   // Sequentially reveal AI response bubbles with realistic human typing pauses
-  const scheduleStaggeredBubbles = useCallback((bubbles: MessageItem[]) => {
-    typingTimeoutRefs.current.forEach((t) => clearTimeout(t));
-    typingTimeoutRefs.current = [];
-    pendingBubblesRef.current = [...bubbles];
+  const scheduleStaggeredBubbles = useCallback(
+    (
+      bubbles: MessageItem[],
+      evaluation?: { outcome: string; score: number; confidence: number } | null
+    ) => {
+      typingTimeoutRefs.current.forEach((t) => clearTimeout(t));
+      typingTimeoutRefs.current = [];
+      pendingBubblesRef.current = [...bubbles];
 
-    let accumulatedDelay = 800; // Initial delay to simulate reading & starting to type
+      let accumulatedDelay = 800; // Initial delay to simulate reading & starting to type
 
-    bubbles.forEach((bubble, index) => {
-      const isLast = index === bubbles.length - 1;
+      bubbles.forEach((bubble, index) => {
+        const isLast = index === bubbles.length - 1;
 
-      const timeout = setTimeout(() => {
-        setMessages((prev) => [...prev, bubble]);
-        pendingBubblesRef.current = pendingBubblesRef.current.filter((b) => b !== bubble);
+        const timeout = setTimeout(() => {
+          setMessages((prev) => [...prev, bubble]);
+          pendingBubblesRef.current = pendingBubblesRef.current.filter((b) => b !== bubble);
 
-        if (isLast) {
-          setIsProspectTyping(false);
-        }
-      }, accumulatedDelay);
+          if (isLast) {
+            setIsProspectTyping(false);
 
-      typingTimeoutRefs.current.push(timeout);
+            // Once the final prospect bubble has appeared, trigger conclusion if decided
+            if (
+              evaluation &&
+              (evaluation.outcome === "deal_won" || evaluation.outcome === "deal_lost")
+            ) {
+              const isDealWon = evaluation.outcome === "deal_won";
+              setStatus(isDealWon ? "WON" : "LOST");
+              setEvaluationOutcome(evaluation.outcome);
+              if (typeof evaluation.score === "number") {
+                setScore(evaluation.score);
+              }
+              if (isDealWon) {
+                // Short 200ms delay so user can read the closing message first
+                setTimeout(() => {
+                  triggerCelebration();
+                }, 200);
+              }
+            }
+          }
+        }, accumulatedDelay);
 
-      // Subsequent bubbles appear after realistic typing pause (~950ms)
-      accumulatedDelay += 950;
-    });
-  }, []);
+        typingTimeoutRefs.current.push(timeout);
+
+        // Subsequent bubbles appear after realistic typing pause (~950ms)
+        accumulatedDelay += 950;
+      });
+    },
+    [triggerCelebration]
+  );
 
   // Trigger AI prospect turn generation
   const triggerProspectTurn = useCallback(async () => {
@@ -147,13 +206,14 @@ export function ChatRoom({
 
       const data = await res.json();
       const newBubbles: MessageItem[] = data.messages || [];
+      const evaluation = data.evaluation;
 
       if (newBubbles.length === 0) {
         setIsProspectTyping(false);
         return;
       }
 
-      scheduleStaggeredBubbles(newBubbles);
+      scheduleStaggeredBubbles(newBubbles, evaluation);
     } catch (err) {
       console.error("Prospect reply error:", err);
       setIsProspectTyping(false);
@@ -220,6 +280,8 @@ export function ChatRoom({
 
   // Handle salesperson sending messages
   const handleSendMessage = async (content: string) => {
+    if (isConcluded) return;
+
     // 1. Settle any unrevealed bubbles in progress
     flushPendingBubbles();
 
@@ -318,15 +380,24 @@ export function ChatRoom({
         hasMore={hasMore}
         isLoadingOlder={isLoadingOlder}
         onLoadOlder={handleLoadOlder}
+        isConcluded={isConcluded}
+        conclusionOutcome={evaluationOutcome}
+        conclusionScore={score}
       />
 
-      {/* 3. Fixed Input Area (Permanently pinned at bottom of chat pane, never locked) */}
+      {/* 3. Fixed Input Area (Permanently pinned at bottom of chat pane) */}
       <div className="p-4 sm:px-6 border-t border-zinc-200 bg-white shrink-0 z-10">
         <div className="max-w-3xl mx-auto">
           <ChatInput
             onSend={handleSendMessage}
             onDraftChange={handleDraftChange}
-            turnStatusHint={turnStatusHint}
+            turnStatusHint={!isConcluded ? turnStatusHint : null}
+            disabled={isConcluded}
+            placeholder={
+              isConcluded
+                ? "Simulation concluded • Practice session complete"
+                : "Type a message and press Enter..."
+            }
           />
         </div>
       </div>

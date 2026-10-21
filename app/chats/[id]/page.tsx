@@ -15,7 +15,7 @@ export default async function ChatDetailPage({ params }: ChatPageProps) {
 
   const { data: chat, error: chatError } = await supabase
     .from("chats")
-    .select("id, product_name, product_description, status")
+    .select("id, product_name, product_description, status, score, evaluation_outcome, evaluation_summary")
     .eq("id", id)
     .single();
 

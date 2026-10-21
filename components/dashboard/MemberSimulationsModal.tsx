@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Coins, Calendar, ChevronRight } from "lucide-react";
+import { X, Coins, Calendar, ChevronRight, Trophy, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
 
@@ -21,6 +22,8 @@ interface MemberSimulation {
   product_description: string;
   tokens_used: number;
   status: string;
+  score?: number | null;
+  evaluation_outcome?: string | null;
   created_at: string;
 }
 
@@ -123,11 +126,31 @@ export function MemberSimulationsModal({
                 className="p-3.5 rounded-2xl border border-zinc-200 hover:border-zinc-300 bg-white hover:bg-zinc-50 transition-all cursor-pointer flex items-center justify-between gap-3 group"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-semibold text-sm text-zinc-900 truncate">
                       {sim.product_name}
                     </span>
-                    <span className="text-[10px] text-zinc-400 flex items-center gap-1 shrink-0">
+                    {sim.status === "WON" || sim.evaluation_outcome === "deal_won" ? (
+                      <Badge variant="success" className="text-[10px] py-0 px-2 flex items-center gap-1">
+                        <Trophy className="w-2.5 h-2.5" />
+                        Won
+                      </Badge>
+                    ) : sim.status === "LOST" || sim.evaluation_outcome === "deal_lost" ? (
+                      <Badge variant="muted" className="text-[10px] py-0 px-2 text-rose-600 bg-rose-50 border-rose-200 flex items-center gap-1">
+                        <XCircle className="w-2.5 h-2.5" />
+                        Lost
+                      </Badge>
+                    ) : (
+                      <Badge variant="default" className="text-[10px] py-0 px-2">
+                        Active
+                      </Badge>
+                    )}
+                    {typeof sim.score === "number" && sim.score > 0 && (
+                      <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md">
+                        Score: {sim.score}/5
+                      </span>
+                    )}
+                    <span className="text-[10px] text-zinc-400 flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
                       <Calendar className="w-3 h-3 text-zinc-400" />
                       {formatDate(sim.created_at)}
                     </span>

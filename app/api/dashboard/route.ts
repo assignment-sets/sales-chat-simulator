@@ -16,6 +16,8 @@ export interface DashboardMemberSummary {
   simulationsCount: number;
   messagesCount: number;
   tokensUsed: number;
+  winRate: number | null;
+  avgScore: number | null;
   lastActiveAt: string | null;
 }
 
@@ -25,6 +27,8 @@ export interface DashboardKpiSummary {
   totalTokens: number;
   activeMembersCount: number;
   totalMembersCount: number;
+  winRate: number | null;
+  avgScore: number | null;
 }
 
 export async function GET() {
@@ -87,7 +91,7 @@ export async function GET() {
   // 2. Fetch all chats for this organization
   const { data: chatRows, error: chatsError } = await supabase
     .from("chats")
-    .select("id, user_id, tokens_used, created_at")
+    .select("id, user_id, tokens_used, status, score, evaluation_outcome, created_at")
     .eq("organization_id", organization.id)
     .order("created_at", { ascending: false });
 
@@ -118,7 +122,14 @@ export async function GET() {
   }
 
   // 4. Aggregate metrics per member
-  const memberMap = new Map<string, DashboardMemberSummary>();
+  interface MemberAccumulator extends DashboardMemberSummary {
+    wonCount: number;
+    lostCount: number;
+    totalScore: number;
+    scoredCount: number;
+  }
+
+  const memberMap = new Map<string, MemberAccumulator>();
 
   for (const m of memberRows || []) {
     const isSelf = m.user_id === user.id;
@@ -139,36 +150,71 @@ export async function GET() {
       simulationsCount: 0,
       messagesCount: 0,
       tokensUsed: 0,
+      winRate: null,
+      avgScore: null,
       lastActiveAt: null,
+      wonCount: 0,
+      lostCount: 0,
+      totalScore: 0,
+      scoredCount: 0,
     });
   }
 
-  // Aggregate simulations per user
+  // Aggregate simulations per user and overall
   let overallTokens = 0;
+  let overallWon = 0;
+  let overallLost = 0;
+  let overallTotalScore = 0;
+  let overallScoredCount = 0;
+
   for (const c of allChats) {
     const tokens = c.tokens_used || 0;
     overallTokens += tokens;
 
-    const existing = memberMap.get(c.user_id);
-    if (existing) {
-      existing.simulationsCount += 1;
-      existing.tokensUsed += tokens;
-      if (!existing.lastActiveAt || new Date(c.created_at) > new Date(existing.lastActiveAt)) {
-        existing.lastActiveAt = c.created_at;
-      }
-    } else {
-      // Member might have left org but has legacy chats
-      memberMap.set(c.user_id, {
+    const isWon = c.status === "WON" || c.evaluation_outcome === "deal_won";
+    const isLost = c.status === "LOST" || c.evaluation_outcome === "deal_lost";
+
+    if (isWon) overallWon += 1;
+    if (isLost) overallLost += 1;
+
+    if (typeof c.score === "number" && c.score > 0) {
+      overallTotalScore += c.score;
+      overallScoredCount += 1;
+    }
+
+    let existing = memberMap.get(c.user_id);
+    if (!existing) {
+      existing = {
         userId: c.user_id,
         email: `Former Member (${c.user_id.slice(0, 8)})`,
         fullName: `Former Member (${c.user_id.slice(0, 8)})`,
         role: "member",
         joinedAt: c.created_at,
-        simulationsCount: 1,
+        simulationsCount: 0,
         messagesCount: 0,
-        tokensUsed: tokens,
+        tokensUsed: 0,
+        winRate: null,
+        avgScore: null,
         lastActiveAt: c.created_at,
-      });
+        wonCount: 0,
+        lostCount: 0,
+        totalScore: 0,
+        scoredCount: 0,
+      };
+      memberMap.set(c.user_id, existing);
+    }
+
+    existing.simulationsCount += 1;
+    existing.tokensUsed += tokens;
+    if (isWon) existing.wonCount += 1;
+    if (isLost) existing.lostCount += 1;
+    if (typeof c.score === "number" && c.score > 0) {
+      existing.totalScore += c.score;
+      existing.scoredCount += 1;
+    }
+
+    if (!existing.lastActiveAt || new Date(c.created_at) > new Date(existing.lastActiveAt)) {
+      existing.lastActiveAt = c.created_at;
     }
   }
 
@@ -180,11 +226,33 @@ export async function GET() {
     }
   }
 
-  const memberSummaries = Array.from(memberMap.values()).sort(
+  // Calculate winRate and avgScore for each member
+  const memberSummaries: DashboardMemberSummary[] = Array.from(memberMap.values()).map((m) => {
+    const concludedCount = m.wonCount + m.lostCount;
+    const winRate = concludedCount > 0 ? Math.round((m.wonCount / concludedCount) * 100) : null;
+    const avgScore = m.scoredCount > 0 ? Number((m.totalScore / m.scoredCount).toFixed(1)) : null;
+
+    return {
+      userId: m.userId,
+      email: m.email,
+      fullName: m.fullName,
+      role: m.role,
+      joinedAt: m.joinedAt,
+      simulationsCount: m.simulationsCount,
+      messagesCount: m.messagesCount,
+      tokensUsed: m.tokensUsed,
+      winRate,
+      avgScore,
+      lastActiveAt: m.lastActiveAt,
+    };
+  }).sort(
     (a, b) => b.simulationsCount - a.simulationsCount || b.messagesCount - a.messagesCount
   );
 
   const activeMembersCount = memberSummaries.filter((m) => m.simulationsCount > 0).length;
+  const overallConcluded = overallWon + overallLost;
+  const teamWinRate = overallConcluded > 0 ? Math.round((overallWon / overallConcluded) * 100) : null;
+  const teamAvgScore = overallScoredCount > 0 ? Number((overallTotalScore / overallScoredCount).toFixed(1)) : null;
 
   const kpis: DashboardKpiSummary = {
     totalSimulations: allChats.length,
@@ -192,6 +260,8 @@ export async function GET() {
     totalTokens: overallTokens,
     activeMembersCount,
     totalMembersCount: memberSummaries.length,
+    winRate: teamWinRate,
+    avgScore: teamAvgScore,
   };
 
   return apiSuccess({

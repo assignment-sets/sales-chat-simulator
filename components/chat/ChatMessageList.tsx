@@ -5,6 +5,7 @@ import { ChatBubble } from "@/components/chat/ChatBubble";
 import { EmptyChatState } from "@/components/chat/EmptyChatState";
 import { Loader } from "@/components/ui/Loader";
 import { Avatar } from "@/components/ui/Avatar";
+import { SimulationConclusionCard } from "@/components/chat/SimulationConclusionCard";
 
 export interface MessageItem {
   id?: string;
@@ -20,6 +21,9 @@ export interface ChatMessageListProps {
   hasMore?: boolean;
   isLoadingOlder?: boolean;
   onLoadOlder?: () => void;
+  isConcluded?: boolean;
+  conclusionOutcome?: "deal_won" | "deal_lost" | string;
+  conclusionScore?: number | null;
 }
 
 export function ChatMessageList({
@@ -29,6 +33,9 @@ export function ChatMessageList({
   hasMore = false,
   isLoadingOlder = false,
   onLoadOlder,
+  isConcluded = false,
+  conclusionOutcome = "in_progress",
+  conclusionScore = null,
 }: ChatMessageListProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -181,6 +188,15 @@ export function ChatMessageList({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Simulation Conclusion & Evaluation Card */}
+        {isConcluded && (
+          <SimulationConclusionCard
+            outcome={conclusionOutcome}
+            score={conclusionScore}
+            productName={productName}
+          />
         )}
 
         <div ref={bottomRef} className="h-2" />

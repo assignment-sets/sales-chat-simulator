@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, MessageSquare, Bot, User, Coins, FileText } from "lucide-react";
+import { X, MessageSquare, Bot, User, Coins, FileText, Trophy, XCircle } from "lucide-react";
 import { Loader } from "@/components/ui/Loader";
 import { Badge } from "@/components/ui/Badge";
 import { notify } from "@/lib/toast";
@@ -16,6 +16,9 @@ interface ChatDetail {
   product_name: string;
   product_description: string;
   tokens_used: number;
+  status?: string;
+  score?: number | null;
+  evaluation_outcome?: string | null;
   created_at: string;
   user_id: string;
 }
@@ -85,10 +88,30 @@ export function TranscriptDrawer({ chatId, onClose }: TranscriptDrawerProps) {
         {/* Header */}
         <div className="p-4 sm:px-6 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-zinc-50/70">
           <div className="min-w-0 pr-3">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Badge variant="accent" className="text-[10px] px-2 py-0.5">
                 Audit Mode
               </Badge>
+              {chat?.status === "WON" || chat?.evaluation_outcome === "deal_won" ? (
+                <Badge variant="success" className="text-[10px] px-2 py-0.5 flex items-center gap-1">
+                  <Trophy className="w-2.5 h-2.5" />
+                  Deal Won
+                </Badge>
+              ) : chat?.status === "LOST" || chat?.evaluation_outcome === "deal_lost" ? (
+                <Badge variant="muted" className="text-[10px] px-2 py-0.5 text-rose-600 bg-rose-50 border-rose-200 flex items-center gap-1">
+                  <XCircle className="w-2.5 h-2.5" />
+                  Lead Lost
+                </Badge>
+              ) : (
+                <Badge variant="default" className="text-[10px] px-2 py-0.5">
+                  Active
+                </Badge>
+              )}
+              {typeof chat?.score === "number" && chat.score > 0 && (
+                <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full">
+                  Score: {chat.score}/5
+                </span>
+              )}
               <span className="text-xs text-zinc-400">
                 {formatDate(chat?.created_at)}
               </span>
@@ -202,6 +225,11 @@ export function TranscriptDrawer({ chatId, onClose }: TranscriptDrawerProps) {
                   <Coins className="w-3.5 h-3.5 text-zinc-400" />
                   {(chat?.tokens_used || 0).toLocaleString()} tokens
                 </span>
+                {typeof chat?.score === "number" && chat.score > 0 && (
+                  <span className="font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md text-[11px]">
+                    Outcome Score: {chat.score}/5
+                  </span>
+                )}
               </div>
               <span className="text-[11px] text-zinc-400 italic">
                 Read-only admin inspection
