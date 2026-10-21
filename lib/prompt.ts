@@ -11,6 +11,66 @@ export interface StructuredProspectResponse {
   objection_type?: "price" | "complexity" | "trust" | "competitor" | "authority" | "none";
 }
 
+export function extractBubbles(input: unknown): string[] {
+  if (!input) return [];
+
+  if (Array.isArray(input)) {
+    return input.flatMap(extractBubbles).filter(Boolean);
+  }
+
+  if (typeof input === "object") {
+    const obj = input as Record<string, unknown>;
+    if (obj.messages) return extractBubbles(obj.messages);
+    if (obj.message) return extractBubbles(obj.message);
+    if (obj.reply) return extractBubbles(obj.reply);
+    if (obj.content) return extractBubbles(obj.content);
+    if (obj.text) return extractBubbles(obj.text);
+    return [];
+  }
+
+  if (typeof input === "string") {
+    let str = input.trim();
+    if (!str) return [];
+
+    // Strip markdown code fences if wrapped in ```json ... ``` or ``` ... ```
+    if (str.startsWith("```")) {
+      str = str.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    }
+
+    // Try parsing as JSON if it looks like a JSON object or array
+    if (
+      (str.startsWith("{") && str.endsWith("}")) ||
+      (str.startsWith("[") && str.endsWith("]"))
+    ) {
+      try {
+        const parsed = JSON.parse(str);
+        const extracted = extractBubbles(parsed);
+        if (extracted.length > 0) return extracted;
+      } catch {
+        // Fallback: extract string literals inside "messages": [...] or "message": "..."
+        const singleMsg = str.match(/"messages?"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+        if (singleMsg && singleMsg[1]) {
+          return [singleMsg[1].replace(/\\"/g, '"')];
+        }
+
+        const arrayMsg = str.match(/"messages"\s*:\s*\[\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+        if (arrayMsg && arrayMsg[1]) {
+          return [arrayMsg[1].replace(/\\"/g, '"')];
+        }
+      }
+    }
+
+    const lines = str
+      .split("\n")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith("```"));
+
+    return lines.length > 0 ? lines : [str];
+  }
+
+  return [];
+}
+
 export function buildSalesSimulationPrompt(
   productName: string,
   productDescription: string

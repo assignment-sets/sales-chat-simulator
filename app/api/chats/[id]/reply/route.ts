@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { groq, DEFAULT_GROQ_MODEL } from "@/lib/groq";
 import {
+  extractBubbles,
   formatGroqMessages,
   MessageItem,
   StructuredProspectResponse,
@@ -95,11 +96,12 @@ export async function POST(request: Request, context: RouteContext) {
 
   // Helper to persist bubbles with staggered timestamps
   const persistAndReturnBubbles = async (
-    rawBubbles: string[],
+    rawBubbles: unknown[],
     sentiment?: string,
     objectionType?: string
   ) => {
     let cleanBubbles = rawBubbles
+      .flatMap(extractBubbles)
       .map((b) => b.trim())
       .filter((b) => b.length > 0);
 
@@ -163,19 +165,10 @@ export async function POST(request: Request, context: RouteContext) {
     try {
       parsed = JSON.parse(rawContent);
     } catch {
-      parsed = { messages: rawContent.split("\n").filter(Boolean) };
+      // Handled by extractBubbles below
     }
 
-    let bubbles: string[] = [];
-    if (Array.isArray(parsed.messages)) {
-      bubbles = parsed.messages;
-    } else if (
-      typeof (parsed as unknown as { message?: string }).message === "string"
-    ) {
-      bubbles = [(parsed as unknown as { message: string }).message];
-    } else {
-      bubbles = [rawContent];
-    }
+    const bubbles = extractBubbles(parsed.messages?.length ? parsed : rawContent);
 
     return await persistAndReturnBubbles(
       bubbles,
@@ -193,12 +186,10 @@ export async function POST(request: Request, context: RouteContext) {
       anyErr?.failed_generation;
 
     if (typeof failedGen === "string" && failedGen.trim().length > 0) {
-      const recoveredBubbles = failedGen
-        .split("\n")
-        .map((s: string) => s.trim())
-        .filter((s: string) => s.length > 0);
-
-      return await persistAndReturnBubbles(recoveredBubbles);
+      const recoveredBubbles = extractBubbles(failedGen);
+      if (recoveredBubbles.length > 0) {
+        return await persistAndReturnBubbles(recoveredBubbles);
+      }
     }
 
     // 2. Fallback: call Groq without response_format to salvage conversational turn
@@ -212,10 +203,7 @@ export async function POST(request: Request, context: RouteContext) {
 
       const fallbackText =
         fallbackCompletion.choices[0]?.message?.content || "";
-      const fallbackBubbles = fallbackText
-        .split("\n")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
+      const fallbackBubbles = extractBubbles(fallbackText);
 
       return await persistAndReturnBubbles(fallbackBubbles);
     } catch (fallbackErr) {
