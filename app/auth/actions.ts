@@ -100,3 +100,34 @@ export async function logout() {
   revalidatePath("/", "layout");
   redirect("/login");
 }
+
+export async function updateProfile(fullName: string) {
+  const cleanName = fullName.trim();
+  if (!cleanName) {
+    return { success: false, error: "Full name cannot be empty" };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    data: {
+      full_name: cleanName,
+      name: cleanName,
+    },
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}

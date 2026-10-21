@@ -3,12 +3,10 @@
 import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Avatar } from "@/components/ui/Avatar";
-import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
-import { logout } from "@/app/auth/actions";
-import { PanelLeft, LogOut, MessageSquare, LayoutDashboard } from "lucide-react";
+import { PanelLeft, MessageSquare, LayoutDashboard } from "lucide-react";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
+import { UserProfileMenu } from "@/components/layout/UserProfileMenu";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 
 export interface NavbarProps {
@@ -33,7 +31,6 @@ export function Navbar({
   isDashboard = false,
 }: NavbarProps) {
   const router = useRouter();
-  const [isSignOutPending, startSignOutTransition] = useTransition();
   const [isNavPending, startNavTransition] = useTransition();
   const [navTarget, setNavTarget] = useState<string | null>(null);
 
@@ -68,13 +65,6 @@ export function Navbar({
     setNavTarget(target);
     startNavTransition(() => {
       router.push(target);
-    });
-  };
-
-  const handleSignOut = (e: React.FormEvent) => {
-    e.preventDefault();
-    startSignOutTransition(async () => {
-      await logout();
     });
   };
 
@@ -157,42 +147,11 @@ export function Navbar({
 
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {(userName || userEmail) && (
-          <div className="flex items-center gap-2">
-            <Avatar name={userName || userEmail} size="sm" />
-            <div className="hidden md:flex flex-col text-left">
-              {userName ? (
-                <>
-                  <span className="text-xs text-zinc-900 max-w-[150px] truncate font-medium">
-                    {userName}
-                  </span>
-                  {userEmail && (
-                    <span className="text-[10px] text-zinc-400 max-w-[150px] truncate leading-tight">
-                      {userEmail}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span className="text-xs text-zinc-600 max-w-[150px] truncate font-medium">
-                  {userEmail}
-                </span>
-              )}
-            </div>
-          </div>
+          <UserProfileMenu
+            userName={userName}
+            userEmail={userEmail}
+          />
         )}
-
-        <form onSubmit={handleSignOut}>
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="text-xs text-zinc-500 hover:text-red-600 hover:bg-red-50"
-            isLoading={isSignOutPending}
-            leftIcon={<LogOut className="w-3.5 h-3.5" />}
-          >
-            <span className="hidden sm:inline">{isSignOutPending ? "Signing out..." : "Sign Out"}</span>
-            <span className="sm:hidden">{isSignOutPending ? "..." : "Exit"}</span>
-          </Button>
-        </form>
       </div>
 
       {/* Practice / Dashboard Mode Transition Loader Overlay */}
