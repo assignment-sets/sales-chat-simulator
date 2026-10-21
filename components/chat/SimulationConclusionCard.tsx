@@ -12,14 +12,6 @@ export interface SimulationConclusionCardProps {
   productName?: string;
 }
 
-const SCORE_DESCRIPTIONS: Record<number, string> = {
-  1: "Critical Objections Missed",
-  2: "Struggling Objection Handling",
-  3: "Competent & Polite Pitch",
-  4: "Persuasive Value Proposition",
-  5: "Masterful Closing & Rapport",
-};
-
 export function SimulationConclusionCard({
   outcome,
   score,
@@ -27,7 +19,6 @@ export function SimulationConclusionCard({
 }: SimulationConclusionCardProps) {
   const isWon = outcome === "deal_won" || outcome === "WON";
   const displayScore = score ? Math.min(Math.max(score, 1), 5) : (isWon ? 4 : 2);
-  const scoreLabel = SCORE_DESCRIPTIONS[displayScore] || "Session Complete";
 
   const handleFeedbackClick = () => {
     notify.info(
@@ -89,9 +80,6 @@ export function SimulationConclusionCard({
               <span className="text-2xl font-black text-zinc-900 font-mono">
                 {displayScore}
                 <span className="text-sm font-normal text-zinc-400"> / 5</span>
-              </span>
-              <span className="text-xs font-medium text-zinc-600">
-                — {scoreLabel}
               </span>
             </div>
           </div>
