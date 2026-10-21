@@ -31,6 +31,40 @@ export interface DashboardKpiSummary {
   avgScore: number | null;
 }
 
+export interface DashboardActivityPoint {
+  date: string;
+  label: string;
+  count: number;
+  wonCount: number;
+}
+
+export interface DashboardScorePoint {
+  score: number;
+  count: number;
+  percentage: number;
+}
+
+export interface DashboardScenarioPoint {
+  productName: string;
+  count: number;
+  wonCount: number;
+  winRate: number | null;
+  avgScore: number | null;
+}
+
+export interface DashboardAnalytics {
+  outcomes: {
+    won: number;
+    lost: number;
+    active: number;
+    total: number;
+    winRate: number | null;
+  };
+  scoreDistribution: DashboardScorePoint[];
+  activityTimeline: DashboardActivityPoint[];
+  scenarioBreakdown: DashboardScenarioPoint[];
+}
+
 export async function GET() {
   const supabase = await createServerSupabaseClient();
   const {
@@ -91,7 +125,7 @@ export async function GET() {
   // 2. Fetch all chats for this organization
   const { data: chatRows, error: chatsError } = await supabase
     .from("chats")
-    .select("id, user_id, tokens_used, status, score, evaluation_outcome, created_at")
+    .select("id, user_id, product_name, tokens_used, status, score, evaluation_outcome, created_at")
     .eq("organization_id", organization.id)
     .order("created_at", { ascending: false });
 
@@ -264,8 +298,131 @@ export async function GET() {
     avgScore: teamAvgScore,
   };
 
+  // --- Derive Visual Analytics Datasets ---
+
+  // 1. Outcome Ratio
+  const activeChatsCount = Math.max(0, allChats.length - overallConcluded);
+  const outcomes = {
+    won: overallWon,
+    lost: overallLost,
+    active: activeChatsCount,
+    total: allChats.length,
+    winRate: teamWinRate,
+  };
+
+  // 2. 14-Day Simulation Activity Timeline
+  const activityMap = new Map<string, { count: number; wonCount: number }>();
+  const now = new Date();
+  const timeline: DashboardActivityPoint[] = [];
+
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    activityMap.set(dateStr, { count: 0, wonCount: 0 });
+    timeline.push({ date: dateStr, label, count: 0, wonCount: 0 });
+  }
+
+  for (const c of allChats) {
+    if (c.created_at) {
+      const chatDateStr = c.created_at.split("T")[0];
+      const entry = activityMap.get(chatDateStr);
+      if (entry) {
+        entry.count += 1;
+        const isWon = c.status === "WON" || c.evaluation_outcome === "deal_won";
+        if (isWon) {
+          entry.wonCount += 1;
+        }
+      }
+    }
+  }
+
+  for (const item of timeline) {
+    const entry = activityMap.get(item.date);
+    if (entry) {
+      item.count = entry.count;
+      item.wonCount = entry.wonCount;
+    }
+  }
+
+  // 3. Evaluation Score Distribution (1-5)
+  const scoreCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  let scoredTotal = 0;
+  for (const c of allChats) {
+    if (typeof c.score === "number" && c.score >= 1 && c.score <= 5) {
+      const rounded = Math.round(c.score);
+      scoreCounts[rounded] = (scoreCounts[rounded] || 0) + 1;
+      scoredTotal += 1;
+    }
+  }
+
+  const scoreDistribution: DashboardScorePoint[] = [1, 2, 3, 4, 5].map((s) => ({
+    score: s,
+    count: scoreCounts[s] || 0,
+    percentage: scoredTotal > 0 ? Math.round(((scoreCounts[s] || 0) / scoredTotal) * 100) : 0,
+  }));
+
+  // 4. Product / Scenario Performance Breakdown
+  interface ScenarioAccumulator {
+    productName: string;
+    count: number;
+    wonCount: number;
+    lostCount: number;
+    totalScore: number;
+    scoredCount: number;
+  }
+  const scenarioMap = new Map<string, ScenarioAccumulator>();
+
+  for (const c of allChats) {
+    const pName = (c.product_name as string)?.trim() || "General Practice";
+    let entry = scenarioMap.get(pName);
+    if (!entry) {
+      entry = {
+        productName: pName,
+        count: 0,
+        wonCount: 0,
+        lostCount: 0,
+        totalScore: 0,
+        scoredCount: 0,
+      };
+      scenarioMap.set(pName, entry);
+    }
+    entry.count += 1;
+    const isWon = c.status === "WON" || c.evaluation_outcome === "deal_won";
+    const isLost = c.status === "LOST" || c.evaluation_outcome === "deal_lost";
+    if (isWon) entry.wonCount += 1;
+    if (isLost) entry.lostCount += 1;
+    if (typeof c.score === "number" && c.score > 0) {
+      entry.totalScore += c.score;
+      entry.scoredCount += 1;
+    }
+  }
+
+  const scenarioBreakdown: DashboardScenarioPoint[] = Array.from(scenarioMap.values())
+    .map((s) => {
+      const concluded = s.wonCount + s.lostCount;
+      return {
+        productName: s.productName,
+        count: s.count,
+        wonCount: s.wonCount,
+        winRate: concluded > 0 ? Math.round((s.wonCount / concluded) * 100) : null,
+        avgScore: s.scoredCount > 0 ? Number((s.totalScore / s.scoredCount).toFixed(1)) : null,
+      };
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
+  const analytics: DashboardAnalytics = {
+    outcomes,
+    scoreDistribution,
+    activityTimeline: timeline,
+    scenarioBreakdown,
+  };
+
   return apiSuccess({
     kpis,
+    analytics,
     members: memberSummaries,
     organization: {
       id: organization.id,

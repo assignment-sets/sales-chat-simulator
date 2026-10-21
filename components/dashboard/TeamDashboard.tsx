@@ -23,10 +23,16 @@ import { TranscriptDrawer } from "@/components/dashboard/TranscriptDrawer";
 import {
   DashboardKpiSummary,
   DashboardMemberSummary,
+  DashboardAnalytics,
 } from "@/app/api/dashboard/route";
+import { ActivityTimelineChart } from "@/components/dashboard/charts/ActivityTimelineChart";
+import { OutcomeDonutChart } from "@/components/dashboard/charts/OutcomeDonutChart";
+import { RepPerformanceChart } from "@/components/dashboard/charts/RepPerformanceChart";
+import { ScenarioScoreChart } from "@/components/dashboard/charts/ScenarioScoreChart";
 
 interface DashboardData {
   kpis: DashboardKpiSummary;
+  analytics?: DashboardAnalytics;
   members: DashboardMemberSummary[];
   organization: {
     id: string;
@@ -105,7 +111,7 @@ export function TeamDashboard() {
     );
   }
 
-  const { kpis, members, organization } = data;
+  const { kpis, analytics, members, organization } = data;
 
   const filteredMembers = members.filter((m) =>
     (m.fullName && m.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -255,6 +261,43 @@ export function TeamDashboard() {
             </p>
           </div>
         </div>
+
+        {/* Visual Analytics Grid */}
+        {analytics && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* 14-Day Practice Velocity */}
+            <div className="p-5 rounded-3xl bg-white border border-zinc-200/80 shadow-2xs min-h-[230px] flex flex-col">
+              <ActivityTimelineChart timeline={analytics.activityTimeline} />
+            </div>
+
+            {/* Deal Outcomes Donut */}
+            <div className="p-5 rounded-3xl bg-white border border-zinc-200/80 shadow-2xs min-h-[230px] flex flex-col">
+              <OutcomeDonutChart outcomes={analytics.outcomes} />
+            </div>
+
+            {/* Rep Performance Benchmarks (Interactive Top/Bottom & Metrics) */}
+            <div className="p-5 rounded-3xl bg-white border border-zinc-200/80 shadow-2xs min-h-[260px] flex flex-col">
+              <RepPerformanceChart
+                members={members}
+                onSelectMember={(m) =>
+                  setSelectedMember({
+                    userId: m.userId,
+                    email: m.email,
+                    fullName: m.fullName,
+                  })
+                }
+              />
+            </div>
+
+            {/* Evaluator Score Distribution & Scenario Breakdown */}
+            <div className="p-5 rounded-3xl bg-white border border-zinc-200/80 shadow-2xs min-h-[260px] flex flex-col">
+              <ScenarioScoreChart
+                scoreDistribution={analytics.scoreDistribution}
+                scenarioBreakdown={analytics.scenarioBreakdown}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Member Breakdown Table */}
         <div className="rounded-3xl bg-white border border-zinc-200 shadow-sm overflow-hidden">
@@ -408,23 +451,24 @@ export function TeamDashboard() {
       </div>
 
       {/* Member Simulations Modal */}
-      <MemberSimulationsModal
-        isOpen={selectedMember !== null}
-        onClose={() => setSelectedMember(null)}
-        userId={selectedMember?.userId || null}
-        userEmail={selectedMember?.email || ""}
-        userName={selectedMember?.fullName}
-        onSelectChat={(chatId) => {
-          setSelectedMember(null);
-          setInspectingChatId(chatId);
-        }}
-      />
+      {selectedMember && (
+        <MemberSimulationsModal
+          isOpen={!!selectedMember}
+          onClose={() => setSelectedMember(null)}
+          userId={selectedMember.userId}
+          userEmail={selectedMember.email}
+          userName={selectedMember.fullName}
+          onSelectChat={(chatId) => setInspectingChatId(chatId)}
+        />
+      )}
 
       {/* Transcript Drawer */}
-      <TranscriptDrawer
-        chatId={inspectingChatId}
-        onClose={() => setInspectingChatId(null)}
-      />
+      {inspectingChatId && (
+        <TranscriptDrawer
+          onClose={() => setInspectingChatId(null)}
+          chatId={inspectingChatId}
+        />
+      )}
     </div>
   );
 }
