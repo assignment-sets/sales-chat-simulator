@@ -10,6 +10,7 @@ import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 
 export interface AppShellProps {
   userEmail?: string;
+  userName?: string;
   chats: ChatSummary[];
   activeOrg?: Organization;
   activeRole?: OrgRole;
@@ -19,6 +20,7 @@ export interface AppShellProps {
 
 function AppShellContent({
   userEmail,
+  userName,
   chats,
   activeOrg,
   activeRole,
@@ -57,6 +59,7 @@ function AppShellContent({
     <div className="h-screen h-dvh max-h-screen bg-white text-zinc-900 flex flex-col font-sans overflow-hidden">
       <Navbar
         userEmail={userEmail}
+        userName={userName}
         onToggleSidebar={toggleSidebar}
         isSidebarOpen={isOpen}
         activeOrg={activeOrg}

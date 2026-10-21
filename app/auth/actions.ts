@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 
 export async function login(formData: FormData) {
-  const email = formData.get("email") as string;
+  const email = (formData.get("email") as string)?.trim();
   const password = formData.get("password") as string;
 
   if (!email || !password) {
@@ -43,17 +43,26 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
-  const email = formData.get("email") as string;
+  const email = (formData.get("email") as string)?.trim();
   const password = formData.get("password") as string;
+  const fullName = (formData.get("fullName") as string)?.trim();
 
   if (!email || !password) {
     redirect("/register?error=" + encodeURIComponent("Please enter email and password"));
   }
 
+  const defaultName = fullName || email.split("@")[0];
+
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        full_name: defaultName,
+        name: defaultName,
+      },
+    },
   });
 
   if (error) {

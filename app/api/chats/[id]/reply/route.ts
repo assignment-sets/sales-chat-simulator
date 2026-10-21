@@ -6,6 +6,7 @@ import {
   MessageItem,
   StructuredProspectResponse,
 } from "@/lib/prompt";
+import { evaluateSimulationTurn } from "@/lib/jev";
 import {
   apiSuccess,
   internalError,
@@ -150,11 +151,42 @@ export async function POST(request: Request, context: RouteContext) {
       created_at: row.created_at,
     }));
 
+    // 6. Evaluate conversational status and performance via TypeSafe AI Jev
+    let evaluationResult = null;
+    try {
+      evaluationResult = await evaluateSimulationTurn({
+        productName: chat.product_name,
+        productDescription: chat.product_description,
+        history: [...history, ...savedMessages],
+      });
+
+      // Update chat record with evaluation outcome and score
+      const updatePayload: Record<string, unknown> = {
+        score: Math.round(evaluationResult.score),
+        evaluation_outcome: evaluationResult.outcome,
+        evaluation_summary: evaluationResult,
+      };
+
+      if (evaluationResult.outcome === "deal_won") {
+        updatePayload.status = "WON";
+      } else if (evaluationResult.outcome === "deal_lost") {
+        updatePayload.status = "LOST";
+      }
+
+      await supabase
+        .from("chats")
+        .update(updatePayload)
+        .eq("id", id);
+    } catch (evalErr) {
+      console.warn("[Jev] Background turn evaluation error:", evalErr);
+    }
+
     return apiSuccess({
       messages: savedMessages,
       sentiment,
       objection_type: objectionType,
       tokens_used: totalTokens,
+      evaluation: evaluationResult,
     });
   };
 

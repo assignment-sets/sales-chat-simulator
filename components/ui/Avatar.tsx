@@ -7,7 +7,12 @@ export interface AvatarProps {
 }
 
 export function Avatar({ name = "U", size = "md", className = "" }: AvatarProps) {
-  const initial = (name || "U").trim().charAt(0).toUpperCase();
+  const trimmed = (name || "U").trim();
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  const initial =
+    parts.length >= 2 && !trimmed.includes("@")
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : trimmed.charAt(0).toUpperCase();
 
   const sizeStyles = {
     sm: "w-7 h-7 text-xs",

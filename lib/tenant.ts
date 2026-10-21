@@ -72,11 +72,13 @@ export async function getUserOrganizations(
 export async function createDefaultOrganizationForUser(
   supabase: SupabaseClient,
   userId: string,
-  userEmail?: string
+  userEmail?: string,
+  userName?: string
 ): Promise<OrganizationMembership | null> {
-  const emailPrefix = userEmail ? userEmail.split("@")[0] : "My";
-  const orgName = `${emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)}'s Workspace`;
-  const cleanSlug = `${emailPrefix.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Math.random().toString(36).substring(2, 8)}`;
+  const baseName = userName?.trim() || (userEmail ? userEmail.split("@")[0] : "My");
+  const capitalized = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+  const orgName = `${capitalized}'s Workspace`;
+  const cleanSlug = `${baseName.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Math.random().toString(36).substring(2, 8)}`;
 
   // Create organization + owner membership atomically via RPC
   const { data: result, error: rpcError } = await supabase.rpc(
@@ -119,7 +121,8 @@ export async function createDefaultOrganizationForUser(
 export async function getActiveOrganization(
   supabase: SupabaseClient,
   userId: string,
-  userEmail?: string
+  userEmail?: string,
+  userName?: string
 ): Promise<ActiveOrgContext | null> {
   let memberships = await getUserOrganizations(supabase, userId);
 
@@ -128,7 +131,8 @@ export async function getActiveOrganization(
     const defaultMembership = await createDefaultOrganizationForUser(
       supabase,
       userId,
-      userEmail
+      userEmail,
+      userName
     );
     if (defaultMembership) {
       memberships = [defaultMembership];

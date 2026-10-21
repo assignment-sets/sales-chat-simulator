@@ -11,6 +11,7 @@ export interface MemberSimulationsModalProps {
   onClose: () => void;
   userId: string | null;
   userEmail: string;
+  userName?: string;
   onSelectChat: (chatId: string) => void;
 }
 
@@ -28,6 +29,7 @@ export function MemberSimulationsModal({
   onClose,
   userId,
   userEmail,
+  userName,
   onSelectChat,
 }: MemberSimulationsModalProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +63,8 @@ export function MemberSimulationsModal({
 
   if (!isOpen) return null;
 
-  const formatDate = (isoString: string) => {
+  const formatDate = (isoString?: string) => {
+    if (!isoString) return "";
     try {
       return new Date(isoString).toLocaleDateString(undefined, {
         month: "short",
@@ -84,7 +87,9 @@ export function MemberSimulationsModal({
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">
               Reviewing practice conversations created by{" "}
-              <span className="font-semibold text-zinc-800">{userEmail}</span>
+              <span className="font-semibold text-zinc-800">
+                {userName ? `${userName} (${userEmail})` : userEmail}
+              </span>
             </p>
           </div>
 

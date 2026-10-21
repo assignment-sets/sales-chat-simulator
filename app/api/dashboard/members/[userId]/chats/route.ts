@@ -39,7 +39,7 @@ export async function GET(request: Request, context: RouteContext) {
   // Fetch all chats for this member within the active organization
   const { data: chats, error } = await supabase
     .from("chats")
-    .select("id, product_name, product_description, status, tokens_used, created_at, updated_at")
+    .select("id, product_name, product_description, status, score, evaluation_outcome, tokens_used, created_at, updated_at")
     .eq("organization_id", organization.id)
     .eq("user_id", userId)
     .order("created_at", { ascending: false });

@@ -13,6 +13,7 @@ import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 
 export interface NavbarProps {
   userEmail?: string;
+  userName?: string;
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
   activeOrg?: Organization;
@@ -23,6 +24,7 @@ export interface NavbarProps {
 
 export function Navbar({
   userEmail,
+  userName,
   onToggleSidebar,
   isSidebarOpen,
   activeOrg,
@@ -154,12 +156,27 @@ export function Navbar({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {userEmail && (
+        {(userName || userEmail) && (
           <div className="flex items-center gap-2">
-            <Avatar name={userEmail} size="sm" />
-            <span className="hidden md:inline-block text-xs text-zinc-600 max-w-[140px] truncate font-medium">
-              {userEmail}
-            </span>
+            <Avatar name={userName || userEmail} size="sm" />
+            <div className="hidden md:flex flex-col text-left">
+              {userName ? (
+                <>
+                  <span className="text-xs text-zinc-900 max-w-[150px] truncate font-medium">
+                    {userName}
+                  </span>
+                  {userEmail && (
+                    <span className="text-[10px] text-zinc-400 max-w-[150px] truncate leading-tight">
+                      {userEmail}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-zinc-600 max-w-[150px] truncate font-medium">
+                  {userEmail}
+                </span>
+              )}
+            </div>
           </div>
         )}
 

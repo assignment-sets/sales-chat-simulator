@@ -10,6 +10,7 @@ import { getActiveOrganization } from "@/lib/tenant";
 export interface DashboardMemberSummary {
   userId: string;
   email: string;
+  fullName: string;
   role: "owner" | "admin" | "member";
   joinedAt: string;
   simulationsCount: number;
@@ -48,18 +49,39 @@ export async function GET() {
     return forbidden("Team oversight is restricted to organization owners and admins");
   }
 
-  // 1. Fetch organization members
-  const { data: memberRows, error: membersError } = await supabase
-    .from("organization_members")
-    .select("id, user_id, role, created_at")
-    .eq("organization_id", organization.id);
+  // 1. Fetch organization members with profile names and emails
+  let memberRows: Array<{
+    id: string;
+    organization_id?: string;
+    user_id: string;
+    role: string;
+    created_at: string;
+    email?: string;
+    full_name?: string;
+  }> = [];
 
-  if (membersError) {
-    return internalError(
-      "Failed to fetch organization members",
-      membersError,
-      "GET /api/dashboard:members"
-    );
+  const { data: rpcMembers, error: rpcError } = await supabase.rpc(
+    "get_organization_members",
+    { target_org_id: organization.id }
+  );
+
+  if (!rpcError && rpcMembers) {
+    memberRows = rpcMembers;
+  } else {
+    // Fallback if RPC migration hasn't run yet
+    const { data: directMembers, error: membersError } = await supabase
+      .from("organization_members")
+      .select("id, user_id, role, created_at")
+      .eq("organization_id", organization.id);
+
+    if (membersError) {
+      return internalError(
+        "Failed to fetch organization members",
+        membersError,
+        "GET /api/dashboard:members"
+      );
+    }
+    memberRows = directMembers || [];
   }
 
   // 2. Fetch all chats for this organization
@@ -99,9 +121,19 @@ export async function GET() {
   const memberMap = new Map<string, DashboardMemberSummary>();
 
   for (const m of memberRows || []) {
+    const isSelf = m.user_id === user.id;
+    const fallbackEmail = isSelf && user.email ? user.email : `member-${m.user_id.slice(0, 8)}@team`;
+    const memberEmail = m.email || fallbackEmail;
+    const fallbackName = isSelf
+      ? ((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || memberEmail.split("@")[0])
+      : (memberEmail.includes("@") ? memberEmail.split("@")[0] : `Team Member (${m.user_id.slice(0, 8)})`);
+
+    const fullName = m.full_name || fallbackName;
+
     memberMap.set(m.user_id, {
       userId: m.user_id,
-      email: m.user_id === user.id && user.email ? user.email : `Team Member (${m.user_id.slice(0, 8)})`,
+      email: memberEmail,
+      fullName,
       role: m.role as "owner" | "admin" | "member",
       joinedAt: m.created_at,
       simulationsCount: 0,
@@ -129,6 +161,7 @@ export async function GET() {
       memberMap.set(c.user_id, {
         userId: c.user_id,
         email: `Former Member (${c.user_id.slice(0, 8)})`,
+        fullName: `Former Member (${c.user_id.slice(0, 8)})`,
         role: "member",
         joinedAt: c.created_at,
         simulationsCount: 1,

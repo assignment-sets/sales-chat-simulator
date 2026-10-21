@@ -44,6 +44,7 @@ export function TeamDashboard() {
   const [selectedMember, setSelectedMember] = useState<{
     userId: string;
     email: string;
+    fullName?: string;
   } | null>(null);
   const [inspectingChatId, setInspectingChatId] = useState<string | null>(null);
 
@@ -105,6 +106,7 @@ export function TeamDashboard() {
   const { kpis, members, organization } = data;
 
   const filteredMembers = members.filter((m) =>
+    (m.fullName && m.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
     m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -118,7 +120,7 @@ export function TeamDashboard() {
         year: "numeric",
       });
     } catch {
-      return "No activity yet";
+      return "Invalid date";
     }
   };
 
@@ -129,114 +131,101 @@ export function TeamDashboard() {
       case "admin":
         return "success";
       default:
-        return "muted";
+        return "default";
     }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-zinc-50/50">
-      <div className="max-w-6xl mx-auto space-y-6 pb-12">
+    <div className="flex-1 overflow-y-auto min-h-0 bg-zinc-50/50 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight">
-                Team Dashboard
+                Team Oversight Dashboard
               </h1>
-              <Badge variant="default" className="text-xs font-semibold">
+              <Badge variant="accent" className="text-xs">
                 {organization.name}
               </Badge>
             </div>
-            <p className="text-xs sm:text-sm text-zinc-500">
-              Real-time practice activity, dialogue volume, and token consumption across your sales team.
+            <p className="text-xs text-zinc-500">
+              Aggregated team metrics, individual sales practice volume, and token usage oversight.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2">
             <Button
-              type="button"
               variant="outline"
               size="sm"
               onClick={() => fetchDashboardData(true)}
-              disabled={isRefreshing}
-              leftIcon={
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-zinc-600" : ""}`}
-                />
-              }
+              isLoading={isRefreshing}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />}
             >
-              {isRefreshing ? "Refreshing..." : "Refresh"}
+              Refresh Data
             </Button>
           </div>
         </div>
 
-        {/* 4 KPI Summary Cards */}
+        {/* Top Metric Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Simulations
-              </span>
-              <MessageSquare className="w-4 h-4 text-zinc-500" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+            <div className="flex items-center justify-between text-zinc-500 mb-2">
+              <span className="text-xs font-medium">Total Simulations</span>
+              <Bot className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-zinc-900">
+            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
               {kpis.totalSimulations}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Total practice scenarios run
+              Created across organization
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Messages
-              </span>
-              <Bot className="w-4 h-4 text-zinc-500" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+            <div className="flex items-center justify-between text-zinc-500 mb-2">
+              <span className="text-xs font-medium">Practice Exchanges</span>
+              <MessageSquare className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-zinc-900">
+            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
               {kpis.totalMessages}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Dialogue turns exchanged
+              Total prompt & prospect messages
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Tokens Used
-              </span>
-              <Coins className="w-4 h-4 text-zinc-500" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+            <div className="flex items-center justify-between text-zinc-500 mb-2">
+              <span className="text-xs font-medium">Total AI Tokens</span>
+              <Coins className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-zinc-900">
+            <div className="text-2xl font-bold text-zinc-900 font-mono tracking-tight">
               {kpis.totalTokens.toLocaleString()}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Total Groq tokens consumed
+              LLM model token consumption
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs">
-            <div className="flex items-center justify-between text-zinc-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Active Reps
-              </span>
-              <Users className="w-4 h-4 text-zinc-500" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+            <div className="flex items-center justify-between text-zinc-500 mb-2">
+              <span className="text-xs font-medium">Active Team Members</span>
+              <Users className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-zinc-900">
+            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
               {kpis.activeMembersCount}{" "}
-              <span className="text-sm font-normal text-zinc-400">
+              <span className="text-xs font-normal text-zinc-400">
                 / {kpis.totalMembersCount}
               </span>
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
-              Reps with at least 1 session
+              Reps with at least 1 simulation
             </p>
           </div>
         </div>
 
-        {/* Member Activity Breakdown Section */}
+        {/* Member Breakdown Table */}
         <div className="rounded-3xl bg-white border border-zinc-200 shadow-sm overflow-hidden">
           <div className="p-4 sm:px-6 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -289,13 +278,13 @@ export function TeamDashboard() {
                     >
                       <td className="py-3.5 px-4 sm:px-6">
                         <div className="flex items-center gap-2.5">
-                          <Avatar name={member.email} size="sm" />
+                          <Avatar name={member.fullName || member.email} size="sm" />
                           <div className="min-w-0">
                             <div className="font-semibold text-zinc-900 truncate max-w-[180px] sm:max-w-xs">
-                              {member.email}
+                              {member.fullName}
                             </div>
-                            <div className="text-[10px] text-zinc-400 font-mono">
-                              ID: {member.userId.slice(0, 8)}...
+                            <div className="text-[11px] text-zinc-400 truncate max-w-[180px] sm:max-w-xs">
+                              {member.email}
                             </div>
                           </div>
                         </div>
@@ -336,6 +325,7 @@ export function TeamDashboard() {
                             setSelectedMember({
                               userId: member.userId,
                               email: member.email,
+                              fullName: member.fullName,
                             });
                           }}
                           className="h-7 text-xs font-medium text-zinc-600 hover:text-zinc-900"
@@ -359,6 +349,7 @@ export function TeamDashboard() {
         onClose={() => setSelectedMember(null)}
         userId={selectedMember?.userId || null}
         userEmail={selectedMember?.email || ""}
+        userName={selectedMember?.fullName}
         onSelectChat={(chatId) => {
           setSelectedMember(null);
           setInspectingChatId(chatId);

@@ -33,15 +33,36 @@ export async function GET(request: Request, context: RouteContext) {
     return notFound("Organization not found");
   }
 
-  // 1. Fetch organization members
-  const { data: members, error: membersError } = await supabase
-    .from("organization_members")
-    .select("id, organization_id, user_id, role, created_at")
-    .eq("organization_id", orgId)
-    .order("created_at", { ascending: true });
+  // 1. Fetch organization members (with profile info if available)
+  let members: Array<{
+    id: string;
+    organization_id: string;
+    user_id: string;
+    role: string;
+    created_at: string;
+    email?: string;
+    full_name?: string;
+  }> = [];
 
-  if (membersError) {
-    return internalError("Failed to fetch organization members", membersError, "GET /api/organizations/[id]/members");
+  const { data: rpcMembers, error: rpcError } = await supabase.rpc(
+    "get_organization_members",
+    { target_org_id: orgId }
+  );
+
+  if (!rpcError && rpcMembers) {
+    members = rpcMembers;
+  } else {
+    // Fallback if RPC migration hasn't run yet
+    const { data: directMembers, error: membersError } = await supabase
+      .from("organization_members")
+      .select("id, organization_id, user_id, role, created_at")
+      .eq("organization_id", orgId)
+      .order("created_at", { ascending: true });
+
+    if (membersError) {
+      return internalError("Failed to fetch organization members", membersError, "GET /api/organizations/[id]/members");
+    }
+    members = directMembers || [];
   }
 
   // 2. If caller is owner or admin, fetch pending invitations

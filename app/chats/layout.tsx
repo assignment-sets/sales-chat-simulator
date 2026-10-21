@@ -17,11 +17,17 @@ export default async function ChatsLayout({
     redirect("/login");
   }
 
+  const userName =
+    (user.user_metadata?.full_name as string) ||
+    (user.user_metadata?.name as string) ||
+    undefined;
+
   // Resolve active organization context
   const activeContext = await getActiveOrganization(
     supabase,
     user.id,
-    user.email
+    user.email,
+    userName
   );
 
   let chatsQuery = supabase
@@ -43,6 +49,7 @@ export default async function ChatsLayout({
   return (
     <AppShell
       userEmail={user.email}
+      userName={userName}
       chats={chats || []}
       activeOrg={activeContext?.organization}
       activeRole={activeContext?.role}

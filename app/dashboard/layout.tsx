@@ -17,11 +17,17 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const userName =
+    (user.user_metadata?.full_name as string) ||
+    (user.user_metadata?.name as string) ||
+    undefined;
+
   // Resolve active organization context
   const activeContext = await getActiveOrganization(
     supabase,
     user.id,
-    user.email
+    user.email,
+    userName
   );
 
   if (!activeContext) {
@@ -37,6 +43,7 @@ export default async function DashboardLayout({
     <div className="h-screen h-dvh max-h-screen bg-white text-zinc-900 flex flex-col font-sans overflow-hidden">
       <Navbar
         userEmail={user.email}
+        userName={userName}
         activeOrg={activeContext.organization}
         activeRole={activeContext.role}
         organizations={activeContext.allOrganizations}

@@ -44,12 +44,24 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
+            id="fullName"
+            name="fullName"
+            type="text"
+            label="Full Name"
+            placeholder="e.g. Alex Morgan"
+            required
+            autoComplete="name"
+            disabled={isPending}
+          />
+
+          <Input
             id="email"
             name="email"
             type="email"
             label="Email Address"
             placeholder="name@company.com"
             required
+            autoComplete="email"
             disabled={isPending}
           />
 
@@ -61,6 +73,7 @@ export default function RegisterPage() {
             placeholder="At least 6 characters"
             required
             minLength={6}
+            autoComplete="new-password"
             disabled={isPending}
           />
 

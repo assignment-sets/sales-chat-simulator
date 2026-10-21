@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
-import { X, Users, UserPlus, Trash2, Mail, ShieldCheck } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { X, Users, UserPlus, Trash2, ShieldCheck } from "lucide-react";
 import { notify } from "@/lib/toast";
 import { Organization, OrgRole } from "@/lib/tenant";
 
@@ -22,6 +23,8 @@ interface MemberItem {
   user_id: string;
   role: OrgRole;
   created_at: string;
+  email?: string;
+  full_name?: string;
 }
 
 interface InvitationItem {
@@ -54,14 +57,15 @@ export function OrgMembersModal({
       setIsLoading(true);
       const res = await fetch(`/api/organizations/${organization.id}/members`);
       if (!res.ok) {
-        throw new Error("Failed to load members");
+        const err = await res.json();
+        throw new Error(err.error || "Failed to load members");
       }
       const data = await res.json();
       setMembers(data.members || []);
       setInvitations(data.invitations || []);
       setCurrentUserId(data.current_user_id || "");
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : "Error loading team");
+      notify.error(err instanceof Error ? err.message : "Failed to load organization members");
     } finally {
       setIsLoading(false);
     }
@@ -77,8 +81,7 @@ export function OrgMembersModal({
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    const email = inviteEmail.trim().toLowerCase();
-    if (!email || !email.includes("@")) {
+    if (!inviteEmail.trim() || !inviteEmail.includes("@")) {
       notify.error("Please enter a valid email address");
       return;
     }
@@ -88,7 +91,7 @@ export function OrgMembersModal({
       const res = await fetch(`/api/organizations/${organization.id}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role: inviteRole }),
+        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
       });
 
       if (!res.ok) {
@@ -96,11 +99,11 @@ export function OrgMembersModal({
         throw new Error(err.error || "Failed to invite member");
       }
 
-      const { result } = await res.json();
-      if (result?.status === "added") {
-        notify.success(`Added ${email} to ${organization.name}`);
+      const result = await res.json();
+      if (result.result?.status === "added") {
+        notify.success(`${inviteEmail} added to organization`);
       } else {
-        notify.success(`Invitation sent to ${email}`);
+        notify.success(`Invitation sent to ${inviteEmail}`);
       }
 
       setInviteEmail("");
@@ -114,11 +117,11 @@ export function OrgMembersModal({
 
   const handleRemoveMember = async (member: MemberItem) => {
     const isSelf = member.user_id === currentUserId;
-    const confirmMsg = isSelf
-      ? `Are you sure you want to leave ${organization.name}?`
-      : "Are you sure you want to remove this member?";
+    const confirmMessage = isSelf
+      ? "Are you sure you want to leave this organization?"
+      : `Are you sure you want to remove this member?`;
 
-    if (!confirm(confirmMsg)) return;
+    if (!confirm(confirmMessage)) return;
 
     try {
       const res = await fetch(
@@ -160,50 +163,48 @@ export function OrgMembersModal({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
+            <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-700">
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-zinc-900 leading-tight">
-                {organization.name}
+              <h2 className="text-base font-semibold text-zinc-900">
+                Team Members
               </h2>
-              <p className="text-xs text-zinc-400">Manage workspace members and roles</p>
+              <p className="text-xs text-zinc-500">
+                Manage who has access to {organization.name}
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer p-1 rounded-lg"
-            aria-label="Close dialog"
+            className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Invite Member Section (Owners & Admins only) */}
+        {/* Invite Member Section (Owners/Admins only) */}
         {isOwnerOrAdmin && (
-          <form
-            onSubmit={handleInvite}
-            className="pt-4 pb-4 border-b border-zinc-100 flex flex-col gap-2.5"
-          >
-            <span className="text-xs font-semibold text-zinc-700 flex items-center gap-1.5">
-              <UserPlus className="w-3.5 h-3.5 text-zinc-500" /> Invite Colleague
-            </span>
-            <div className="flex gap-2">
+          <form onSubmit={handleInvite} className="py-4 border-b border-zinc-100">
+            <label className="text-xs font-medium text-zinc-700 mb-1.5 flex items-center gap-1.5">
+              <UserPlus className="w-3.5 h-3.5 text-zinc-500" />
+              Invite New Member
+            </label>
+            <div className="flex items-center gap-2">
               <div className="flex-1">
                 <Input
                   type="email"
                   placeholder="colleague@company.com"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  disabled={isInviting}
+                  className="h-9 text-xs"
                   required
                 />
               </div>
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as "member" | "admin")}
-                disabled={isInviting}
-                className="px-3 py-2 text-xs font-medium bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-800 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 cursor-pointer"
+                className="h-9 px-2.5 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 cursor-pointer"
               >
                 <option value="member">Member</option>
                 <option value="admin">Admin</option>
@@ -230,21 +231,24 @@ export function OrgMembersModal({
               </div>
               {members.map((member) => {
                 const isSelf = member.user_id === currentUserId;
+                const displayName = member.full_name || (isSelf ? "You (Current Account)" : `User ${member.user_id.slice(0, 8)}`);
+
                 return (
                   <div
                     key={member.id}
                     className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50/70 hover:bg-zinc-50 border border-zinc-100 transition-colors"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-zinc-200 text-zinc-700 flex items-center justify-center font-bold text-xs shrink-0">
-                        {isSelf ? "You" : <Mail className="w-3.5 h-3.5 text-zinc-500" />}
-                      </div>
+                      <Avatar name={member.full_name || member.email || "Member"} size="sm" />
                       <div className="truncate">
                         <div className="text-xs font-medium text-zinc-900 truncate">
-                          {isSelf ? "You (Current Account)" : `User ${member.user_id.slice(0, 8)}`}
+                          {displayName}
+                          {isSelf && member.full_name && (
+                            <span className="ml-1 text-[10px] text-zinc-400 font-normal">(You)</span>
+                          )}
                         </div>
-                        <div className="text-[10px] text-zinc-400">
-                          Joined {new Date(member.created_at).toLocaleDateString()}
+                        <div className="text-[10px] text-zinc-400 truncate">
+                          {member.email ? `${member.email} • ` : ""}Joined {new Date(member.created_at).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
