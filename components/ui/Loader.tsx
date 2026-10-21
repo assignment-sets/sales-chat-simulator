@@ -50,7 +50,7 @@ export function Loader({
 
   if (overlay) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-[1px] transition-opacity animate-in fade-in duration-150">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/70 backdrop-blur-[1px] transition-opacity animate-in fade-in duration-150">
         {dots}
       </div>
     );

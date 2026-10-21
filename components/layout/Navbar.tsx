@@ -36,7 +36,7 @@ export function Navbar({
   };
 
   return (
-    <header className="h-14 border-b border-zinc-200 bg-white sticky top-0 z-30 flex items-center justify-between px-3 sm:px-6">
+    <header className="h-14 border-b border-zinc-200 bg-white sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {onToggleSidebar && (
           <button

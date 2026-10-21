@@ -112,7 +112,7 @@ export function OrgSwitcher({
         </button>
 
         {isOpen && (
-          <div className="absolute left-0 mt-1.5 w-64 rounded-2xl bg-white border border-zinc-200 shadow-lg py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute left-0 mt-1.5 w-64 rounded-2xl bg-white border border-zinc-200/90 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
             <div className="px-3 py-1.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider select-none">
               Organizations
             </div>

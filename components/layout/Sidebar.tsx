@@ -72,13 +72,13 @@ export function Sidebar({
       {isOpen && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-black/20 z-40 lg:hidden backdrop-blur-2xs transition-opacity"
+          className="fixed inset-0 bg-black/20 z-30 lg:hidden backdrop-blur-2xs transition-opacity"
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-72 bg-zinc-50/70 border-r border-zinc-200 flex flex-col h-full shrink-0 overflow-hidden transition-transform duration-200 ease-in-out ${
+        className={`fixed lg:static top-14 lg:top-0 bottom-0 left-0 z-30 lg:z-0 w-72 bg-zinc-50/70 border-r border-zinc-200 flex flex-col h-[calc(100dvh-3.5rem)] lg:h-full shrink-0 overflow-hidden transition-transform duration-200 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:hidden"
         }`}
       >
