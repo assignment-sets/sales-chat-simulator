@@ -30,11 +30,10 @@ export default async function ChatsLayout({
     .order("created_at", { ascending: false });
 
   if (activeContext) {
-    chatsQuery = chatsQuery.eq("organization_id", activeContext.organization.id);
-    // Regular members only see their own simulations in the sidebar
-    if (activeContext.role === "member") {
-      chatsQuery = chatsQuery.eq("user_id", user.id);
-    }
+    // Personal practice sidebar: every user strictly sees their own simulations in the active org
+    chatsQuery = chatsQuery
+      .eq("organization_id", activeContext.organization.id)
+      .eq("user_id", user.id);
   } else {
     chatsQuery = chatsQuery.eq("user_id", user.id);
   }

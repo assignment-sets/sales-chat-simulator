@@ -94,11 +94,12 @@ export async function POST(request: Request, context: RouteContext) {
     history
   );
 
-  // Helper to persist bubbles with staggered timestamps
+  // Helper to persist bubbles with staggered timestamps and token tracking
   const persistAndReturnBubbles = async (
     rawBubbles: unknown[],
     sentiment?: string,
-    objectionType?: string
+    objectionType?: string,
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
   ) => {
     let cleanBubbles = rawBubbles
       .flatMap(extractBubbles)
@@ -113,6 +114,10 @@ export async function POST(request: Request, context: RouteContext) {
       cleanBubbles = cleanBubbles.slice(0, 3);
     }
 
+    const promptTokens = usage?.prompt_tokens || 0;
+    const completionTokens = usage?.completion_tokens || 0;
+    const totalTokens = usage?.total_tokens || (promptTokens + completionTokens);
+
     const baseTime = Date.now();
     const rowsToInsert = cleanBubbles.map((bubble, index) => ({
       chat_id: id,
@@ -120,6 +125,9 @@ export async function POST(request: Request, context: RouteContext) {
       role: "assistant" as const,
       content: bubble,
       created_at: new Date(baseTime + index * 1000).toISOString(),
+      prompt_tokens: index === 0 ? promptTokens : 0,
+      completion_tokens: index === 0 ? completionTokens : 0,
+      total_tokens: index === 0 ? totalTokens : 0,
     }));
 
     const { data: insertedRows, error: insertError } = await supabase
@@ -135,6 +143,25 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
+    // Increment chat token counter if tokens were recorded
+    if (totalTokens > 0) {
+      try {
+        const { data: currentChat } = await supabase
+          .from("chats")
+          .select("tokens_used")
+          .eq("id", id)
+          .maybeSingle();
+
+        const currentTotal = (currentChat?.tokens_used || 0) + totalTokens;
+        await supabase
+          .from("chats")
+          .update({ tokens_used: currentTotal })
+          .eq("id", id);
+      } catch (tokenErr) {
+        console.warn("Could not update chat token counter:", tokenErr);
+      }
+    }
+
     const savedMessages: MessageItem[] = (insertedRows || []).map((row) => ({
       id: row.id,
       role: row.role as MessageItem["role"],
@@ -146,6 +173,7 @@ export async function POST(request: Request, context: RouteContext) {
       messages: savedMessages,
       sentiment,
       objection_type: objectionType,
+      tokens_used: totalTokens,
     });
   };
 
@@ -173,7 +201,8 @@ export async function POST(request: Request, context: RouteContext) {
     return await persistAndReturnBubbles(
       bubbles,
       parsed.buyer_sentiment,
-      parsed.objection_type
+      parsed.objection_type,
+      completion.usage
     );
   } catch (err: unknown) {
     console.warn("Groq JSON mode error, attempting recovery:", err);
@@ -205,7 +234,12 @@ export async function POST(request: Request, context: RouteContext) {
         fallbackCompletion.choices[0]?.message?.content || "";
       const fallbackBubbles = extractBubbles(fallbackText);
 
-      return await persistAndReturnBubbles(fallbackBubbles);
+      return await persistAndReturnBubbles(
+        fallbackBubbles,
+        undefined,
+        undefined,
+        fallbackCompletion.usage
+      );
     } catch (fallbackErr) {
       return internalError(
         "Failed to generate prospect reply",

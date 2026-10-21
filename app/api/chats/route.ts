@@ -7,7 +7,7 @@ import {
 } from "@/lib/api-response";
 import { getActiveOrganization } from "@/lib/tenant";
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -25,16 +25,21 @@ export async function GET() {
   }
 
   const { organization, role } = activeContext;
+  const { searchParams } = new URL(request.url);
+  const scope = searchParams.get("scope"); // 'personal' | 'team'
 
   // Dual-check tenant scoping:
-  // - Regular members see only their own simulations in the active org
-  // - Owners and admins see all simulations across the active org
+  // - Default: personal practice simulations for the current user
+  // - 'team' scope is only permitted for owner or admin roles
   let query = supabase
     .from("chats")
     .select("id, product_name, user_id, organization_id, created_at")
     .eq("organization_id", organization.id);
 
-  if (role === "member") {
+  if (scope === "team" && (role === "owner" || role === "admin")) {
+    // Admin team view: all simulations in the active org
+  } else {
+    // Personal practice simulations
     query = query.eq("user_id", user.id);
   }
 
@@ -48,6 +53,7 @@ export async function GET() {
     chats: chats || [],
     active_organization_id: organization.id,
     role,
+    scope: scope === "team" && (role === "owner" || role === "admin") ? "team" : "personal",
   });
 }
 

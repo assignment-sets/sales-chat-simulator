@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronDown, Check, Plus, Users } from "lucide-react";
+import { Building2, ChevronDown, Check, Plus, Users, LayoutDashboard } from "lucide-react";
+import Link from "next/link";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
@@ -180,6 +181,17 @@ export function OrgSwitcher({
 
             {/* Quick Actions */}
             <div className="px-1 space-y-0.5">
+              {(currentRole === "owner" || currentRole === "admin") && (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors cursor-pointer"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Team Dashboard</span>
+                </Link>
+              )}
+
               <button
                 onClick={() => {
                   setIsOpen(false);

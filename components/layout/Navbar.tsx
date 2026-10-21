@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { logout } from "@/app/auth/actions";
-import { PanelLeft, LogOut, MessageSquare } from "lucide-react";
+import { PanelLeft, LogOut, MessageSquare, LayoutDashboard } from "lucide-react";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 
@@ -16,6 +16,7 @@ export interface NavbarProps {
   activeOrg?: Organization;
   activeRole?: OrgRole;
   organizations?: OrganizationMembership[];
+  isDashboard?: boolean;
 }
 
 export function Navbar({
@@ -25,6 +26,7 @@ export function Navbar({
   activeOrg,
   activeRole,
   organizations,
+  isDashboard = false,
 }: NavbarProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -70,6 +72,34 @@ export function Navbar({
               currentRole={activeRole}
               organizations={organizations}
             />
+          </div>
+        )}
+
+        {/* Practice vs Team Dashboard Switcher for Owners/Admins */}
+        {activeRole && (activeRole === "owner" || activeRole === "admin") && (
+          <div className="hidden sm:flex items-center bg-zinc-100 p-0.5 rounded-xl border border-zinc-200/80 text-xs font-medium ml-1 sm:ml-2">
+            <Link
+              href="/chats"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors ${
+                !isDashboard
+                  ? "bg-white text-zinc-900 shadow-2xs font-semibold"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Practice</span>
+            </Link>
+            <Link
+              href="/dashboard"
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors ${
+                isDashboard
+                  ? "bg-white text-zinc-900 shadow-2xs font-semibold"
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>Dashboard</span>
+            </Link>
           </div>
         )}
       </div>
