@@ -52,8 +52,9 @@ export function CreateOrgDialog({
       onClose();
       if (onCreated) {
         onCreated(organization);
+      } else {
+        router.refresh();
       }
-      router.refresh();
     } catch (err) {
       notify.error(err instanceof Error ? err.message : "Failed to create organization");
     } finally {

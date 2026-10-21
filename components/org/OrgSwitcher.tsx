@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronDown, Check, Plus, Users } from "lucide-react";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 import { Badge } from "@/components/ui/Badge";
+import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
 import { CreateOrgDialog } from "@/components/org/CreateOrgDialog";
 import { OrgMembersModal } from "@/components/org/OrgMembersModal";
@@ -24,8 +25,29 @@ export function OrgSwitcher({
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [targetOrgId, setTargetOrgId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Reset targetOrgId once the page has reloaded with the new organization
+  useEffect(() => {
+    if (targetOrgId && targetOrgId === currentOrg.id) {
+      setTargetOrgId(null);
+      setIsSwitching(false);
+    }
+  }, [currentOrg.id, targetOrgId]);
+
+  // Safety timeout in case navigation hangs
+  useEffect(() => {
+    if (isSwitching || targetOrgId) {
+      const timer = setTimeout(() => {
+        setIsSwitching(false);
+        setTargetOrgId(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSwitching, targetOrgId]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -49,6 +71,9 @@ export function OrgSwitcher({
 
     try {
       setIsSwitching(true);
+      setTargetOrgId(orgId);
+      setIsOpen(false);
+
       const res = await fetch("/api/organizations/switch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -60,14 +85,15 @@ export function OrgSwitcher({
         throw new Error(err.error || "Failed to switch organization");
       }
 
-      setIsOpen(false);
-      // Route to /chats to show the new organization's simulations
-      router.push("/chats");
-      router.refresh();
+      // Route to /chats and refresh layout data with new active org
+      startTransition(() => {
+        router.push("/chats");
+        router.refresh();
+      });
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : "Error switching organization");
-    } finally {
       setIsSwitching(false);
+      setTargetOrgId(null);
+      notify.error(err instanceof Error ? err.message : "Error switching organization");
     }
   };
 
@@ -179,6 +205,11 @@ export function OrgSwitcher({
           </div>
         )}
       </div>
+
+      {/* Organization Switching Loader Overlay */}
+      {(isSwitching || isPending || targetOrgId !== null) && (
+        <Loader overlay size="md" label="Switching organization..." />
+      )}
 
       {/* Modals */}
       <CreateOrgDialog
