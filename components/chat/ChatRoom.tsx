@@ -14,6 +14,7 @@ export interface ChatRoomProps {
     status: string;
     score?: number | null;
     evaluation_outcome?: string | null;
+    ai_feedback?: string | null;
   };
   initialMessages: MessageItem[];
   initialHasMore?: boolean;
@@ -401,6 +402,7 @@ export function ChatRoom({
 
       {/* 2. ONLY Message Bubbles Scroll Area */}
       <ChatMessageList
+        chatId={chat.id}
         productName={chat.product_name}
         messages={messages}
         isProspectTyping={isProspectTyping}
@@ -410,6 +412,7 @@ export function ChatRoom({
         isConcluded={isConcluded}
         conclusionOutcome={evaluationOutcome}
         conclusionScore={score}
+        initialFeedback={chat.ai_feedback}
       />
 
       {/* 3. Fixed Input Area (Permanently pinned at bottom of chat pane) */}

@@ -15,6 +15,7 @@ export interface MessageItem {
 }
 
 export interface ChatMessageListProps {
+  chatId?: string;
   productName: string;
   messages: MessageItem[];
   isProspectTyping?: boolean;
@@ -24,9 +25,11 @@ export interface ChatMessageListProps {
   isConcluded?: boolean;
   conclusionOutcome?: "deal_won" | "deal_lost" | string;
   conclusionScore?: number | null;
+  initialFeedback?: string | null;
 }
 
 export function ChatMessageList({
+  chatId,
   productName,
   messages,
   isProspectTyping = false,
@@ -36,6 +39,7 @@ export function ChatMessageList({
   isConcluded = false,
   conclusionOutcome = "in_progress",
   conclusionScore = null,
+  initialFeedback = null,
 }: ChatMessageListProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -193,9 +197,11 @@ export function ChatMessageList({
         {/* Simulation Conclusion & Evaluation Card */}
         {isConcluded && (
           <SimulationConclusionCard
+            chatId={chatId}
             outcome={conclusionOutcome}
             score={conclusionScore}
             productName={productName}
+            initialFeedback={initialFeedback}
           />
         )}
 
