@@ -198,9 +198,9 @@ export function TranscriptDrawer({ chatId, onClose }: TranscriptDrawerProps) {
                   <MessageSquare className="w-3.5 h-3.5 text-zinc-400" />
                   {messages.length} messages
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 font-mono">
                   <Coins className="w-3.5 h-3.5 text-zinc-400" />
-                  {chat?.tokens_used || 0} tokens
+                  {(chat?.tokens_used || 0).toLocaleString()} tokens
                 </span>
               </div>
               <span className="text-[11px] text-zinc-400 italic">

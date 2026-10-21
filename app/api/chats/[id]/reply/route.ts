@@ -143,25 +143,6 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    // Increment chat token counter if tokens were recorded
-    if (totalTokens > 0) {
-      try {
-        const { data: currentChat } = await supabase
-          .from("chats")
-          .select("tokens_used")
-          .eq("id", id)
-          .maybeSingle();
-
-        const currentTotal = (currentChat?.tokens_used || 0) + totalTokens;
-        await supabase
-          .from("chats")
-          .update({ tokens_used: currentTotal })
-          .eq("id", id);
-      } catch (tokenErr) {
-        console.warn("Could not update chat token counter:", tokenErr);
-      }
-    }
-
     const savedMessages: MessageItem[] = (insertedRows || []).map((row) => ({
       id: row.id,
       role: row.role as MessageItem["role"],

@@ -135,9 +135,9 @@ export function MemberSimulationsModal({
 
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right text-xs">
-                    <div className="font-semibold text-zinc-700 flex items-center gap-1 justify-end">
+                    <div className="font-semibold text-zinc-700 flex items-center gap-1 justify-end font-mono">
                       <Coins className="w-3 h-3 text-zinc-400" />
-                      {sim.tokens_used || 0}
+                      {(sim.tokens_used || 0).toLocaleString()}
                     </div>
                     <div className="text-[10px] text-zinc-400">tokens</div>
                   </div>

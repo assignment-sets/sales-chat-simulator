@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { Loader } from "@/components/ui/Loader";
 import { logout } from "@/app/auth/actions";
 import { PanelLeft, LogOut, MessageSquare, LayoutDashboard } from "lucide-react";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
@@ -28,11 +30,48 @@ export function Navbar({
   organizations,
   isDashboard = false,
 }: NavbarProps) {
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+  const [isSignOutPending, startSignOutTransition] = useTransition();
+  const [isNavPending, startNavTransition] = useTransition();
+  const [navTarget, setNavTarget] = useState<string | null>(null);
+
+  // Reset target once current view matches the intended route
+  useEffect(() => {
+    if (navTarget) {
+      if ((navTarget === "/dashboard" && isDashboard) || (navTarget === "/chats" && !isDashboard)) {
+        setNavTarget(null);
+      }
+    }
+  }, [isDashboard, navTarget]);
+
+  // Safety timeout in case client navigation is interrupted or hangs
+  useEffect(() => {
+    if (navTarget) {
+      const timer = setTimeout(() => {
+        setNavTarget(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [navTarget]);
+
+  const handleModeSwitch = (e: React.MouseEvent, target: "/chats" | "/dashboard") => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+    if ((target === "/dashboard" && isDashboard) || (target === "/chats" && !isDashboard)) {
+      e.preventDefault();
+      return;
+    }
+
+    e.preventDefault();
+    setNavTarget(target);
+    startNavTransition(() => {
+      router.push(target);
+    });
+  };
 
   const handleSignOut = (e: React.FormEvent) => {
     e.preventDefault();
-    startTransition(async () => {
+    startSignOutTransition(async () => {
       await logout();
     });
   };
@@ -56,7 +95,15 @@ export function Navbar({
           </button>
         )}
 
-        <Link href="/chats" className="flex items-center gap-2 select-none shrink-0 [&_svg]:shrink-0">
+        <Link
+          href="/chats"
+          onClick={(e) => {
+            if (isDashboard) {
+              handleModeSwitch(e, "/chats");
+            }
+          }}
+          className="flex items-center gap-2 select-none shrink-0 [&_svg]:shrink-0"
+        >
           <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
             <MessageSquare className="w-4 h-4" />
           </div>
@@ -80,6 +127,7 @@ export function Navbar({
           <div className="hidden sm:flex items-center bg-zinc-100 p-0.5 rounded-xl border border-zinc-200/80 text-xs font-medium ml-1 sm:ml-2">
             <Link
               href="/chats"
+              onClick={(e) => handleModeSwitch(e, "/chats")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors ${
                 !isDashboard
                   ? "bg-white text-zinc-900 shadow-2xs font-semibold"
@@ -91,6 +139,7 @@ export function Navbar({
             </Link>
             <Link
               href="/dashboard"
+              onClick={(e) => handleModeSwitch(e, "/dashboard")}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors ${
                 isDashboard
                   ? "bg-white text-zinc-900 shadow-2xs font-semibold"
@@ -120,14 +169,19 @@ export function Navbar({
             variant="ghost"
             size="sm"
             className="text-xs text-zinc-500 hover:text-red-600 hover:bg-red-50"
-            isLoading={isPending}
+            isLoading={isSignOutPending}
             leftIcon={<LogOut className="w-3.5 h-3.5" />}
           >
-            <span className="hidden sm:inline">{isPending ? "Signing out..." : "Sign Out"}</span>
-            <span className="sm:hidden">{isPending ? "..." : "Exit"}</span>
+            <span className="hidden sm:inline">{isSignOutPending ? "Signing out..." : "Sign Out"}</span>
+            <span className="sm:hidden">{isSignOutPending ? "..." : "Exit"}</span>
           </Button>
         </form>
       </div>
+
+      {/* Practice / Dashboard Mode Transition Loader Overlay */}
+      {(isNavPending || navTarget !== null) && (
+        <Loader overlay size="md" />
+      )}
     </header>
   );
 }
