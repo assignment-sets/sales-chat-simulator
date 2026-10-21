@@ -40,7 +40,7 @@ export async function GET(request: Request, context: RouteContext) {
   // 1. Fetch simulation metadata verifying it belongs to this active organization
   const { data: chat, error: chatError } = await supabase
     .from("chats")
-    .select("id, product_name, product_description, status, score, evaluation_outcome, tokens_used, created_at, user_id")
+    .select("id, product_name, product_description, status, score, evaluation_outcome, tokens_used, created_at, user_id, ai_feedback")
     .eq("id", chatId)
     .eq("organization_id", organization.id)
     .maybeSingle();
