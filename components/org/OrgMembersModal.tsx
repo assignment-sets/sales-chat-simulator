@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { Avatar } from "@/components/ui/Avatar";
 import { X, Users, UserPlus, Trash2, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { getPlanConfig, getQuotaLimit } from "@/lib/plans";
 import { notify } from "@/lib/toast";
 import { Organization, OrgRole } from "@/lib/tenant";
 
@@ -51,6 +53,10 @@ export function OrgMembersModal({
   const [isInviting, setIsInviting] = useState(false);
 
   const isOwnerOrAdmin = userRole === "owner" || userRole === "admin";
+  const plan = getPlanConfig(organization.plan_tier);
+  const seatLimit = getQuotaLimit(organization.plan_tier, "team_seats");
+  const totalSeatsUsed = members.length + invitations.length;
+  const isSeatLimitReached = !isLoading && totalSeatsUsed >= seatLimit;
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -186,33 +192,61 @@ export function OrgMembersModal({
         {/* Invite Member Section (Owners/Admins only) */}
         {isOwnerOrAdmin && (
           <form onSubmit={handleInvite} className="py-4 border-b border-zinc-100">
-            <label className="text-xs font-medium text-zinc-700 mb-1.5 flex items-center gap-1.5">
-              <UserPlus className="w-3.5 h-3.5 text-zinc-500" />
-              Invite New Member
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-medium text-zinc-700 flex items-center gap-1.5">
+                <UserPlus className="w-3.5 h-3.5 text-zinc-500" />
+                <span>Invite New Member</span>
+              </label>
+              <span className="text-[11px] font-mono text-zinc-500">
+                {totalSeatsUsed} / {seatLimit} seats ({plan.name})
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               <div className="flex-1">
                 <Input
                   type="email"
-                  placeholder="colleague@company.com"
+                  placeholder={
+                    isSeatLimitReached
+                      ? `Seat limit reached on ${plan.name} plan`
+                      : "colleague@company.com"
+                  }
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   className="h-9 text-xs"
+                  disabled={isSeatLimitReached}
                   required
                 />
               </div>
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as "member" | "admin")}
-                className="h-9 px-2.5 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 cursor-pointer"
+                disabled={isSeatLimitReached}
+                className="h-9 px-2.5 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="member">Member</option>
                 <option value="admin">Admin</option>
               </select>
-              <Button type="submit" size="sm" isLoading={isInviting}>
+              <Button
+                type="submit"
+                size="sm"
+                isLoading={isInviting}
+                disabled={isSeatLimitReached}
+              >
                 Invite
               </Button>
             </div>
+            {isSeatLimitReached && (
+              <div className="mt-2 flex items-center justify-between text-[11px] text-zinc-500">
+                <span>Seat quota reached for this workspace.</span>
+                <Link
+                  href="/pricing"
+                  onClick={onClose}
+                  className="font-semibold text-zinc-900 hover:underline"
+                >
+                  View Plans &rarr;
+                </Link>
+              </div>
+            )}
           </form>
         )}
 

@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { XCircle, Sparkles, Trophy } from "lucide-react";
+import { XCircle, Sparkles, Trophy, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { DetailedFeedbackModal } from "@/components/chat/DetailedFeedbackModal";
+import { hasFeature, PlanTier } from "@/lib/plans";
+import { notify } from "@/lib/toast";
 
 export interface SimulationConclusionCardProps {
   chatId?: string;
@@ -12,6 +14,7 @@ export interface SimulationConclusionCardProps {
   score?: number | null;
   productName?: string;
   initialFeedback?: string | null;
+  planTier?: PlanTier;
 }
 
 export function SimulationConclusionCard({
@@ -20,10 +23,22 @@ export function SimulationConclusionCard({
   score,
   productName,
   initialFeedback,
+  planTier = "starter",
 }: SimulationConclusionCardProps) {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const isWon = outcome === "deal_won" || outcome === "WON";
   const displayScore = score ? Math.min(Math.max(score, 1), 5) : (isWon ? 4 : 2);
+  const canViewFeedback = hasFeature(planTier, "detailed_ai_feedback");
+
+  const handleFeedbackButtonClick = () => {
+    if (!canViewFeedback) {
+      notify.info(
+        "Detailed AI Coaching Breakdown is a Pro feature. View Plans & Pricing in the workspace menu."
+      );
+      return;
+    }
+    setIsFeedbackOpen(true);
+  };
 
   return (
     <>
@@ -116,18 +131,29 @@ export function SimulationConclusionCard({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setIsFeedbackOpen(true)}
+                onClick={handleFeedbackButtonClick}
                 className="text-xs gap-1.5 text-zinc-700 hover:text-zinc-900 bg-white shadow-2xs font-medium cursor-pointer"
-                leftIcon={<Sparkles className="w-3.5 h-3.5 text-amber-500" />}
+                leftIcon={
+                  canViewFeedback ? (
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                  )
+                }
               >
-                Get Detailed AI Feedback
+                <span>Get Detailed AI Feedback</span>
+                {!canViewFeedback && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 ml-0.5">
+                    Pro
+                  </span>
+                )}
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {chatId && (
+      {chatId && canViewFeedback && (
         <DetailedFeedbackModal
           isOpen={isFeedbackOpen}
           onClose={() => setIsFeedbackOpen(false)}

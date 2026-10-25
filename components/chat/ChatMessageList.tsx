@@ -6,6 +6,7 @@ import { EmptyChatState } from "@/components/chat/EmptyChatState";
 import { Loader } from "@/components/ui/Loader";
 import { Avatar } from "@/components/ui/Avatar";
 import { SimulationConclusionCard } from "@/components/chat/SimulationConclusionCard";
+import { PlanTier } from "@/lib/plans";
 
 export interface MessageItem {
   id?: string;
@@ -26,6 +27,7 @@ export interface ChatMessageListProps {
   conclusionOutcome?: "deal_won" | "deal_lost" | string;
   conclusionScore?: number | null;
   initialFeedback?: string | null;
+  planTier?: PlanTier;
 }
 
 export function ChatMessageList({
@@ -40,6 +42,7 @@ export function ChatMessageList({
   conclusionOutcome = "in_progress",
   conclusionScore = null,
   initialFeedback = null,
+  planTier = "starter",
 }: ChatMessageListProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -202,6 +205,7 @@ export function ChatMessageList({
             score={conclusionScore}
             productName={productName}
             initialFeedback={initialFeedback}
+            planTier={planTier}
           />
         )}
 

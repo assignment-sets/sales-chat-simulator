@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { ChatRoom } from "@/components/chat/ChatRoom";
 import { MessageItem } from "@/components/chat/ChatMessageList";
+import { normalizePlanTier } from "@/lib/plans";
 
 interface ChatPageProps {
   params: Promise<{
@@ -15,13 +16,22 @@ export default async function ChatDetailPage({ params }: ChatPageProps) {
 
   const { data: chat, error: chatError } = await supabase
     .from("chats")
-    .select("id, product_name, product_description, status, score, evaluation_outcome, evaluation_summary, ai_feedback")
+    .select(
+      "id, product_name, product_description, status, score, evaluation_outcome, evaluation_summary, ai_feedback, organization:organizations(plan_tier)"
+    )
     .eq("id", id)
     .single();
 
   if (chatError || !chat) {
     notFound();
   }
+
+  const orgRel = Array.isArray(chat.organization)
+    ? chat.organization[0]
+    : chat.organization;
+  const planTier = normalizePlanTier(
+    (orgRel as { plan_tier?: string | null } | null)?.plan_tier
+  );
 
   const PAGE_SIZE = 50;
   const { data: messageRows } = await supabase
@@ -50,6 +60,7 @@ export default async function ChatDetailPage({ params }: ChatPageProps) {
       chat={chat}
       initialMessages={initialMessages}
       initialHasMore={initialHasMore}
+      planTier={planTier}
     />
   );
 }

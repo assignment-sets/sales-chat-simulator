@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronDown, Check, Plus, Users, LayoutDashboard } from "lucide-react";
+import { Building2, ChevronDown, Check, Plus, Users, LayoutDashboard, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 import { Badge } from "@/components/ui/Badge";
@@ -202,6 +202,20 @@ export function OrgSwitcher({
                 <Users className="w-3.5 h-3.5 text-zinc-500" />
                 <span>Team Members</span>
               </button>
+
+              <Link
+                href="/pricing"
+                onClick={() => setIsOpen(false)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Plans & Pricing</span>
+                </div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                  {currentOrg.plan_tier || "starter"}
+                </span>
+              </Link>
 
               <button
                 onClick={() => {

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatMessageList, MessageItem } from "@/components/chat/ChatMessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { PlanTier } from "@/lib/plans";
 import { notify } from "@/lib/toast";
 
 export interface ChatRoomProps {
@@ -18,12 +19,14 @@ export interface ChatRoomProps {
   };
   initialMessages: MessageItem[];
   initialHasMore?: boolean;
+  planTier?: PlanTier;
 }
 
 export function ChatRoom({
   chat,
   initialMessages,
   initialHasMore = false,
+  planTier = "starter",
 }: ChatRoomProps) {
   const [messages, setMessages] = useState<MessageItem[]>(initialMessages);
   const [isProspectTyping, setIsProspectTyping] = useState(false);
@@ -398,6 +401,7 @@ export function ChatRoom({
         productName={chat.product_name}
         productDescription={chat.product_description}
         messageCount={messages.length}
+        planTier={planTier}
       />
 
       {/* 2. ONLY Message Bubbles Scroll Area */}
@@ -413,6 +417,7 @@ export function ChatRoom({
         conclusionOutcome={evaluationOutcome}
         conclusionScore={score}
         initialFeedback={chat.ai_feedback}
+        planTier={planTier}
       />
 
       {/* 3. Fixed Input Area (Permanently pinned at bottom of chat pane) */}

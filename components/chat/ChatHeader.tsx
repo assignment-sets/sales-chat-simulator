@@ -4,17 +4,20 @@ import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronUp, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ExportChatButton } from "@/components/chat/ExportChatButton";
+import { PlanTier } from "@/lib/plans";
 
 export interface ChatHeaderProps {
   productName: string;
   productDescription: string;
   messageCount: number;
+  planTier?: PlanTier;
 }
 
 export function ChatHeader({
   productName,
   productDescription,
   messageCount,
+  planTier = "starter",
 }: ChatHeaderProps) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -74,7 +77,7 @@ export function ChatHeader({
           {messageCount} {messageCount === 1 ? "message" : "messages"}
         </div>
 
-        <ExportChatButton />
+        <ExportChatButton planTier={planTier} />
       </div>
 
       {/* Floating Pitch & Policies Popover */}
