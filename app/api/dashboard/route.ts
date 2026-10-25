@@ -5,6 +5,7 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
+import { requireFeature } from "@/lib/entitlements";
 import { getActiveOrganization } from "@/lib/tenant";
 
 export interface DashboardMemberSummary {
@@ -85,6 +86,12 @@ export async function GET() {
 
   if (role !== "owner" && role !== "admin") {
     return forbidden("Team oversight is restricted to organization owners and admins");
+  }
+
+  // Enforce Pro/Scale plan tier requirement for Team Oversight Dashboard
+  const featureGate = requireFeature(organization, "team_dashboard");
+  if (!featureGate.ok) {
+    return featureGate.response;
   }
 
   // 1. Fetch organization members with profile names and emails

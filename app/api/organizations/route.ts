@@ -6,6 +6,7 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
+import { normalizePlanTier } from "@/lib/plans";
 import {
   ACTIVE_ORG_COOKIE_NAME,
   getActiveOrganization,
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
     id: result.id,
     name: result.name,
     slug: result.slug,
+    plan_tier: normalizePlanTier(result.plan_tier),
     created_by: result.created_by,
     created_at: result.created_at,
     updated_at: result.updated_at,

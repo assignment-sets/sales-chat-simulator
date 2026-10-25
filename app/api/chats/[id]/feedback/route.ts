@@ -6,6 +6,7 @@ import {
   unauthorized,
 } from "@/lib/api-response";
 import { validateChatAccess } from "@/lib/chat-auth";
+import { requireOrgFeature } from "@/lib/entitlements";
 
 interface RouteContext {
   params: Promise<{
@@ -28,6 +29,7 @@ export async function POST(request: Request, context: RouteContext) {
   // 1. Dual-check tenant access: verify chat belongs to user & org
   const chatCheck = await validateChatAccess<{
     id: string;
+    organization_id?: string;
     product_name: string;
     product_description: string;
     status: string;
@@ -40,7 +42,7 @@ export async function POST(request: Request, context: RouteContext) {
     supabase,
     id,
     user.id,
-    "id, product_name, product_description, status, score, evaluation_outcome, evaluation_summary, ai_feedback, tokens_used"
+    "id, organization_id, product_name, product_description, status, score, evaluation_outcome, evaluation_summary, ai_feedback, tokens_used"
   );
 
   if (!chatCheck.ok) {
@@ -48,6 +50,16 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const chat = chatCheck.chat;
+
+  // Enforce Pro/Scale plan tier requirement for Detailed AI Coaching Feedback
+  const featureGate = await requireOrgFeature(
+    supabase,
+    chat.organization_id,
+    "detailed_ai_feedback"
+  );
+  if (!featureGate.ok) {
+    return featureGate.response;
+  }
 
   // 2. Fast-path: return cached feedback immediately if already generated
   if (chat.ai_feedback && chat.ai_feedback.trim().length > 0) {

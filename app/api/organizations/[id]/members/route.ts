@@ -7,6 +7,7 @@ import {
   notFound,
   unauthorized,
 } from "@/lib/api-response";
+import { checkQuota } from "@/lib/entitlements";
 import { validateOrgMembership } from "@/lib/tenant";
 
 interface RouteContext {
@@ -117,6 +118,15 @@ export async function POST(request: Request, context: RouteContext) {
 
   if (!email || !email.includes("@")) {
     return badRequest("A valid email address is required");
+  }
+
+  // Enforce team seat quota for this organization's plan tier
+  const quota = await checkQuota(supabase, {
+    type: "team_seats",
+    organizationId: orgId,
+  });
+  if (!quota.ok) {
+    return quota.response;
   }
 
   // Call the database function to add or invite the member

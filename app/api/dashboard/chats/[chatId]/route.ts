@@ -6,6 +6,7 @@ import {
   notFound,
   unauthorized,
 } from "@/lib/api-response";
+import { requireFeature } from "@/lib/entitlements";
 import { getActiveOrganization } from "@/lib/tenant";
 
 interface RouteContext {
@@ -35,6 +36,12 @@ export async function GET(request: Request, context: RouteContext) {
 
   if (role !== "owner" && role !== "admin") {
     return forbidden("Viewing conversation transcripts is restricted to organization owners and admins");
+  }
+
+  // Enforce Pro/Scale plan tier requirement for Team Oversight Dashboard
+  const featureGate = requireFeature(organization, "team_dashboard");
+  if (!featureGate.ok) {
+    return featureGate.response;
   }
 
   // 1. Fetch simulation metadata verifying it belongs to this active organization

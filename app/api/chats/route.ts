@@ -5,6 +5,7 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
+import { checkQuota } from "@/lib/entitlements";
 import { getActiveOrganization } from "@/lib/tenant";
 
 export async function GET(request: Request) {
@@ -89,6 +90,15 @@ export async function POST(request: Request) {
     !product_description.trim()
   ) {
     return badRequest("product_name and product_description are required");
+  }
+
+  // Enforce monthly simulation quota for the active organization's plan tier
+  const quota = await checkQuota(supabase, {
+    type: "monthly_simulations",
+    organization: activeContext.organization,
+  });
+  if (!quota.ok) {
+    return quota.response;
   }
 
   // Insert chat linked explicitly to both the author user and active organization
