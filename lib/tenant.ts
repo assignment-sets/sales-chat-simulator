@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { normalizePlanTier, PlanTier } from "@/lib/plans";
 
 export const ACTIVE_ORG_COOKIE_NAME = "saleschat_active_org_id";
 
@@ -9,6 +10,7 @@ export interface Organization {
   id: string;
   name: string;
   slug: string;
+  plan_tier: PlanTier;
   created_at: string;
   updated_at: string;
 }
@@ -43,7 +45,7 @@ export async function getUserOrganizations(
       user_id,
       role,
       created_at,
-      organization:organizations(id, name, slug, created_at, updated_at)
+      organization:organizations(id, name, slug, plan_tier, created_at, updated_at)
     `)
     .eq("user_id", userId)
     .order("created_at", { ascending: true });
@@ -60,10 +62,16 @@ export async function getUserOrganizations(
     return [];
   }
 
-  // Filter out any members where organization join might have failed
-  return (data as unknown as OrganizationMembership[]).filter(
-    (m) => m && m.organization && m.organization.id
-  );
+  // Filter out any members where organization join might have failed and normalize plan_tier
+  return (data as unknown as OrganizationMembership[])
+    .filter((m) => m && m.organization && m.organization.id)
+    .map((m) => ({
+      ...m,
+      organization: {
+        ...m.organization,
+        plan_tier: normalizePlanTier(m.organization.plan_tier),
+      },
+    }));
 }
 
 /**
@@ -106,6 +114,7 @@ export async function createDefaultOrganizationForUser(
       id: result.id,
       name: result.name,
       slug: result.slug,
+      plan_tier: normalizePlanTier(result.plan_tier),
       created_at: result.created_at,
       updated_at: result.updated_at,
     },
