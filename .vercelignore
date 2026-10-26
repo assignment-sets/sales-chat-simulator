@@ -1,0 +1,5 @@
+# Never upload local secrets with CLI deployments.
+# Runtime configuration lives in Vercel project environment variables.
+.env
+.env.*
+!.env.example
