@@ -162,6 +162,77 @@ export async function POST(request: Request, context: RouteContext) {
   return apiSuccess({ success: true, result }, 201);
 }
 
+export async function PATCH(request: Request, context: RouteContext) {
+  const { id: orgId } = await context.params;
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return unauthorized();
+  }
+
+  const { isMember, role } = await validateOrgMembership(supabase, user.id, orgId);
+  if (!isMember || !role) {
+    return notFound("Organization not found");
+  }
+
+  if (role !== "owner" && role !== "admin") {
+    return forbidden("Only organization owners and admins can update member roles");
+  }
+
+  let body: { memberId?: unknown; role?: unknown };
+  try {
+    body = await request.json();
+  } catch (err) {
+    return badRequest("Invalid JSON request body", err, "PATCH /api/organizations/[id]/members:parse");
+  }
+
+  const memberId = typeof body?.memberId === "string" ? body.memberId.trim() : "";
+  const newRole = typeof body?.role === "string" ? body.role.trim() : "";
+
+  if (!memberId || !newRole) {
+    return badRequest("memberId and role are required");
+  }
+
+  if (newRole !== "admin" && newRole !== "member") {
+    return badRequest("Role must be either 'admin' or 'member'");
+  }
+
+  // Fetch the membership record being targeted
+  const { data: targetMember, error: targetError } = await supabase
+    .from("organization_members")
+    .select("id, user_id, role")
+    .eq("organization_id", orgId)
+    .eq("id", memberId)
+    .maybeSingle();
+
+  if (targetError || !targetMember) {
+    return notFound("Member not found in this organization");
+  }
+
+  // Prevent demoting an owner
+  if (targetMember.role === "owner") {
+    return forbidden("Organization owners cannot be demoted");
+  }
+
+  const { data: updatedMember, error: updateError } = await supabase
+    .from("organization_members")
+    .update({ role: newRole })
+    .eq("id", targetMember.id)
+    .eq("organization_id", orgId)
+    .select("id, user_id, role, created_at")
+    .maybeSingle();
+
+  if (updateError) {
+    return internalError("Failed to update member role", updateError, "PATCH /api/organizations/[id]/members");
+  }
+
+  return apiSuccess({ member: updatedMember });
+}
+
 export async function DELETE(request: Request, context: RouteContext) {
   const { id: orgId } = await context.params;
   const supabase = await createServerSupabaseClient();
