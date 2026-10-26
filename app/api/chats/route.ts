@@ -5,6 +5,7 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
+import { enforceRateLimits } from "@/lib/rate-limit";
 import { checkQuota } from "@/lib/entitlements";
 import { getActiveOrganization } from "@/lib/tenant";
 
@@ -74,6 +75,15 @@ export async function POST(request: Request) {
     return internalError("Failed to resolve active organization");
   }
 
+  // Throttle simulation creation before touching the database or quota checks
+  const rateLimit = await enforceRateLimits(
+    ["chats.create.user", `u:${user.id}`],
+    ["chats.create.user.daily", `u:${user.id}`]
+  );
+  if (!rateLimit.ok) {
+    return rateLimit.response;
+  }
+
   let body: { product_name?: unknown; product_description?: unknown };
   try {
     body = await request.json();
@@ -90,6 +100,17 @@ export async function POST(request: Request) {
     !product_description.trim()
   ) {
     return badRequest("product_name and product_description are required");
+  }
+
+  const cleanName = product_name.trim();
+  const cleanDescription = product_description.trim();
+
+  if (cleanName.length > 120) {
+    return badRequest("product_name must be 120 characters or fewer");
+  }
+
+  if (cleanDescription.length > 2000) {
+    return badRequest("product_description must be 2,000 characters or fewer");
   }
 
   // Enforce monthly simulation quota for the active organization's plan tier

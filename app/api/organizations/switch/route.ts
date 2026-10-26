@@ -10,6 +10,7 @@ import {
   ACTIVE_ORG_COOKIE_NAME,
   validateOrgMembership,
 } from "@/lib/tenant";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
@@ -20,6 +21,11 @@ export async function POST(request: Request) {
 
   if (authError || !user) {
     return unauthorized();
+  }
+
+  const rateLimit = await enforceRateLimit("orgs.switch.user", `u:${user.id}`);
+  if (!rateLimit.ok) {
+    return rateLimit.response;
   }
 
   let body: { organization_id?: unknown };

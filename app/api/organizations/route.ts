@@ -3,10 +3,12 @@ import { cookies } from "next/headers";
 import {
   apiSuccess,
   badRequest,
+  forbidden,
   internalError,
   unauthorized,
 } from "@/lib/api-response";
 import { normalizePlanTier } from "@/lib/plans";
+import { enforceRateLimits } from "@/lib/rate-limit";
 import {
   ACTIVE_ORG_COOKIE_NAME,
   getActiveOrganization,
@@ -47,6 +49,15 @@ export async function POST(request: Request) {
     return unauthorized();
   }
 
+  // Throttle organization creation (prevents free-tier quota farming)
+  const rateLimit = await enforceRateLimits(
+    ["orgs.create.user", `u:${user.id}`],
+    ["orgs.create.user.daily", `u:${user.id}`]
+  );
+  if (!rateLimit.ok) {
+    return rateLimit.response;
+  }
+
   let body: { name?: unknown };
   try {
     body = await request.json();
@@ -61,6 +72,27 @@ export async function POST(request: Request) {
 
   if (name.length < 2 || name.length > 50) {
     return badRequest("Organization name must be between 2 and 50 characters");
+  }
+
+  // Cap owned organizations so one user cannot reset free-tier quotas by creating new workspaces
+  const { count: ownedOrgCount, error: ownedOrgError } = await supabase
+    .from("organization_members")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("role", "owner");
+
+  if (ownedOrgError) {
+    return internalError(
+      "Failed to verify organization ownership limit",
+      ownedOrgError,
+      "POST /api/organizations:ownedCount"
+    );
+  }
+
+  if ((ownedOrgCount ?? 0) >= 3) {
+    return forbidden(
+      "You can own up to 3 organizations. Contact support if you need more."
+    );
   }
 
   const cleanSlug = `${name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")}-${Math.random().toString(36).substring(2, 8)}`;

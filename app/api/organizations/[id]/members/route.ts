@@ -8,6 +8,7 @@ import {
   unauthorized,
 } from "@/lib/api-response";
 import { checkQuota } from "@/lib/entitlements";
+import { enforceRateLimits } from "@/lib/rate-limit";
 import { validateOrgMembership } from "@/lib/tenant";
 
 interface RouteContext {
@@ -104,6 +105,15 @@ export async function POST(request: Request, context: RouteContext) {
   const { isMember, role } = await validateOrgMembership(supabase, user.id, orgId);
   if (!isMember || (role !== "owner" && role !== "admin")) {
     return forbidden("Only organization owners and admins can invite new members");
+  }
+
+  // Throttle invitations per organization before parsing the body
+  const rateLimit = await enforceRateLimits(
+    ["orgs.invite.org", `o:${orgId}`],
+    ["orgs.invite.org.daily", `o:${orgId}`]
+  );
+  if (!rateLimit.ok) {
+    return rateLimit.response;
   }
 
   let body: { email?: unknown; role?: unknown };

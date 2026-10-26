@@ -6,6 +6,7 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { getActiveOrganization } from "@/lib/tenant";
 import { normalizePlanTier, PlanTier } from "@/lib/plans";
 
@@ -29,6 +30,12 @@ export async function POST(request: Request) {
 
   if (role !== "owner" && role !== "admin") {
     return forbidden("Only organization owners and admins can switch subscription plans");
+  }
+
+  // Throttle billing-sensitive plan changes
+  const rateLimit = await enforceRateLimit("orgs.tier.org", `o:${organization.id}`);
+  if (!rateLimit.ok) {
+    return rateLimit.response;
   }
 
   let body: { plan_tier?: unknown };

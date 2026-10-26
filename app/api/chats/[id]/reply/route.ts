@@ -9,10 +9,19 @@ import {
 import { evaluateSimulationTurn } from "@/lib/jev";
 import {
   apiSuccess,
+  badRequest,
   internalError,
+  rateLimited,
   unauthorized,
 } from "@/lib/api-response";
 import { validateChatAccess } from "@/lib/chat-auth";
+import {
+  acquireChatLock,
+  enforceRateLimits,
+  releaseChatLock,
+} from "@/lib/rate-limit";
+
+const MAX_USER_TURNS = 40;
 
 interface RouteContext {
   params: Promise<{
@@ -37,6 +46,7 @@ export async function POST(request: Request, context: RouteContext) {
     id: string;
     product_name: string;
     product_description: string;
+    organization_id?: string;
   }>(
     supabase,
     id,
@@ -49,7 +59,20 @@ export async function POST(request: Request, context: RouteContext) {
   }
   const chat = chatCheck.chat;
 
-  // 2. Fetch full chronological history with dual scoping
+  // 2. Throttle expensive generation per user and per organization
+  const orgIdentifier = chat.organization_id
+    ? `o:${chat.organization_id}`
+    : `u:${user.id}`;
+  const rateLimit = await enforceRateLimits(
+    ["ai.reply.user", `u:${user.id}`],
+    ["ai.reply.user.hourly", `u:${user.id}`],
+    ["ai.reply.org", orgIdentifier]
+  );
+  if (!rateLimit.ok) {
+    return rateLimit.response;
+  }
+
+  // 3. Fetch full chronological history with dual scoping
   let historyQuery = supabase
     .from("messages")
     .select("id, role, content, created_at")
@@ -88,7 +111,15 @@ export async function POST(request: Request, context: RouteContext) {
     return apiSuccess({ messages: [] });
   }
 
-  // 4. Format prompt messages with coalesced turns for Groq
+  // 4. Enforce the per-simulation turn cap
+  const userTurnCount = history.filter((message) => message.role === "user").length;
+  if (userTurnCount > MAX_USER_TURNS) {
+    return badRequest(
+      `This simulation has reached its ${MAX_USER_TURNS}-turn limit. Start a new simulation to keep practicing.`
+    );
+  }
+
+  // 5. Format prompt messages with coalesced turns for Groq
   const groqMessages = formatGroqMessages(
     chat.product_name,
     chat.product_description,
@@ -198,8 +229,15 @@ export async function POST(request: Request, context: RouteContext) {
     });
   };
 
+  // 6. Prevent concurrent generations for the same conversation
+  const lockKey = `reply:${id}`;
+  const lockAcquired = await acquireChatLock(lockKey, 45);
+  if (!lockAcquired) {
+    return rateLimited(3000);
+  }
+
   try {
-    // 5. Invoke Groq with JSON Mode for structured multi-bubble output
+    // 7. Invoke Groq with JSON Mode for structured multi-bubble output
     const completion = await groq.chat.completions.create({
       model: DEFAULT_GROQ_MODEL,
       messages: groqMessages,
@@ -268,5 +306,7 @@ export async function POST(request: Request, context: RouteContext) {
         "POST /api/chats/[id]/reply:groq"
       );
     }
+  } finally {
+    await releaseChatLock(lockKey);
   }
 }

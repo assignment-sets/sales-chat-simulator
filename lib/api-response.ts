@@ -63,6 +63,35 @@ export function notFound(clientMessage = "Resource not found") {
   return apiError(clientMessage, 404);
 }
 
+/**
+ * Standardized 429 response for rate-limited requests.
+ * Includes standard retry/limit headers so clients can back off correctly.
+ */
+export function rateLimited(
+  retryAfterMs: number,
+  limit?: number,
+  remaining = 0
+): NextResponse<ApiErrorPayload> {
+  const retryAfter = Math.max(1, Math.ceil(retryAfterMs / 1000));
+  const response = apiError(
+    `Too many requests. Please wait ${retryAfter}s and try again.`,
+    429
+  );
+
+  response.headers.set("Retry-After", String(retryAfter));
+  response.headers.set("X-RateLimit-Remaining", String(Math.max(0, remaining)));
+  response.headers.set(
+    "X-RateLimit-Reset",
+    String(Math.ceil((Date.now() + Math.max(0, retryAfterMs)) / 1000))
+  );
+
+  if (limit !== undefined) {
+    response.headers.set("X-RateLimit-Limit", String(limit));
+  }
+
+  return response;
+}
+
 export function internalError(
   clientMessage = "An unexpected error occurred. Please try again later.",
   internalError?: unknown,

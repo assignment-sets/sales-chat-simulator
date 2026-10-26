@@ -6,6 +6,7 @@ import {
   unauthorized,
 } from "@/lib/api-response";
 import { validateChatAccess } from "@/lib/chat-auth";
+import { enforceRateLimits } from "@/lib/rate-limit";
 
 interface RouteContext {
   params: Promise<{
@@ -107,7 +108,16 @@ export async function POST(request: Request, context: RouteContext) {
     return chatCheck.response;
   }
 
-  // 2. Parse incoming message body
+  // 2. Throttle message writes before parsing the body
+  const rateLimit = await enforceRateLimits(
+    ["messages.create.user", `u:${user.id}`],
+    ["messages.create.user.hourly", `u:${user.id}`]
+  );
+  if (!rateLimit.ok) {
+    return rateLimit.response;
+  }
+
+  // 3. Parse incoming message body
   let body: { content?: unknown } = {};
   try {
     body = await request.json();
@@ -125,7 +135,11 @@ export async function POST(request: Request, context: RouteContext) {
     return badRequest("Message content cannot be empty");
   }
 
-  // 3. Atomically persist user message
+  if (content.length > 2000) {
+    return badRequest("Messages must be 2,000 characters or fewer");
+  }
+
+  // 4. Atomically persist user message
   const { data: message, error: insertError } = await supabase
     .from("messages")
     .insert({

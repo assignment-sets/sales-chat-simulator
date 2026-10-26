@@ -3,10 +3,16 @@ import { groq, DEFAULT_GROQ_MODEL } from "@/lib/groq";
 import {
   badRequest,
   internalError,
+  rateLimited,
   unauthorized,
 } from "@/lib/api-response";
 import { validateChatAccess } from "@/lib/chat-auth";
 import { requireOrgFeature } from "@/lib/entitlements";
+import {
+  acquireChatLock,
+  enforceRateLimits,
+  releaseChatLock,
+} from "@/lib/rate-limit";
 
 interface RouteContext {
   params: Promise<{
@@ -71,7 +77,16 @@ export async function POST(request: Request, context: RouteContext) {
     });
   }
 
-  // 3. Fetch full conversation transcript
+  // 3. Throttle expensive coaching generations (cached responses above are free)
+  const rateLimit = await enforceRateLimits(
+    ["ai.feedback.user", `u:${user.id}`],
+    ["ai.feedback.user.daily", `u:${user.id}`]
+  );
+  if (!rateLimit.ok) {
+    return rateLimit.response;
+  }
+
+  // 4. Fetch full conversation transcript
   const { data: messages, error: msgsError } = await supabase
     .from("messages")
     .select("role, content, created_at")
@@ -137,8 +152,24 @@ ${jevEvaluationBlock}
 Full Conversation Transcript:
 ${dialogue}`;
 
+  // 5. Prevent concurrent generations for the same simulation
+  const lockKey = `feedback:${id}`;
+  const lockAcquired = await acquireChatLock(lockKey, 120);
+  if (!lockAcquired) {
+    return rateLimited(5000);
+  }
+
+  let lockReleased = false;
+  const releaseLock = async () => {
+    if (lockReleased) {
+      return;
+    }
+    lockReleased = true;
+    await releaseChatLock(lockKey);
+  };
+
   try {
-    // 5. Invoke Groq with streaming enabled
+    // 6. Invoke Groq with streaming enabled
     const completion = await groq.chat.completions.create({
       model: DEFAULT_GROQ_MODEL,
       messages: [
@@ -149,39 +180,43 @@ ${dialogue}`;
       stream: true,
     });
 
-    // 6. Pipe stream directly to client and save completed text to database
+    // 7. Pipe stream directly to client and save completed text to database
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
         let fullFeedbackText = "";
 
         try {
-          for await (const chunk of completion) {
-            const content = chunk.choices[0]?.delta?.content || "";
-            if (content) {
-              fullFeedbackText += content;
-              controller.enqueue(encoder.encode(content));
+          try {
+            for await (const chunk of completion) {
+              const content = chunk.choices[0]?.delta?.content || "";
+              if (content) {
+                fullFeedbackText += content;
+                controller.enqueue(encoder.encode(content));
+              }
+            }
+          } catch (streamErr) {
+            console.error("[Feedback] Streaming error:", streamErr);
+            controller.error(streamErr);
+            return;
+          }
+
+          controller.close();
+
+          // 8. Persist feedback to database asynchronously
+          const trimmed = fullFeedbackText.trim();
+          if (trimmed.length > 0) {
+            try {
+              await supabase
+                .from("chats")
+                .update({ ai_feedback: trimmed })
+                .eq("id", id);
+            } catch (dbErr) {
+              console.warn("[Feedback] Failed to persist AI feedback to database:", dbErr);
             }
           }
-        } catch (streamErr) {
-          console.error("[Feedback] Streaming error:", streamErr);
-          controller.error(streamErr);
-          return;
-        }
-
-        controller.close();
-
-        // 7. Persist feedback to database asynchronously
-        const trimmed = fullFeedbackText.trim();
-        if (trimmed.length > 0) {
-          try {
-            await supabase
-              .from("chats")
-              .update({ ai_feedback: trimmed })
-              .eq("id", id);
-          } catch (dbErr) {
-            console.warn("[Feedback] Failed to persist AI feedback to database:", dbErr);
-          }
+        } finally {
+          await releaseLock();
         }
       },
     });
@@ -193,6 +228,7 @@ ${dialogue}`;
       },
     });
   } catch (err) {
+    await releaseLock();
     return internalError(
       "Failed to stream AI coaching feedback",
       err,
