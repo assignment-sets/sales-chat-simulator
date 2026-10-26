@@ -35,11 +35,11 @@ Instead of complicated token budgets, subscription tiers are differentiated by h
 | **Interactive Sales Roleplay** | Included | Included | Included |
 | **Automated Jev Evaluation (Win/Loss + 1–5 Score)** | Included | Included | Included |
 | **Turn Feedback Summary Card** | Included | Included | Included |
+| **Client-side Markdown Transcript Export** | Included | Included | Included |
 | **Detailed AI Coaching Breakdown** (`DetailedFeedbackModal`) | Gated / Locked (Upgrade Hook) | Included (Unlimited) | Included (Unlimited) |
 | **Team Oversight Dashboard** (`TeamDashboard`) | Personal stats only | Included (Full Team) | Included (Full Team) |
 | **Rep Performance Benchmarks & Charts** | Locked | Included | Included |
 | **Manager Transcript Drawer Inspection** | Locked | Included | Included |
-| **Client-side Markdown Transcript Export** | Locked | Included | Included |
 | **Custom Scenario Templates & Turn Deadlines** *(Roadmap)* | Standard templates only | Custom personas & rubrics | Custom personas & rubrics |
 
 ---

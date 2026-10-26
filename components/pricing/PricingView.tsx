@@ -33,7 +33,6 @@ const TIER_FEATURE_LISTS: Record<PlanTier, TierFeatureRow[]> = {
     { label: "Automated Jev Win/Loss & 1–5 score", included: true },
     { label: "Detailed AI Coaching Breakdown", included: false },
     { label: "Team Oversight Dashboard & analytics", included: false },
-    { label: "Markdown transcript export", included: false },
   ],
   pro: [
     { label: "150 practice simulations / month", included: true },
@@ -41,7 +40,6 @@ const TIER_FEATURE_LISTS: Record<PlanTier, TierFeatureRow[]> = {
     { label: "Automated Jev Win/Loss & 1–5 score", included: true },
     { label: "Unlimited Detailed AI Coaching", included: true },
     { label: "Full Team Dashboard & rep benchmarks", included: true },
-    { label: "Markdown transcript export", included: true },
   ],
   scale: [
     { label: "600 practice simulations / month", included: true },
@@ -49,7 +47,6 @@ const TIER_FEATURE_LISTS: Record<PlanTier, TierFeatureRow[]> = {
     { label: "Automated Jev Win/Loss & 1–5 score", included: true },
     { label: "Unlimited Detailed AI Coaching", included: true },
     { label: "Full Team Dashboard & rep benchmarks", included: true },
-    { label: "Markdown transcript export", included: true },
   ],
 };
 

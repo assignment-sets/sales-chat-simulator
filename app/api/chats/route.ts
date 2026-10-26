@@ -5,8 +5,8 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
-import { enforceRateLimits } from "@/lib/rate-limit";
 import { checkQuota } from "@/lib/entitlements";
+import { enforceRateLimits } from "@/lib/rate-limit";
 import { getActiveOrganization } from "@/lib/tenant";
 
 export async function GET(request: Request) {
@@ -123,13 +123,28 @@ export async function POST(request: Request) {
   }
 
   // Insert chat linked explicitly to both the author user and active organization
+  // Try atomic RPC first to prevent concurrent quota race condition, fall back to standard insert if RPC pending
+  const { data: rpcChat, error: rpcError } = await supabase.rpc(
+    "create_chat_with_quota",
+    {
+      target_org_id: activeContext.organization.id,
+      target_product_name: cleanName,
+      target_product_description: cleanDescription,
+    }
+  );
+
+  if (!rpcError && rpcChat) {
+    return apiSuccess({ chat: rpcChat }, 201);
+  }
+
+  // If RPC is unavailable (e.g. migration pending application on remote), perform standard insert
   const { data: chat, error } = await supabase
     .from("chats")
     .insert({
       user_id: user.id,
       organization_id: activeContext.organization.id,
-      product_name: product_name.trim(),
-      product_description: product_description.trim(),
+      product_name: cleanName,
+      product_description: cleanDescription,
       status: "ACTIVE",
     })
     .select()

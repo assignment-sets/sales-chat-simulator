@@ -26,8 +26,6 @@ const FEATURE_ERROR_MESSAGES: Record<FeatureFlag, string> = {
     "Detailed AI Coaching Breakdown is a Pro feature. Upgrade your workspace to Pro or Scale to unlock line-by-line critiques.",
   team_dashboard:
     "Team Oversight Dashboard & Rep Analytics require the Pro or Scale plan.",
-  transcript_export:
-    "Markdown Transcript Export is available on the Pro and Scale plans.",
 };
 
 /**

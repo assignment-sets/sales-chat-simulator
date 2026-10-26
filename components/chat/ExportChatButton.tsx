@@ -3,17 +3,15 @@
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Download, Lock } from "lucide-react";
+import { Download } from "lucide-react";
 import { exportChatAsMarkdown } from "@/lib/exportChat";
-import { hasFeature, PlanTier } from "@/lib/plans";
 import { notify } from "@/lib/toast";
 
 export function ExportChatButton({
   className = "",
-  planTier = "starter",
 }: {
   className?: string;
-  planTier?: PlanTier;
+  planTier?: string;
 }) {
   const pathname = usePathname();
   const [isExporting, setIsExporting] = useState(false);
@@ -24,16 +22,7 @@ export function ExportChatButton({
 
   if (!chatId) return null;
 
-  const canExport = hasFeature(planTier, "transcript_export");
-
   const handleExport = async () => {
-    if (!canExport) {
-      notify.info(
-        "Markdown transcript export is a Pro feature. View Plans & Pricing in the workspace menu."
-      );
-      return;
-    }
-
     try {
       setIsExporting(true);
       const res = await fetch(`/api/chats/${chatId}`);
@@ -65,21 +54,11 @@ export function ExportChatButton({
       size="sm"
       onClick={handleExport}
       isLoading={isExporting}
-      leftIcon={
-        canExport ? (
-          <Download className="w-3.5 h-3.5" />
-        ) : (
-          <Lock className="w-3 h-3 text-zinc-400" />
-        )
-      }
+      leftIcon={<Download className="w-3.5 h-3.5" />}
       className={`text-xs h-7 px-2.5 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 border-zinc-200 gap-1.5 font-medium shrink-0 ${className}`}
+      title="Export conversation transcript as Markdown"
     >
       <span>Export</span>
-      {!canExport && (
-        <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 ml-0.5">
-          Pro
-        </span>
-      )}
     </Button>
   );
 }

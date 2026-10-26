@@ -6,9 +6,9 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
-import { enforceRateLimit } from "@/lib/rate-limit";
 import { getActiveOrganization } from "@/lib/tenant";
 import { normalizePlanTier, PlanTier } from "@/lib/plans";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
@@ -51,17 +51,26 @@ export async function POST(request: Request) {
 
   const targetTier: PlanTier = normalizePlanTier(body.plan_tier);
 
-  const { error: updateError } = await supabase
-    .from("organizations")
-    .update({ plan_tier: targetTier })
-    .eq("id", organization.id);
+  // Call secure RPC to update organization plan tier
+  const { data: result, error: rpcError } = await supabase.rpc(
+    "update_organization_plan_tier",
+    {
+      target_org_id: organization.id,
+      new_tier: targetTier,
+    }
+  );
 
-  if (updateError) {
-    return internalError("Failed to update organization plan", updateError);
+  if (rpcError) {
+    return internalError(
+      "Failed to update organization plan",
+      rpcError,
+      "POST /api/organizations/tier"
+    );
   }
 
   return apiSuccess({
     organization_id: organization.id,
     plan_tier: targetTier,
+    result,
   });
 }

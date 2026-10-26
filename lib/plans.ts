@@ -6,8 +6,7 @@ export type QuotaType =
 
 export type FeatureFlag =
   | "detailed_ai_feedback"
-  | "team_dashboard"
-  | "transcript_export";
+  | "team_dashboard";
 
 export interface PlanDefinition {
   id: PlanTier;
@@ -31,7 +30,6 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanDefinition> = {
     features: {
       detailed_ai_feedback: false,
       team_dashboard: false,
-      transcript_export: false,
     },
   },
   pro: {
@@ -46,7 +44,6 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanDefinition> = {
     features: {
       detailed_ai_feedback: true,
       team_dashboard: true,
-      transcript_export: true,
     },
   },
   scale: {
@@ -61,7 +58,6 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanDefinition> = {
     features: {
       detailed_ai_feedback: true,
       team_dashboard: true,
-      transcript_export: true,
     },
   },
 };
