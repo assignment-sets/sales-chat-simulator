@@ -8,6 +8,12 @@ import {
 import { checkQuota } from "@/lib/entitlements";
 import { enforceRateLimits } from "@/lib/rate-limit";
 import { getActiveOrganization } from "@/lib/tenant";
+import { invalidate } from "@/lib/cache";
+import {
+  dashboardKey,
+  memberChatsKey,
+  pricingKey,
+} from "@/lib/cache/keys";
 
 export async function GET(request: Request) {
   const supabase = await createServerSupabaseClient();
@@ -134,6 +140,11 @@ export async function POST(request: Request) {
   );
 
   if (!rpcError && rpcChat) {
+    await invalidate(
+      dashboardKey(activeContext.organization.id),
+      pricingKey(activeContext.organization.id),
+      memberChatsKey(activeContext.organization.id, user.id)
+    );
     return apiSuccess({ chat: rpcChat }, 201);
   }
 
@@ -157,6 +168,13 @@ export async function POST(request: Request) {
       "POST /api/chats:insert"
     );
   }
+
+  // Chat persisted (fallback path): drop org aggregates for this org and user.
+  await invalidate(
+    dashboardKey(activeContext.organization.id),
+    pricingKey(activeContext.organization.id),
+    memberChatsKey(activeContext.organization.id, user.id)
+  );
 
   return apiSuccess({ chat }, 201);
 }

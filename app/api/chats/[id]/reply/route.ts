@@ -20,6 +20,12 @@ import {
   enforceRateLimits,
   releaseChatLock,
 } from "@/lib/rate-limit";
+import { invalidate } from "@/lib/cache";
+import {
+  dashboardKey,
+  memberChatsKey,
+  transcriptKey,
+} from "@/lib/cache/keys";
 
 const MAX_USER_TURNS = 40;
 
@@ -218,6 +224,16 @@ export async function POST(request: Request, context: RouteContext) {
       }
     } catch (evalErr) {
       console.warn("[Jev] Background turn evaluation error:", evalErr);
+    }
+
+    // Bubbles are persisted and the chat row may have been re-evaluated, so the
+    // org aggregates, this transcript and the author's member list are stale.
+    if (chat.organization_id) {
+      await invalidate(
+        dashboardKey(chat.organization_id),
+        transcriptKey(chat.organization_id, id),
+        memberChatsKey(chat.organization_id, user.id)
+      );
     }
 
     return apiSuccess({

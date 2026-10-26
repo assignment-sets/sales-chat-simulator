@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import {
   apiSuccess,
@@ -5,6 +6,9 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
+import { cached } from "@/lib/cache";
+import { dashboardKey } from "@/lib/cache/keys";
+import { CACHE_TTLS } from "@/lib/cache/policies";
 import { requireFeature } from "@/lib/entitlements";
 import { getActiveOrganization } from "@/lib/tenant";
 
@@ -66,32 +70,60 @@ export interface DashboardAnalytics {
   scenarioBreakdown: DashboardScenarioPoint[];
 }
 
-export async function GET() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+/**
+ * Org-scoped dashboard payload. Deliberately excludes anything caller-specific
+ * (role, email, metadata) so one cache entry is valid for every admin in the org.
+ */
+interface DashboardPayload {
+  kpis: DashboardKpiSummary;
+  analytics: DashboardAnalytics;
+  members: DashboardMemberSummary[];
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
 
-  if (authError || !user) {
-    return unauthorized();
+/**
+ * Carries a sanitized client message plus internal details for `internalError`,
+ * since the loader runs inside `cached()` and can only signal failures by throwing.
+ */
+class DashboardLoadError extends Error {
+  readonly internal?: unknown;
+  readonly context?: string;
+
+  constructor(message: string, internal?: unknown, context?: string) {
+    super(message);
+    this.name = "DashboardLoadError";
+    this.internal = internal;
+    this.context = context;
   }
+}
 
-  const activeContext = await getActiveOrganization(supabase, user.id, user.email);
-  if (!activeContext) {
-    return internalError("Failed to resolve active organization");
-  }
+/**
+ * Heavy dashboard aggregation, keyed purely by organization.
+ *
+ * Must stay free of `cookies()`/`headers()` and user-specific fields: it is
+ * cached and shared by every owner/admin of the organization.
+ */
+async function loadDashboard(
+  supabase: SupabaseClient,
+  orgId: string
+): Promise<DashboardPayload> {
+  // 0. Organization identity for the response payload
+  const { data: orgRow, error: orgError } = await supabase
+    .from("organizations")
+    .select("id, name, slug")
+    .eq("id", orgId)
+    .maybeSingle();
 
-  const { organization, role } = activeContext;
-
-  if (role !== "owner" && role !== "admin") {
-    return forbidden("Team oversight is restricted to organization owners and admins");
-  }
-
-  // Enforce Pro/Scale plan tier requirement for Team Oversight Dashboard
-  const featureGate = requireFeature(organization, "team_dashboard");
-  if (!featureGate.ok) {
-    return featureGate.response;
+  if (orgError || !orgRow) {
+    throw new DashboardLoadError(
+      "Failed to load organization",
+      orgError,
+      "GET /api/dashboard:organization"
+    );
   }
 
   // 1. Fetch organization members with profile names and emails
@@ -107,7 +139,7 @@ export async function GET() {
 
   const { data: rpcMembers, error: rpcError } = await supabase.rpc(
     "get_organization_members",
-    { target_org_id: organization.id }
+    { target_org_id: orgId }
   );
 
   if (!rpcError && rpcMembers) {
@@ -117,10 +149,10 @@ export async function GET() {
     const { data: directMembers, error: membersError } = await supabase
       .from("organization_members")
       .select("id, user_id, role, created_at")
-      .eq("organization_id", organization.id);
+      .eq("organization_id", orgId);
 
     if (membersError) {
-      return internalError(
+      throw new DashboardLoadError(
         "Failed to fetch organization members",
         membersError,
         "GET /api/dashboard:members"
@@ -133,11 +165,11 @@ export async function GET() {
   const { data: chatRows, error: chatsError } = await supabase
     .from("chats")
     .select("id, user_id, product_name, tokens_used, status, score, evaluation_outcome, created_at")
-    .eq("organization_id", organization.id)
+    .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 
   if (chatsError) {
-    return internalError(
+    throw new DashboardLoadError(
       "Failed to fetch organization chats",
       chatsError,
       "GET /api/dashboard:chats"
@@ -173,12 +205,13 @@ export async function GET() {
   const memberMap = new Map<string, MemberAccumulator>();
 
   for (const m of memberRows || []) {
-    const isSelf = m.user_id === user.id;
-    const fallbackEmail = isSelf && user.email ? user.email : `member-${m.user_id.slice(0, 8)}@team`;
-    const memberEmail = m.email || fallbackEmail;
-    const fallbackName = isSelf
-      ? ((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || memberEmail.split("@")[0])
-      : (memberEmail.includes("@") ? memberEmail.split("@")[0] : `Team Member (${m.user_id.slice(0, 8)})`);
+    // Deterministic, caller-independent fallbacks: the cached payload is shared
+    // by every admin, so it must never embed the requesting user's email/name.
+    const shortId = m.user_id.slice(0, 8);
+    const memberEmail = m.email || `member-${shortId}@team`;
+    const fallbackName = memberEmail.includes("@")
+      ? memberEmail.split("@")[0]
+      : `Team Member (${shortId})`;
 
     const fullName = m.full_name || fallbackName;
 
@@ -427,15 +460,64 @@ export async function GET() {
     scenarioBreakdown,
   };
 
-  return apiSuccess({
+  return {
     kpis,
     analytics,
     members: memberSummaries,
     organization: {
-      id: organization.id,
-      name: organization.name,
-      slug: organization.slug,
+      id: orgRow.id,
+      name: orgRow.name,
+      slug: orgRow.slug,
     },
+  };
+}
+
+export async function GET() {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return unauthorized();
+  }
+
+  const activeContext = await getActiveOrganization(supabase, user.id, user.email);
+  if (!activeContext) {
+    return internalError("Failed to resolve active organization");
+  }
+
+  const { organization, role } = activeContext;
+
+  if (role !== "owner" && role !== "admin") {
+    return forbidden("Team oversight is restricted to organization owners and admins");
+  }
+
+  // Enforce Pro/Scale plan tier requirement for Team Oversight Dashboard
+  const featureGate = requireFeature(organization, "team_dashboard");
+  if (!featureGate.ok) {
+    return featureGate.response;
+  }
+
+  // Auth, role and feature checks above stay outside the cache. The payload is
+  // org-scoped only; `currentUserRole` is added per caller afterwards.
+  let payload: DashboardPayload;
+  try {
+    payload = await cached(
+      dashboardKey(organization.id),
+      CACHE_TTLS.dashboard,
+      () => loadDashboard(supabase, organization.id)
+    );
+  } catch (error) {
+    if (error instanceof DashboardLoadError) {
+      return internalError(error.message, error.internal, error.context);
+    }
+    return internalError("Failed to load dashboard", error, "GET /api/dashboard");
+  }
+
+  return apiSuccess({
+    ...payload,
     currentUserRole: role,
   });
 }

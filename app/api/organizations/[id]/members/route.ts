@@ -10,6 +10,8 @@ import {
 import { checkQuota } from "@/lib/entitlements";
 import { enforceRateLimits } from "@/lib/rate-limit";
 import { validateOrgMembership } from "@/lib/tenant";
+import { invalidate } from "@/lib/cache";
+import { pricingKey } from "@/lib/cache/keys";
 
 interface RouteContext {
   params: Promise<{
@@ -153,6 +155,9 @@ export async function POST(request: Request, context: RouteContext) {
       "POST /api/organizations/[id]/members:rpc"
     );
   }
+
+  // Seat usage changed in the pricing page's counters.
+  await invalidate(pricingKey(orgId));
 
   return apiSuccess({ success: true, result }, 201);
 }

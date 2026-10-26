@@ -13,6 +13,8 @@ import {
   enforceRateLimits,
   releaseChatLock,
 } from "@/lib/rate-limit";
+import { invalidate } from "@/lib/cache";
+import { dashboardKey, transcriptKey } from "@/lib/cache/keys";
 
 interface RouteContext {
   params: Promise<{
@@ -207,10 +209,21 @@ ${dialogue}`;
           const trimmed = fullFeedbackText.trim();
           if (trimmed.length > 0) {
             try {
-              await supabase
+              const { error: persistError } = await supabase
                 .from("chats")
                 .update({ ai_feedback: trimmed })
                 .eq("id", id);
+
+              if (persistError) {
+                console.warn("[Feedback] Failed to persist AI feedback to database:", persistError);
+              } else if (chat.organization_id) {
+                // Only invalidate once the write actually succeeded. Awaiting is
+                // safe: `invalidate` never throws and the lock is released in `finally`.
+                await invalidate(
+                  dashboardKey(chat.organization_id),
+                  transcriptKey(chat.organization_id, id)
+                );
+              }
             } catch (dbErr) {
               console.warn("[Feedback] Failed to persist AI feedback to database:", dbErr);
             }

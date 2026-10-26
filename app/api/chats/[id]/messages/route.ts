@@ -7,6 +7,12 @@ import {
 } from "@/lib/api-response";
 import { validateChatAccess } from "@/lib/chat-auth";
 import { enforceRateLimits } from "@/lib/rate-limit";
+import { invalidate } from "@/lib/cache";
+import {
+  dashboardKey,
+  memberChatsKey,
+  transcriptKey,
+} from "@/lib/cache/keys";
 
 interface RouteContext {
   params: Promise<{
@@ -97,7 +103,10 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   // 1. Dual-check: verify chat exists and belongs to user
-  const chatCheck = await validateChatAccess(
+  const chatCheck = await validateChatAccess<{
+    id: string;
+    organization_id?: string;
+  }>(
     supabase,
     id,
     user.id,
@@ -156,6 +165,17 @@ export async function POST(request: Request, context: RouteContext) {
       "Failed to save message",
       insertError,
       "POST /api/chats/[id]/messages:insert"
+    );
+  }
+
+  // The message was persisted: drop the aggregates and transcript that embed it.
+  // Legacy chats may have no organization_id, so skip cache work in that case.
+  const orgId = chatCheck.chat.organization_id;
+  if (orgId) {
+    await invalidate(
+      dashboardKey(orgId),
+      transcriptKey(orgId, id),
+      memberChatsKey(orgId, user.id)
     );
   }
 
