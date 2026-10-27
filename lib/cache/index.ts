@@ -1,4 +1,10 @@
 import { getRedisClient } from "@/lib/redis";
+import {
+  dashboardKey,
+  memberChatsKey,
+  pricingKey,
+  transcriptKey,
+} from "./keys";
 
 /**
  * Minimal cache-aside layer on the shared Upstash Redis client.
@@ -94,4 +100,52 @@ export async function invalidate(...keys: string[]): Promise<void> {
   } catch (error) {
     console.error(`[Cache] error invalidating keys=${uniqueKeys.join(",")}`, error);
   }
+}
+
+/**
+ * Centralized invalidator for chat lifecycle mutations (create, reply, message, delete).
+ */
+export async function invalidateChat(
+  orgId?: string | null,
+  chatId?: string | null,
+  userId?: string | null
+): Promise<void> {
+  if (!orgId) return;
+
+  const keys: string[] = [dashboardKey(orgId), pricingKey(orgId)];
+
+  if (chatId) {
+    keys.push(transcriptKey(orgId, chatId));
+  }
+  if (userId) {
+    keys.push(memberChatsKey(orgId, userId));
+  }
+
+  await invalidate(...keys);
+}
+
+/**
+ * Centralized invalidator for team membership and seat changes (invite, role update, remove).
+ */
+export async function invalidateOrgMembers(
+  orgId?: string | null,
+  userId?: string | null
+): Promise<void> {
+  if (!orgId) return;
+
+  const keys: string[] = [dashboardKey(orgId), pricingKey(orgId)];
+
+  if (userId) {
+    keys.push(memberChatsKey(orgId, userId));
+  }
+
+  await invalidate(...keys);
+}
+
+/**
+ * Centralized invalidator for workspace subscription tier or plan changes.
+ */
+export async function invalidateOrgTier(orgId?: string | null): Promise<void> {
+  if (!orgId) return;
+  await invalidate(dashboardKey(orgId), pricingKey(orgId));
 }

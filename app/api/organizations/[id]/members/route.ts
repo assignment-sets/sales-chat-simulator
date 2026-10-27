@@ -10,8 +10,7 @@ import {
 import { checkQuota } from "@/lib/entitlements";
 import { enforceRateLimits } from "@/lib/rate-limit";
 import { validateOrgMembership } from "@/lib/tenant";
-import { invalidate } from "@/lib/cache";
-import { pricingKey } from "@/lib/cache/keys";
+import { invalidateOrgMembers } from "@/lib/cache";
 
 interface RouteContext {
   params: Promise<{
@@ -162,8 +161,8 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  // Seat usage changed in the pricing page's counters.
-  await invalidate(pricingKey(orgId));
+  // Seat usage and member lists changed; invalidate centralized org member caches.
+  await invalidateOrgMembers(orgId);
 
   return apiSuccess({ success: true, result }, 201);
 }
@@ -235,6 +234,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (updateError) {
     return internalError("Failed to update member role", updateError, "PATCH /api/organizations/[id]/members");
   }
+
+  await invalidateOrgMembers(orgId, targetMember.user_id);
 
   return apiSuccess({ member: updatedMember });
 }
@@ -321,6 +322,8 @@ export async function DELETE(request: Request, context: RouteContext) {
   if (!deletedRows || deletedRows.length === 0) {
     return notFound("Member could not be deleted");
   }
+
+  await invalidateOrgMembers(orgId, targetMember.user_id);
 
   return apiSuccess({ success: true });
 }

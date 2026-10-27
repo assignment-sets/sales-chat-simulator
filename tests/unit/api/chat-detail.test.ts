@@ -104,7 +104,7 @@ describe("DELETE /api/chats/[id]", () => {
       role: "owner",
     });
 
-    const invalidateSpy = vi.spyOn(cacheModule, "invalidate").mockResolvedValue();
+    const invalidateSpy = vi.spyOn(cacheModule, "invalidateChat").mockResolvedValue();
 
     mockClient.from = vi.fn(() => ({
       delete: vi.fn().mockReturnThis(),
@@ -118,5 +118,6 @@ describe("DELETE /api/chats/[id]", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.success).toBe(true);
+    expect(invalidateSpy).toHaveBeenCalledWith("org-1", "chat-1", undefined);
   });
 });

@@ -6,6 +6,7 @@ import {
   unauthorized,
 } from "@/lib/api-response";
 import { validateChatAccess } from "@/lib/chat-auth";
+import { invalidateChat } from "@/lib/cache";
 
 interface RouteContext {
   params: Promise<{
@@ -124,6 +125,11 @@ export async function DELETE(request: Request, context: RouteContext) {
 
   if (!deletedRows || deletedRows.length === 0) {
     return notFound("Chat not found");
+  }
+
+  const orgId = chatCheck.chat.organization_id;
+  if (orgId) {
+    await invalidateChat(orgId, id, chatCheck.chat.user_id);
   }
 
   return apiSuccess({ success: true });

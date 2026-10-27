@@ -5,7 +5,6 @@ import * as tenantModule from "@/lib/tenant";
 import * as rateLimitModule from "@/lib/rate-limit";
 import * as entitlementsModule from "@/lib/entitlements";
 import * as cacheModule from "@/lib/cache";
-import { pricingKey } from "@/lib/cache/keys";
 
 describe("GET /api/organizations/[id]/members", () => {
   beforeEach(() => {
@@ -409,7 +408,7 @@ describe("POST /api/organizations/[id]/members", () => {
     });
 
     vi.spyOn(entitlementsModule, "checkQuota").mockResolvedValue({ ok: true });
-    const invalidateSpy = vi.spyOn(cacheModule, "invalidate").mockResolvedValue();
+    const invalidateSpy = vi.spyOn(cacheModule, "invalidateOrgMembers").mockResolvedValue();
 
     const mockResult = { status: "invited", email: "newuser@saleschat.io" };
     mockClient.rpc = vi.fn(async (fnName: string, params: any) => {
@@ -434,7 +433,7 @@ describe("POST /api/organizations/[id]/members", () => {
     expect(json.success).toBe(true);
     expect(json.result).toEqual(mockResult);
 
-    expect(invalidateSpy).toHaveBeenCalledWith(pricingKey("org-1"));
+    expect(invalidateSpy).toHaveBeenCalledWith("org-1");
   });
 
   it("returns 403 forbidden when an admin attempts to invite/grant the owner role", async () => {
@@ -470,7 +469,7 @@ describe("POST /api/organizations/[id]/members", () => {
     });
 
     vi.spyOn(entitlementsModule, "checkQuota").mockResolvedValue({ ok: true });
-    vi.spyOn(cacheModule, "invalidate").mockResolvedValue();
+    vi.spyOn(cacheModule, "invalidateOrgMembers").mockResolvedValue();
 
     const mockResult = { status: "added", user_id: "user-2", email: "coowner@saleschat.io" };
     mockClient.rpc = vi.fn(async (fnName: string, params: any) => {
