@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { Navbar } from "@/components/layout/Navbar";
 import { getActiveOrganization } from "@/lib/tenant";
@@ -14,7 +13,11 @@ export default async function PricingLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    return (
+      <div className="min-h-full flex flex-col bg-white text-zinc-900 font-sans overflow-y-auto">
+        {children}
+      </div>
+    );
   }
 
   const userName =
@@ -30,7 +33,11 @@ export default async function PricingLayout({
   );
 
   if (!activeContext) {
-    redirect("/chats");
+    return (
+      <div className="min-h-full flex flex-col bg-white text-zinc-900 font-sans overflow-y-auto">
+        {children}
+      </div>
+    );
   }
 
   return (

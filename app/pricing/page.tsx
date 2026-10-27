@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { getActiveOrganization } from "@/lib/tenant";
@@ -7,6 +8,11 @@ import { pricingKey } from "@/lib/cache/keys";
 import { CACHE_TTLS } from "@/lib/cache/policies";
 import { PricingView } from "@/components/pricing/PricingView";
 
+export const metadata: Metadata = {
+  title: "Plans & Pricing",
+  description: "Predictable simulation quotas and team seat plans for individuals and growing sales teams.",
+};
+
 export default async function PricingPage() {
   const supabase = await createServerSupabaseClient();
   const {
@@ -14,7 +20,15 @@ export default async function PricingPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    return (
+      <PricingView
+        organizationName="Public"
+        currentTier={null}
+        simulationsUsedThisMonth={0}
+        seatsUsed={0}
+        isAuthenticated={false}
+      />
+    );
   }
 
   const activeContext = await getActiveOrganization(

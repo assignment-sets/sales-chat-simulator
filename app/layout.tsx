@@ -14,9 +14,29 @@ const geistMono = Geist_Mono({
 
 import { Toaster } from "sonner";
 
+const appBaseUrl =
+  process.env.NEXT_PUBLIC_APP_URL || "https://saleschat.io";
+
 export const metadata: Metadata = {
-  title: "SalesChat - AI Sales Practice Simulator",
-  description: "Sharpen your live chat sales skills against realistic AI prospects.",
+  metadataBase: new URL(appBaseUrl),
+  title: {
+    default: "SalesChat - AI Sales Practice Simulator",
+    template: "%s | SalesChat",
+  },
+  description: "Sharpen your live chat sales skills against hyper-realistic AI prospect personas.",
+  openGraph: {
+    title: "SalesChat - AI Sales Practice Simulator",
+    description: "Sharpen your live chat sales skills against hyper-realistic AI prospect personas with instant coaching feedback.",
+    url: appBaseUrl,
+    siteName: "SalesChat",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SalesChat - AI Sales Practice Simulator",
+    description: "Practice objection handling, negotiation, and closing against realistic prospect personas.",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

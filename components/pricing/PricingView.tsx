@@ -15,10 +15,11 @@ import {
 } from "@/lib/plans";
 
 export interface PricingViewProps {
-  organizationName: string;
+  organizationName?: string;
   currentTier?: string | null;
-  simulationsUsedThisMonth: number;
-  seatsUsed: number;
+  simulationsUsedThisMonth?: number;
+  seatsUsed?: number;
+  isAuthenticated?: boolean;
 }
 
 interface TierFeatureRow {
@@ -53,8 +54,9 @@ const TIER_FEATURE_LISTS: Record<PlanTier, TierFeatureRow[]> = {
 export function PricingView({
   organizationName,
   currentTier,
-  simulationsUsedThisMonth,
-  seatsUsed,
+  simulationsUsedThisMonth = 0,
+  seatsUsed = 0,
+  isAuthenticated = true,
 }: PricingViewProps) {
   const router = useRouter();
   const [switchingTier, setSwitchingTier] = useState<PlanTier | null>(null);
@@ -62,6 +64,10 @@ export function PricingView({
   const activePlan = getPlanConfig(activeTier);
 
   const handleSwitchTier = async (targetTier: PlanTier) => {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
     if (targetTier === activeTier) return;
 
     try {
@@ -106,80 +112,90 @@ export function PricingView({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <Link
-              href="/chats"
+              href={isAuthenticated ? "/chats" : "/"}
               className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 mb-2 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Practice</span>
+              <span>{isAuthenticated ? "Back to Practice" : "Back to Home"}</span>
             </Link>
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight">
-              Plans & Usage
+              {isAuthenticated ? "Plans & Usage" : "Transparent Plans & Pricing"}
             </h1>
             <p className="text-xs sm:text-sm text-zinc-500 mt-0.5">
-              Workspace: <span className="font-medium text-zinc-700">{organizationName}</span>
+              {isAuthenticated ? (
+                <>
+                  Workspace: <span className="font-medium text-zinc-700">{organizationName}</span>
+                </>
+              ) : (
+                "Predictable simulation tiers for individuals and growing sales teams."
+              )}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="text-xs text-zinc-400">Active Tier:</span>
-            <Badge variant="accent" className="text-xs px-2.5 py-0.5 uppercase tracking-wider">
-              {activePlan.name}
-            </Badge>
-          </div>
+          {isAuthenticated && (
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <span className="text-xs text-zinc-400">Active Tier:</span>
+              <Badge variant="accent" className="text-xs px-2.5 py-0.5 uppercase tracking-wider">
+                {activePlan.name}
+              </Badge>
+            </div>
+          )}
         </div>
 
-        {/* Current Monthly Quota Summary Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="font-semibold text-zinc-700">
-                Monthly Simulations
-              </span>
-              <span className="font-mono font-semibold text-zinc-900">
-                {simulationsUsedThisMonth} / {simLimit}
-              </span>
+        {/* Current Monthly Quota Summary Bar (Only for authenticated active orgs) */}
+        {isAuthenticated && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5">
+              <div className="flex items-center justify-between text-xs mb-2">
+                <span className="font-semibold text-zinc-700">
+                  Monthly Simulations
+                </span>
+                <span className="font-mono font-semibold text-zinc-900">
+                  {simulationsUsedThisMonth} / {simLimit}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    simPercent >= 100 ? "bg-rose-500" : "bg-zinc-900"
+                  }`}
+                  style={{ width: `${simPercent}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-2">
+                Resets on the 1st of each calendar month (UTC)
+              </p>
             </div>
-            <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  simPercent >= 100 ? "bg-rose-500" : "bg-zinc-900"
-                }`}
-                style={{ width: `${simPercent}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-zinc-400 mt-2">
-              Resets on the 1st of each calendar month (UTC)
-            </p>
-          </div>
 
-          <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="font-semibold text-zinc-700">
-                Team Seats
-              </span>
-              <span className="font-mono font-semibold text-zinc-900">
-                {seatsUsed} / {seatLimit}
-              </span>
+            <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 sm:p-5">
+              <div className="flex items-center justify-between text-xs mb-2">
+                <span className="font-semibold text-zinc-700">
+                  Team Seats
+                </span>
+                <span className="font-mono font-semibold text-zinc-900">
+                  {seatsUsed} / {seatLimit}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    seatPercent >= 100 ? "bg-amber-500" : "bg-zinc-900"
+                  }`}
+                  style={{ width: `${seatPercent}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-2">
+                Includes active members and pending invitations
+              </p>
             </div>
-            <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
-                  seatPercent >= 100 ? "bg-amber-500" : "bg-zinc-900"
-                }`}
-                style={{ width: `${seatPercent}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-zinc-400 mt-2">
-              Includes active members and pending invitations
-            </p>
           </div>
-        </div>
+        )}
 
         {/* 3-Column Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {tiers.map((tierKey) => {
             const plan = PLAN_CONFIGS[tierKey];
-            const isCurrent = tierKey === activeTier;
+            const isCurrent = isAuthenticated && tierKey === activeTier;
             const isPopular = tierKey === "pro";
             const features = TIER_FEATURE_LISTS[tierKey];
 
@@ -245,20 +261,39 @@ export function PricingView({
                   </ul>
                 </div>
 
-                {/* Action Button: Instant 1-click access */}
-                <Button
-                  type="button"
-                  variant={isPopular && !isCurrent ? "primary" : "outline"}
-                  size="md"
-                  disabled={isCurrent || switchingTier !== null}
-                  isLoading={switchingTier === tierKey}
-                  onClick={() => handleSwitchTier(tierKey)}
-                  className="w-full text-xs font-semibold cursor-pointer disabled:cursor-not-allowed"
-                >
-                  {isCurrent
-                    ? "Active Plan"
-                    : `Switch to ${plan.name}`}
-                </Button>
+                {/* Action Button */}
+                {isAuthenticated ? (
+                  <Button
+                    type="button"
+                    variant={isPopular && !isCurrent ? "primary" : "outline"}
+                    size="md"
+                    disabled={isCurrent || switchingTier !== null}
+                    isLoading={switchingTier === tierKey}
+                    onClick={() => handleSwitchTier(tierKey)}
+                    className="w-full text-xs font-semibold cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    {isCurrent
+                      ? "Active Plan"
+                      : tierKey === "starter"
+                        ? "Downgrade to Starter"
+                        : `Upgrade to ${plan.name}`}
+                  </Button>
+                ) : (
+                  <Link href="/login" className="w-full">
+                    <Button
+                      type="button"
+                      variant={isPopular ? "primary" : "outline"}
+                      size="md"
+                      className="w-full text-xs font-semibold cursor-pointer"
+                    >
+                      {tierKey === "starter"
+                        ? "Start Free"
+                        : tierKey === "pro"
+                          ? "Start with Pro"
+                          : `Start with ${plan.name}`}
+                    </Button>
+                  </Link>
+                )}
               </div>
             );
           })}
