@@ -29,10 +29,7 @@ export async function login(formData: FormData) {
   // Claim any pending organization invitations for this email
   if (data?.user) {
     try {
-      await supabase.rpc("claim_pending_org_invitations", {
-        user_id: data.user.id,
-        user_email: email,
-      });
+      await supabase.rpc("claim_pending_org_invitations");
     } catch {
       // Non-fatal if table or function is pending migration
     }
@@ -78,10 +75,7 @@ export async function signup(formData: FormData) {
   // If user session is created immediately (e.g. autoconfirm enabled)
   if (data?.session && data.user) {
     try {
-      await supabase.rpc("claim_pending_org_invitations", {
-        user_id: data.user.id,
-        user_email: email,
-      });
+      await supabase.rpc("claim_pending_org_invitations");
     } catch {
       // Non-fatal
     }

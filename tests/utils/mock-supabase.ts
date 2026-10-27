@@ -109,6 +109,14 @@ export function createMockSupabaseClient(options: MockSupabaseOptions = {}) {
         data: { user },
         error: user ? null : { message: "Invalid session" },
       })),
+      signInWithPassword: vi.fn(async () => ({
+        data: { user, session: user ? { access_token: "mock-token" } : null },
+        error: user ? null : { message: "Invalid email or password" },
+      })),
+      signUp: vi.fn(async () => ({
+        data: { user, session: user ? { access_token: "mock-token" } : null },
+        error: null,
+      })),
       signOut: vi.fn(async () => ({ error: null })),
     },
     from: vi.fn((tableName: string) => {
