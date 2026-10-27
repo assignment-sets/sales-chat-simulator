@@ -71,7 +71,36 @@ Additional non-rate guards:
 - Simulations stop generating prospect replies after **40 user turns**.
 - A user can own at most **3 organizations**, limiting free-tier quota farming.
 - Per-conversation Redis locks prevent duplicate concurrent LLM generations:
-  `reply` 45s, `feedback` 120s.
+  `reply` 60s, `feedback` 120s.
+- AI routes export `maxDuration` (`reply` 60s, `feedback` 90s) so the platform
+  terminates a runaway invocation. Vercel's default is 300s, which is far too
+  generous for a single completion.
+- Groq calls always pass `request.signal`, a per-request timeout, and a bounded
+  retry count. Aborted requests are never retried and never followed by a
+  recovery generation.
+
+## AI usage ceiling
+
+`lib/ai-usage.ts` enforces a **monthly per-organization token ceiling** as a
+safety backstop, not a marketed plan quota (see `docs/PRICING_AND_LIMITS.md`).
+
+- Usage is recorded in `public.organization_ai_usage`, one row per organization
+  per UTC month, written only through the `record_org_ai_usage` RPC.
+- The ceiling is checked in `reply` and `feedback` after authentication, feature
+  gating and rate limits, and before the conversation lock or any Groq call.
+- Exhausted ceiling → `403` with the used/limit counts and the reset date. This
+  is separate from rate limiting (`429`) and plan quotas (`403` simulations).
+- Ceilings are roughly 3x expected maximum usage: starter `500,000`, pro
+  `5,000,000`, scale `20,000,000` tokens per month.
+- The check **fails open** on database errors, matching the Redis rate limiter:
+  the WAF rule and per-user limits still bound spend.
+- `estimated_cost_usd` is recorded for observability only, priced from
+  `GROQ_INPUT_PRICE_PER_MTOK` / `GROQ_OUTPUT_PRICE_PER_MTOK`. It is never used
+  to enforce the limit.
+
+Known gaps: tokens consumed by a stream aborted mid-flight cannot be measured
+(Groq only reports usage in the final chunk), and TypeSafe AI Jev usage is not
+metered because the SDK does not return token counts.
 
 ## Behavior
 

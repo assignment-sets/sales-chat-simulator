@@ -6,6 +6,12 @@
 2. **Never Cut Off Mid-Conversation**: Roleplay conversations should never fail halfway through because a hidden token meter ran out. Gate checks happen **only when creating a new simulation** (`POST /api/chats`).
 3. **Turn Counts Belong to Scenarios, Not Pricing**: Roleplays naturally vary—some objections take 8 turns, others take 20. Turn counts are a **simulation scenario parameter** (e.g., test time limits), not a tier restriction.
 4. **Natural Abuse Protection**: TypeSafe AI Jev automatically concludes chats as `deal_won` or `deal_lost` once an agreement or impasse is reached, preventing runaway conversations.
+5. **Invisible Safety Backstop, Not a Quota**: Every organization has an internal monthly AI token ceiling (`lib/ai-usage.ts`) sized at roughly 3x its expected maximum usage. It is never marketed, never shown as a pricing dimension, and only trips on abuse, bugs, or runaway requests. Normal workspaces never touch it.
+
+> [!IMPORTANT]
+> The safety ceiling returns `403` on new AI calls once exhausted. It is the one
+> deliberate exception to "never cut off mid-conversation", and it is set high
+> enough that only abnormal usage reaches it. See `docs/RATE_LIMITING.md`.
 
 ---
 

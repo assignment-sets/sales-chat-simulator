@@ -43,6 +43,16 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_or_publishable_key
 ```
 
+Optional AI guardrail settings:
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `GROQ_TIMEOUT_MS` | `30000` | Client-level timeout for a single Groq attempt |
+| `GROQ_MAX_RETRIES` | `1` | SDK retries per call (each retry can cost another generation) |
+| `GROQ_INPUT_PRICE_PER_MTOK` | `0` | Input price per 1M tokens, used only for the spend estimate column |
+| `GROQ_OUTPUT_PRICE_PER_MTOK` | `0` | Output price per 1M tokens, used only for the spend estimate column |
+| `AI_CEILING_DISABLED` | unset | Set to `true` to bypass the monthly per-org AI usage ceiling (load tests only) |
+
 ### 3. Database Setup
 
 Apply the SQL migrations located in `supabase/migrations/` to your Supabase project:

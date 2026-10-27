@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from "@/utils/supabase/server";
-import { groq, DEFAULT_GROQ_MODEL } from "@/lib/groq";
+import { groq, DEFAULT_GROQ_MODEL, isGroqAbortError } from "@/lib/groq";
 import {
   extractBubbles,
   formatGroqMessages,
@@ -10,6 +10,7 @@ import { evaluateSimulationTurn } from "@/lib/jev";
 import {
   apiSuccess,
   badRequest,
+  clientClosed,
   internalError,
   rateLimited,
   unauthorized,
@@ -20,6 +21,7 @@ import {
   enforceRateLimits,
   releaseChatLock,
 } from "@/lib/rate-limit";
+import { checkAiTokenCeiling, recordAiUsage } from "@/lib/ai-usage";
 import { invalidate } from "@/lib/cache";
 import {
   dashboardKey,
@@ -29,6 +31,10 @@ import {
 
 const MAX_USER_TURNS = 40;
 
+// Hard cap for the whole request: primary generation, one recovery call, the
+// Jev evaluation and the database writes all have to fit inside this.
+export const maxDuration = 60;
+
 interface RouteContext {
   params: Promise<{
     id: string;
@@ -37,6 +43,12 @@ interface RouteContext {
 
 export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
+
+  // The client is already gone: do not start any billable work.
+  if (request.signal.aborted) {
+    return clientClosed();
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -106,7 +118,7 @@ export async function POST(request: Request, context: RouteContext) {
     created_at: row.created_at,
   }));
 
-  // 3. Idempotency guard: only generate a reply if the latest message was from the user
+  // 4. Idempotency guard: only generate a reply if the latest message was from the user
   if (history.length === 0) {
     return apiSuccess({ messages: [] });
   }
@@ -117,7 +129,7 @@ export async function POST(request: Request, context: RouteContext) {
     return apiSuccess({ messages: [] });
   }
 
-  // 4. Enforce the per-simulation turn cap
+  // 5. Enforce the per-simulation turn cap
   const userTurnCount = history.filter((message) => message.role === "user").length;
   if (userTurnCount > MAX_USER_TURNS) {
     return badRequest(
@@ -125,7 +137,7 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  // 5. Format prompt messages with coalesced turns for Groq
+  // 6. Format prompt messages with coalesced turns for Groq
   const groqMessages = formatGroqMessages(
     chat.product_name,
     chat.product_description,
@@ -155,6 +167,10 @@ export async function POST(request: Request, context: RouteContext) {
     const promptTokens = usage?.prompt_tokens || 0;
     const completionTokens = usage?.completion_tokens || 0;
     const totalTokens = usage?.total_tokens || (promptTokens + completionTokens);
+
+    // Meter the call before persisting: if the insert below fails, the tokens
+    // were still billed. `recordAiUsage` never throws.
+    await recordAiUsage(supabase, chat.organization_id, usage);
 
     const baseTime = Date.now();
     const rowsToInsert = cleanBubbles.map((bubble, index) => ({
@@ -188,42 +204,50 @@ export async function POST(request: Request, context: RouteContext) {
       created_at: row.created_at,
     }));
 
-    // 6. Evaluate conversational status and performance via TypeSafe AI Jev
+    // 7. Evaluate conversational status and performance via TypeSafe AI Jev.
+    //    Skipped when the client already disconnected: the response cannot be
+    //    delivered and the evaluation is extra paid work.
     let evaluationResult = null;
-    try {
-      evaluationResult = await evaluateSimulationTurn({
-        productName: chat.product_name,
-        productDescription: chat.product_description,
-        history: [...history, ...savedMessages],
-      });
-
-      // Update chat record with evaluation outcome and score
-      const updatePayload: Record<string, unknown> = {
-        score: Math.round(evaluationResult.score),
-        evaluation_outcome: evaluationResult.outcome,
-        evaluation_summary: evaluationResult,
-      };
-
-      if (evaluationResult.outcome === "deal_won") {
-        updatePayload.status = "WON";
-      } else if (evaluationResult.outcome === "deal_lost") {
-        updatePayload.status = "LOST";
-      }
-
-      console.log(
-        `[Chat Reply] Simulation ${id} evaluation: ${evaluationResult.outcome} | score=${evaluationResult.score}/5 | leadLostProb=${evaluationResult.leadLostProbability.toFixed(2)}`
+    if (request.signal.aborted) {
+      console.warn(
+        `[Chat Reply] Client disconnected before evaluation; skipping Jev for chat=${id}.`
       );
+    } else {
+      try {
+        evaluationResult = await evaluateSimulationTurn({
+          productName: chat.product_name,
+          productDescription: chat.product_description,
+          history: [...history, ...savedMessages],
+        });
 
-      const { error: updateChatErr } = await supabase
-        .from("chats")
-        .update(updatePayload)
-        .eq("id", id);
+        // Update chat record with evaluation outcome and score
+        const updatePayload: Record<string, unknown> = {
+          score: Math.round(evaluationResult.score),
+          evaluation_outcome: evaluationResult.outcome,
+          evaluation_summary: evaluationResult,
+        };
 
-      if (updateChatErr) {
-        console.warn("[Chat Reply] Could not update chat status with evaluation:", updateChatErr);
+        if (evaluationResult.outcome === "deal_won") {
+          updatePayload.status = "WON";
+        } else if (evaluationResult.outcome === "deal_lost") {
+          updatePayload.status = "LOST";
+        }
+
+        console.log(
+          `[Chat Reply] Simulation ${id} evaluation: ${evaluationResult.outcome} | score=${evaluationResult.score}/5 | leadLostProb=${evaluationResult.leadLostProbability.toFixed(2)}`
+        );
+
+        const { error: updateChatErr } = await supabase
+          .from("chats")
+          .update(updatePayload)
+          .eq("id", id);
+
+        if (updateChatErr) {
+          console.warn("[Chat Reply] Could not update chat status with evaluation:", updateChatErr);
+        }
+      } catch (evalErr) {
+        console.warn("[Jev] Background turn evaluation error:", evalErr);
       }
-    } catch (evalErr) {
-      console.warn("[Jev] Background turn evaluation error:", evalErr);
     }
 
     // Bubbles are persisted and the chat row may have been re-evaluated, so the
@@ -245,22 +269,40 @@ export async function POST(request: Request, context: RouteContext) {
     });
   };
 
-  // 6. Prevent concurrent generations for the same conversation
+  // 8. Enforce the organization's monthly AI usage safety ceiling. This runs
+  //    after the free guards above so an idempotent no-op never returns 403.
+  const ceiling = await checkAiTokenCeiling(supabase, chat.organization_id);
+  if (!ceiling.ok) {
+    return ceiling.response;
+  }
+
+  // 9. Prevent concurrent generations for the same conversation. The lock TTL
+  //     matches `maxDuration` so it can never expire while this invocation is
+  //     still allowed to run.
   const lockKey = `reply:${id}`;
-  const lockAcquired = await acquireChatLock(lockKey, 45);
+  const lockAcquired = await acquireChatLock(lockKey, 60);
   if (!lockAcquired) {
     return rateLimited(3000);
   }
 
   try {
-    // 7. Invoke Groq with JSON Mode for structured multi-bubble output
-    const completion = await groq.chat.completions.create({
-      model: DEFAULT_GROQ_MODEL,
-      messages: groqMessages,
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-      max_completion_tokens: 350,
-    });
+    // 10. Invoke Groq with JSON Mode for structured multi-bubble output.
+    //     `signal` stops generation the moment the client disconnects; the
+    //     per-request timeout bounds the wait for the first response byte.
+    const completion = await groq.chat.completions.create(
+      {
+        model: DEFAULT_GROQ_MODEL,
+        messages: groqMessages,
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+        max_completion_tokens: 350,
+      },
+      {
+        signal: request.signal,
+        timeout: 20_000,
+        maxRetries: 1,
+      }
+    );
 
     const rawContent = completion.choices[0]?.message?.content || "{}";
     let parsed: StructuredProspectResponse = { messages: [] };
@@ -280,6 +322,15 @@ export async function POST(request: Request, context: RouteContext) {
       completion.usage
     );
   } catch (err: unknown) {
+    // A disconnected client is not a generation failure. Retrying here would
+    // bill a second completion for a response nobody will read.
+    if (request.signal.aborted || isGroqAbortError(err)) {
+      console.warn(
+        `[Chat Reply] Generation aborted for chat=${id}; skipping recovery call.`
+      );
+      return clientClosed();
+    }
+
     console.warn("Groq JSON mode error, attempting recovery:", err);
 
     // 1. Check if Groq returned failed_generation in error payload
@@ -298,12 +349,19 @@ export async function POST(request: Request, context: RouteContext) {
 
     // 2. Fallback: call Groq without response_format to salvage conversational turn
     try {
-      const fallbackCompletion = await groq.chat.completions.create({
-        model: DEFAULT_GROQ_MODEL,
-        messages: groqMessages,
-        temperature: 0.7,
-        max_completion_tokens: 300,
-      });
+      const fallbackCompletion = await groq.chat.completions.create(
+        {
+          model: DEFAULT_GROQ_MODEL,
+          messages: groqMessages,
+          temperature: 0.7,
+          max_completion_tokens: 300,
+        },
+        {
+          signal: request.signal,
+          timeout: 10_000,
+          maxRetries: 0,
+        }
+      );
 
       const fallbackText =
         fallbackCompletion.choices[0]?.message?.content || "";
@@ -316,6 +374,13 @@ export async function POST(request: Request, context: RouteContext) {
         fallbackCompletion.usage
       );
     } catch (fallbackErr) {
+      if (request.signal.aborted || isGroqAbortError(fallbackErr)) {
+        console.warn(
+          `[Chat Reply] Recovery generation aborted for chat=${id}; client is gone.`
+        );
+        return clientClosed();
+      }
+
       return internalError(
         "Failed to generate prospect reply",
         fallbackErr,

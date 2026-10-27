@@ -55,6 +55,15 @@ export function unauthorized(clientMessage = "Unauthorized") {
   return apiError(clientMessage, 401);
 }
 
+/**
+ * 499 for requests the client already abandoned (closed tab, cancelled fetch).
+ * Nobody reads this body; it exists so handlers can exit deterministically
+ * instead of pretending a generation failure happened.
+ */
+export function clientClosed(clientMessage = "Request cancelled by the client") {
+  return apiError(clientMessage, 499);
+}
+
 export function forbidden(clientMessage = "Forbidden") {
   return apiError(clientMessage, 403);
 }

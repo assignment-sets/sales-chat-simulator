@@ -72,6 +72,7 @@ export function ChatRoom({
   const typingTimeoutRefs = useRef<NodeJS.Timeout[]>([]);
   const pendingBubblesRef = useRef<MessageItem[]>([]);
   const isReplyInFlightRef = useRef(false);
+  const replyAbortRef = useRef<AbortController | null>(null);
   const draftTextRef = useRef<string>("");
   const pendingEvaluationRef = useRef<{ outcome: string; score: number; confidence: number } | null>(null);
 
@@ -81,6 +82,8 @@ export function ChatRoom({
       if (emptySettleTimerRef.current) clearTimeout(emptySettleTimerRef.current);
       if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
       typingTimeoutRefs.current.forEach((t) => clearTimeout(t));
+      // Stop paying for a reply nobody will see when the user navigates away.
+      replyAbortRef.current?.abort();
     };
   }, []);
 
@@ -215,13 +218,17 @@ export function ChatRoom({
 
     if (isReplyInFlightRef.current) return;
 
+    const controller = new AbortController();
+
     try {
       isReplyInFlightRef.current = true;
+      replyAbortRef.current = controller;
       setIsProspectTyping(true);
 
       const res = await fetch(`/api/chats/${chat.id}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -246,10 +253,19 @@ export function ChatRoom({
 
       scheduleStaggeredBubbles(newBubbles, evaluation);
     } catch (err) {
+      // The component unmounted or a newer turn superseded this one. The
+      // request was deliberately cancelled, so stay quiet.
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
+
       console.error("Prospect reply error:", err);
       setIsProspectTyping(false);
       notify.error(err instanceof Error ? err.message : "Failed to receive buyer response");
     } finally {
+      if (replyAbortRef.current === controller) {
+        replyAbortRef.current = null;
+      }
       isReplyInFlightRef.current = false;
     }
   }, [chat.id, scheduleStaggeredBubbles]);
