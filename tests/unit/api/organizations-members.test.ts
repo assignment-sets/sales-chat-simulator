@@ -436,6 +436,60 @@ describe("POST /api/organizations/[id]/members", () => {
 
     expect(invalidateSpy).toHaveBeenCalledWith(pricingKey("org-1"));
   });
+
+  it("returns 403 forbidden when an admin attempts to invite/grant the owner role", async () => {
+    setupMockAuth({ userId: "admin-1", orgId: "org-1", role: "admin" });
+
+    vi.spyOn(tenantModule, "validateOrgMembership").mockResolvedValue({
+      isMember: true,
+      role: "admin",
+    });
+
+    const req = new Request("http://localhost:3000/api/organizations/org-1/members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "newowner@saleschat.io", role: "owner" }),
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: "org-1" }) });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toContain("Only organization owners can grant the owner role");
+  });
+
+  it("allows owner to grant owner role via invite_or_add_org_member", async () => {
+    const { mockClient } = setupMockAuth({ userId: "owner-1", orgId: "org-1", role: "owner" });
+
+    vi.spyOn(tenantModule, "validateOrgMembership").mockResolvedValue({
+      isMember: true,
+      role: "owner",
+    });
+
+    vi.spyOn(rateLimitModule, "enforceRateLimits").mockResolvedValue({
+      ok: true,
+    });
+
+    vi.spyOn(entitlementsModule, "checkQuota").mockResolvedValue({ ok: true });
+    vi.spyOn(cacheModule, "invalidate").mockResolvedValue();
+
+    const mockResult = { status: "added", user_id: "user-2", email: "coowner@saleschat.io" };
+    mockClient.rpc = vi.fn(async (fnName: string, params: any) => {
+      if (fnName === "invite_or_add_org_member") {
+        expect(params.target_role).toBe("owner");
+        return { data: mockResult, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const req = new Request("http://localhost:3000/api/organizations/org-1/members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "coowner@saleschat.io", role: "owner" }),
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: "org-1" }) });
+    expect(res.status).toBe(201);
+  });
 });
 
 describe("PATCH /api/organizations/[id]/members", () => {

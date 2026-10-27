@@ -126,7 +126,13 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-  const targetRole = body?.role === "admin" ? "admin" : "member";
+  const requestedRole = typeof body?.role === "string" ? body.role.trim().toLowerCase() : "member";
+
+  if (requestedRole === "owner" && role !== "owner") {
+    return forbidden("Only organization owners can grant the owner role");
+  }
+
+  const targetRole = requestedRole === "owner" ? "owner" : (requestedRole === "admin" ? "admin" : "member");
 
   if (!email || !email.includes("@")) {
     return badRequest("A valid email address is required");
