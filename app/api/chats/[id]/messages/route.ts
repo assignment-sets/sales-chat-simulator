@@ -13,6 +13,7 @@ import {
   memberChatsKey,
   transcriptKey,
 } from "@/lib/cache/keys";
+import { MAX_USER_TURNS } from "@/lib/plans";
 
 interface RouteContext {
   params: Promise<{
@@ -148,7 +149,28 @@ export async function POST(request: Request, context: RouteContext) {
     return badRequest("Messages must be 2,000 characters or fewer");
   }
 
-  // 4. Atomically persist user message
+  // 4. Enforce simulation turn cap
+  const { count: userTurnCount, error: countError } = await supabase
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("chat_id", id)
+    .eq("role", "user");
+
+  if (countError) {
+    return internalError(
+      "Failed to verify simulation turn limit",
+      countError,
+      "POST /api/chats/[id]/messages:count"
+    );
+  }
+
+  if ((userTurnCount ?? 0) >= MAX_USER_TURNS) {
+    return badRequest(
+      `Turn cap of ${MAX_USER_TURNS} reached for this simulation. Start a new simulation to keep practicing.`
+    );
+  }
+
+  // 5. Atomically persist user message
   const { data: message, error: insertError } = await supabase
     .from("messages")
     .insert({

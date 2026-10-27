@@ -62,6 +62,9 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanDefinition> = {
   },
 };
 
+export const MAX_USER_TURNS = 40;
+export const MAX_OWNED_ORGS_PER_USER = 3;
+
 export function normalizePlanTier(tier?: string | null): PlanTier {
   if (tier === "pro" || tier === "scale") {
     return tier;

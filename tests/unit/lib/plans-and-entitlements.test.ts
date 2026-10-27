@@ -5,6 +5,8 @@ import {
   getQuotaLimit,
   getPlanConfig,
   PLAN_CONFIGS,
+  MAX_USER_TURNS,
+  MAX_OWNED_ORGS_PER_USER,
 } from "@/lib/plans";
 import {
   requireFeature,
@@ -62,6 +64,11 @@ describe("plans.ts (Plan Configurations & Helpers)", () => {
 
     expect(getQuotaLimit("scale", "monthly_simulations")).toBe(600);
     expect(getQuotaLimit("scale", "team_seats")).toBe(50);
+  });
+
+  it("exports valid turn and organization ownership constraints", () => {
+    expect(MAX_USER_TURNS).toBe(40);
+    expect(MAX_OWNED_ORGS_PER_USER).toBe(3);
   });
 });
 

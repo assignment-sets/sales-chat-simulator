@@ -114,4 +114,32 @@ describe("POST /api/chats/[id]/messages", () => {
     expect(json.message.id).toBe("msg-new-1");
     expect(invalidateSpy).toHaveBeenCalled();
   });
+
+  it("returns 400 bad request when simulation user turn limit of 40 is reached", async () => {
+    const { mockClient } = setupMockAuth({ userId: "user-1", orgId: "org-1" });
+
+    vi.spyOn(chatAuthModule, "validateChatAccess").mockResolvedValue({
+      ok: true,
+      chat: { id: "chat-1", organization_id: "org-1", status: "ACTIVE" },
+      role: "member",
+    });
+
+    mockClient.from = vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      then: (onfulfilled: any, onrejected: any) =>
+        Promise.resolve({ count: 40, error: null }).then(onfulfilled, onrejected),
+    })) as any;
+
+    const req = new Request("http://localhost:3000/api/chats/chat-1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: "Are we past the turn limit?" }),
+    });
+
+    const res = await POST(req, { params: Promise.resolve({ id: "chat-1" }) });
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("Turn cap of 40 reached for this simulation");
+  });
 });

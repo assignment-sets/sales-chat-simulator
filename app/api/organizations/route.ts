@@ -7,7 +7,7 @@ import {
   internalError,
   unauthorized,
 } from "@/lib/api-response";
-import { normalizePlanTier } from "@/lib/plans";
+import { normalizePlanTier, MAX_OWNED_ORGS_PER_USER } from "@/lib/plans";
 import { enforceRateLimits } from "@/lib/rate-limit";
 import {
   ACTIVE_ORG_COOKIE_NAME,
@@ -89,9 +89,9 @@ export async function POST(request: Request) {
     );
   }
 
-  if ((ownedOrgCount ?? 0) >= 3) {
+  if ((ownedOrgCount ?? 0) >= MAX_OWNED_ORGS_PER_USER) {
     return forbidden(
-      "You can own up to 3 organizations. Contact support if you need more."
+      `You can own up to ${MAX_OWNED_ORGS_PER_USER} organizations. Contact support if you need more.`
     );
   }
 

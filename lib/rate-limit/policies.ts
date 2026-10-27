@@ -102,6 +102,33 @@ export const RATE_LIMITS = {
     window: "1 h",
     description: "Plan tier changes per organization",
   },
+
+  // --- Authentication & Abuse Prevention ----------------------------------
+  "auth.login.ip": {
+    limit: 10,
+    window: "1 m",
+    description: "Login attempts per IP address (burst protection)",
+  },
+  "auth.login.email": {
+    limit: 5,
+    window: "15 m",
+    description: "Login attempts per email address",
+  },
+  "auth.signup.ip": {
+    limit: 5,
+    window: "1 h",
+    description: "Account registrations per IP address",
+  },
+  "auth.reset.ip": {
+    limit: 3,
+    window: "15 m",
+    description: "Password reset requests per IP address",
+  },
+  "auth.verify.ip": {
+    limit: 3,
+    window: "15 m",
+    description: "Resend verification requests per IP address",
+  },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMITS;

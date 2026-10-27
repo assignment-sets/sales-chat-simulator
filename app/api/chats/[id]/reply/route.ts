@@ -28,8 +28,7 @@ import {
   memberChatsKey,
   transcriptKey,
 } from "@/lib/cache/keys";
-
-const MAX_USER_TURNS = 40;
+import { MAX_USER_TURNS } from "@/lib/plans";
 
 // Hard cap for the whole request: primary generation, one recovery call, the
 // Jev evaluation and the database writes all have to fit inside this.
