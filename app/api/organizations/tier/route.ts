@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createAdminSupabaseClient } from "@/utils/supabase/admin";
 import {
   apiSuccess,
   badRequest,
@@ -9,6 +10,7 @@ import {
 import { getActiveOrganization } from "@/lib/tenant";
 import { normalizePlanTier, PlanTier } from "@/lib/plans";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { invalidateOrgTier } from "@/lib/cache";
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
@@ -51,8 +53,20 @@ export async function POST(request: Request) {
 
   const targetTier: PlanTier = normalizePlanTier(body.plan_tier);
 
+  // Self-service plan upgrade guard:
+  // In production (and by default), self-service tier upgrades are disabled pending Stripe/billing integration.
+  const allowSelfServe = process.env.ALLOW_SELF_SERVE_TIER_SWITCH === "true";
+  if (!allowSelfServe) {
+    return forbidden(
+      "Self-service plan upgrades are currently disabled pending billing integration. Please contact sales to upgrade your plan."
+    );
+  }
+
+  // When self-serve is explicitly enabled in dev/test, execute with service-role admin client
+  const adminClient = createAdminSupabaseClient() || supabase;
+
   // Call secure RPC to update organization plan tier
-  const { data: result, error: rpcError } = await supabase.rpc(
+  const { data: result, error: rpcError } = await adminClient.rpc(
     "update_organization_plan_tier",
     {
       target_org_id: organization.id,
@@ -67,6 +81,8 @@ export async function POST(request: Request) {
       "POST /api/organizations/tier"
     );
   }
+
+  await invalidateOrgTier(organization.id);
 
   return apiSuccess({
     organization_id: organization.id,

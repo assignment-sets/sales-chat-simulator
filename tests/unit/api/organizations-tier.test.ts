@@ -7,6 +7,7 @@ import * as rateLimitModule from "@/lib/rate-limit";
 describe("POST /api/organizations/tier", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    delete process.env.ALLOW_SELF_SERVE_TIER_SWITCH;
   });
 
   it("returns 401 unauthorized when user is not authenticated", async () => {
@@ -108,7 +109,23 @@ describe("POST /api/organizations/tier", () => {
     expect(json.error).toContain("plan_tier is required");
   });
 
-  it("returns 500 internal error when update_organization_plan_tier RPC fails", async () => {
+  it("returns 403 forbidden when self-service plan switching is disabled by default", async () => {
+    setupMockAuth({ userId: "user-1", orgId: "org-1", role: "owner" });
+
+    const req = new Request("http://localhost:3000/api/organizations/tier", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan_tier: "scale" }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toContain("Self-service plan upgrades are currently disabled");
+  });
+
+  it("returns 500 internal error when update_organization_plan_tier RPC fails in allowed mode", async () => {
+    process.env.ALLOW_SELF_SERVE_TIER_SWITCH = "true";
     const { mockClient } = setupMockAuth({
       userId: "user-1",
       orgId: "org-1",
@@ -134,7 +151,8 @@ describe("POST /api/organizations/tier", () => {
     expect(json.error).toContain("Failed to update organization plan");
   });
 
-  it("successfully updates plan tier for owner with normalized tier", async () => {
+  it("successfully updates plan tier for owner when self-serve switch is enabled", async () => {
+    process.env.ALLOW_SELF_SERVE_TIER_SWITCH = "true";
     const { mockClient } = setupMockAuth({
       userId: "user-1",
       orgId: "org-123",
@@ -170,7 +188,8 @@ describe("POST /api/organizations/tier", () => {
     expect(json.result).toEqual(mockRpcResult);
   });
 
-  it("successfully updates plan tier for admin", async () => {
+  it("successfully updates plan tier for admin when self-serve switch is enabled", async () => {
+    process.env.ALLOW_SELF_SERVE_TIER_SWITCH = "true";
     const { mockClient } = setupMockAuth({
       userId: "user-admin",
       orgId: "org-123",
