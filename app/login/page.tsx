@@ -50,18 +50,35 @@ export default function LoginPage() {
             label="Email Address"
             placeholder="name@company.com"
             required
+            autoComplete="email"
             disabled={isPending}
           />
 
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            label="Password"
-            placeholder="••••••••"
-            required
-            disabled={isPending}
-          />
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="password"
+                className="text-xs font-semibold text-zinc-700 select-none"
+              >
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              required
+              autoComplete="current-password"
+              disabled={isPending}
+            />
+          </div>
 
           <Button
             type="submit"
@@ -74,15 +91,26 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-zinc-500">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="font-semibold text-zinc-900 hover:underline"
-          >
-            Create an account
-          </Link>
-        </p>
+        <div className="mt-6 flex flex-col items-center gap-1.5 text-center text-xs text-zinc-500">
+          <p>
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-zinc-900 hover:underline"
+            >
+              Create an account
+            </Link>
+          </p>
+          <p className="text-[11px] text-zinc-400">
+            Need another verification link?{" "}
+            <Link
+              href="/resend-verification"
+              className="font-medium text-zinc-600 hover:underline"
+            >
+              Resend email
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

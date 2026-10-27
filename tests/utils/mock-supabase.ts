@@ -118,6 +118,26 @@ export function createMockSupabaseClient(options: MockSupabaseOptions = {}) {
         error: null,
       })),
       signOut: vi.fn(async () => ({ error: null })),
+      resetPasswordForEmail: vi.fn(async (_email: string, _opts?: any) => ({
+        data: {},
+        error: null,
+      })),
+      updateUser: vi.fn(async (_attrs: any) => ({
+        data: { user },
+        error: null,
+      })),
+      resend: vi.fn(async (_opts: any) => ({
+        data: {},
+        error: null,
+      })),
+      verifyOtp: vi.fn(async (_params: any) => ({
+        data: { user, session: user ? { access_token: "mock-token" } : null },
+        error: null,
+      })),
+      exchangeCodeForSession: vi.fn(async (_code: string) => ({
+        data: { user, session: user ? { access_token: "mock-token" } : null },
+        error: null,
+      })),
     },
     from: vi.fn((tableName: string) => {
       const tableData = options.tables?.[tableName] ?? [];
@@ -161,29 +181,56 @@ export function setupMockAuth(options: MockUserContext | null = {}) {
     updated_at: new Date().toISOString(),
   };
 
-  const activeContext = {
-    organization,
+  const member = {
+    id: "test-member-id",
+    organization_id: orgId,
+    user_id: userId,
     role,
-    allOrganizations: [
-      {
-        id: "mem-1",
-        organization_id: orgId,
-        user_id: userId,
-        role,
-        created_at: new Date().toISOString(),
-        organization,
-      },
-    ],
+    created_at: new Date().toISOString(),
+  };
+
+  const allOrganizations = [
+    {
+      id: "mem-1",
+      organization_id: orgId,
+      user_id: userId,
+      role,
+      created_at: new Date().toISOString(),
+      organization,
+    },
+  ];
+
+  const defaultTables: Record<string, any[]> = {
+    organizations: [organization],
+    organization_members: [member],
+    chats: [],
+    messages: [],
+    ...(options.tables || {}),
   };
 
   const mockClient = createMockSupabaseClient({
     userContext: { userId, email, role, orgId, orgName, planTier },
-    tables: options.tables,
+    tables: options.tables ?? defaultTables,
     rpcHandlers: options.rpcHandlers,
   });
+
+  const activeContext = {
+    organization,
+    role,
+    membership: member,
+    user: { id: userId, email },
+    allOrganizations,
+  };
 
   testState.activeClient = mockClient;
   testState.activeContext = activeContext;
 
-  return { mockClient, userId, activeContext };
+  return {
+    mockClient,
+    userId,
+    user: { id: userId, email },
+    organization,
+    membership: member,
+    activeContext,
+  };
 }
