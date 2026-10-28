@@ -79,6 +79,7 @@ export function createMockQueryBuilder(initialData: any = null, error: any = nul
 export const testState = {
   activeClient: null as any,
   activeContext: null as any,
+  adminClient: null as any,
 };
 
 export const mockCookieStore = {
@@ -138,6 +139,9 @@ export function createMockSupabaseClient(options: MockSupabaseOptions = {}) {
         data: { user, session: user ? { access_token: "mock-token" } : null },
         error: null,
       })),
+      admin: {
+        deleteUser: vi.fn(async (_uid: string) => ({ data: {}, error: null })),
+      },
     },
     from: vi.fn((tableName: string) => {
       const tableData = options.tables?.[tableName] ?? [];

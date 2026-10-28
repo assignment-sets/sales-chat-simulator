@@ -17,6 +17,11 @@ vi.mock("@/utils/supabase/server", () => ({
   createServerSupabaseClient: vi.fn(async () => testState.activeClient),
 }));
 
+// Intercept admin Supabase client
+vi.mock("@/utils/supabase/admin", () => ({
+  createAdminSupabaseClient: vi.fn(() => testState.adminClient || testState.activeClient),
+}));
+
 // Intercept tenant resolver
 vi.mock("@/lib/tenant", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/tenant")>();
@@ -35,6 +40,7 @@ vi.mock("@/lib/tenant", async (importOriginal) => {
 beforeEach(() => {
   testState.activeClient = null;
   testState.activeContext = null;
+  testState.adminClient = null;
   mockCookieStore.get.mockReset();
   mockCookieStore.set.mockReset();
   mockCookieStore.delete.mockReset();

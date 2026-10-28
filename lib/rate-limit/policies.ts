@@ -103,6 +103,18 @@ export const RATE_LIMITS = {
     description: "Plan tier changes per organization",
   },
 
+  // --- Account & GDPR -----------------------------------------------------
+  "account.export.user": {
+    limit: 5,
+    window: "1 h",
+    description: "GDPR data exports per user",
+  },
+  "account.delete.user": {
+    limit: 3,
+    window: "1 h",
+    description: "Account deletion attempts per user",
+  },
+
   // --- Authentication & Abuse Prevention ----------------------------------
   "auth.login.ip": {
     limit: 10,
