@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { ACTIVE_ORG_COOKIE_NAME } from "@/lib/tenant";
 
 async function getClientIp(): Promise<string> {
   try {
@@ -264,6 +265,12 @@ export async function resendVerificationEmail(formData: FormData) {
 export async function logout() {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete(ACTIVE_ORG_COOKIE_NAME);
+  } catch {
+    // Safe fallback if cookies() context is unavailable
+  }
   revalidatePath("/", "layout");
   redirect("/login");
 }

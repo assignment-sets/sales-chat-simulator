@@ -8,6 +8,7 @@ import {
 } from "@/lib/api-response";
 import {
   ACTIVE_ORG_COOKIE_NAME,
+  ACTIVE_ORG_COOKIE_OPTIONS,
   validateOrgMembership,
 } from "@/lib/tenant";
 import { enforceRateLimit } from "@/lib/rate-limit";
@@ -55,12 +56,7 @@ export async function POST(request: Request) {
 
   // Update active organization cookie
   const cookieStore = await cookies();
-  cookieStore.set(ACTIVE_ORG_COOKIE_NAME, organizationId, {
-    path: "/",
-    sameSite: "lax",
-    httpOnly: false,
-    maxAge: 60 * 60 * 24 * 365,
-  });
+  cookieStore.set(ACTIVE_ORG_COOKIE_NAME, organizationId, ACTIVE_ORG_COOKIE_OPTIONS);
 
   return apiSuccess({
     success: true,

@@ -11,6 +11,7 @@ import { normalizePlanTier, MAX_OWNED_ORGS_PER_USER } from "@/lib/plans";
 import { enforceRateLimits } from "@/lib/rate-limit";
 import {
   ACTIVE_ORG_COOKIE_NAME,
+  ACTIVE_ORG_COOKIE_OPTIONS,
   getActiveOrganization,
 } from "@/lib/tenant";
 
@@ -120,12 +121,7 @@ export async function POST(request: Request) {
   // Set newly created org as active in cookies
   try {
     const cookieStore = await cookies();
-    cookieStore.set(ACTIVE_ORG_COOKIE_NAME, org.id, {
-      path: "/",
-      sameSite: "lax",
-      httpOnly: false,
-      maxAge: 60 * 60 * 24 * 365,
-    });
+    cookieStore.set(ACTIVE_ORG_COOKIE_NAME, org.id, ACTIVE_ORG_COOKIE_OPTIONS);
   } catch (err) {
     console.warn("Could not set active org cookie in POST /api/organizations:", err);
   }

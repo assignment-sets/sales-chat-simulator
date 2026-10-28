@@ -1,7 +1,29 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
+import { verifyCsrf } from "@/lib/security/csrf";
+
+const MUTATING_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 
 export async function proxy(request: NextRequest) {
+  // Enforce CSRF defense on mutating API routes
+  if (
+    request.nextUrl.pathname.startsWith("/api/") &&
+    MUTATING_METHODS.includes(request.method)
+  ) {
+    const csrf = verifyCsrf(request);
+    if (!csrf.valid) {
+      return NextResponse.json(
+        {
+          error: {
+            message: "Cross-site request forbidden",
+            code: "FORBIDDEN",
+          },
+        },
+        { status: 403 }
+      );
+    }
+  }
+
   return await updateSession(request);
 }
 

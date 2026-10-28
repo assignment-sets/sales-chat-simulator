@@ -4,6 +4,14 @@ import { normalizePlanTier, PlanTier } from "@/lib/plans";
 
 export const ACTIVE_ORG_COOKIE_NAME = "saleschat_active_org_id";
 
+export const ACTIVE_ORG_COOKIE_OPTIONS = {
+  path: "/",
+  sameSite: "lax" as const,
+  httpOnly: false,
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 60 * 60 * 24 * 365, // 1 year
+};
+
 export type OrgRole = "owner" | "admin" | "member";
 
 export interface Organization {
@@ -174,12 +182,11 @@ export async function getActiveOrganization(
   if (cookieOrgId !== activeMembership.organization_id) {
     try {
       const cookieStore = await cookies();
-      cookieStore.set(ACTIVE_ORG_COOKIE_NAME, activeMembership.organization_id, {
-        path: "/",
-        sameSite: "lax",
-        httpOnly: false,
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-      });
+      cookieStore.set(
+        ACTIVE_ORG_COOKIE_NAME,
+        activeMembership.organization_id,
+        ACTIVE_ORG_COOKIE_OPTIONS
+      );
     } catch {
       // In Server Components, cookie setting might throw; this is expected and safe
     }
