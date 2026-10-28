@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { X, Building2 } from "lucide-react";
 import { notify } from "@/lib/toast";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 import { Organization } from "@/lib/tenant";
 
 export interface CreateOrgDialogProps {
@@ -22,6 +23,11 @@ export function CreateOrgDialog({
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose,
+  });
 
   if (!isOpen) return null;
 
@@ -63,8 +69,17 @@ export function CreateOrgDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+    >
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-org-dialog-title"
+        className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150"
+      >
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
@@ -77,7 +92,7 @@ export function CreateOrgDialog({
           <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
             <Building2 className="w-4 h-4" />
           </div>
-          <h2 className="text-lg font-bold text-zinc-900">New Organization</h2>
+          <h2 id="create-org-dialog-title" className="text-lg font-bold text-zinc-900">New Organization</h2>
         </div>
         <p className="text-xs text-zinc-500 mb-5">
           Create a shared workspace to collaborate with your sales team.

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 export interface MemberSimulationsModalProps {
   isOpen: boolean;
@@ -37,6 +38,11 @@ export function MemberSimulationsModal({
 }: MemberSimulationsModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [simulations, setSimulations] = useState<MemberSimulation[]>([]);
+
+  const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose,
+  });
 
   useEffect(() => {
     if (!isOpen || !userId) {
@@ -80,12 +86,21 @@ export function MemberSimulationsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl bg-white border border-zinc-200 rounded-3xl p-6 shadow-2xl relative max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-150">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150"
+    >
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="member-simulations-title"
+        className="w-full max-w-2xl bg-white border border-zinc-200 rounded-3xl p-6 shadow-2xl relative max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-150"
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-100 shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-zinc-900">
+            <h2 id="member-simulations-title" className="text-lg font-bold text-zinc-900">
               Practice Sessions
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
 import { parseFeedbackMarkdown, ParsedTurn } from "@/lib/feedback-parser";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 export interface DetailedFeedbackModalProps {
   isOpen: boolean;
@@ -41,6 +42,11 @@ export function DetailedFeedbackModal({
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasLoadedRef = useRef(false);
+
+  const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose,
+  });
 
   // Sync initialFeedback if provided externally
   useEffect(() => {
@@ -152,12 +158,21 @@ export function DetailedFeedbackModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-zinc-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-150"
+    >
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feedback-dialog-title"
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-zinc-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+      >
         {/* Header */}
         <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0 bg-white">
           <div className="min-w-0">
-            <h3 className="font-semibold text-sm sm:text-base text-zinc-900 tracking-tight">
+            <h3 id="feedback-dialog-title" className="font-semibold text-sm sm:text-base text-zinc-900 tracking-tight">
               Coaching Feedback
             </h3>
             {productName && (

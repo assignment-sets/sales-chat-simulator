@@ -11,6 +11,7 @@ import Link from "next/link";
 import { getPlanConfig, getQuotaLimit } from "@/lib/plans";
 import { notify } from "@/lib/toast";
 import { Organization, OrgRole } from "@/lib/tenant";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 export interface OrgMembersModalProps {
   isOpen: boolean;
@@ -51,6 +52,11 @@ export function OrgMembersModal({
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"member" | "admin">("member");
   const [isInviting, setIsInviting] = useState(false);
+
+  const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose,
+  });
 
   const isOwnerOrAdmin = userRole === "owner" || userRole === "admin";
   const plan = getPlanConfig(organization.plan_tier);
@@ -164,8 +170,17 @@ export function OrgMembersModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+    >
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="org-members-modal-title"
+        className="w-full max-w-lg bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
           <div className="flex items-center gap-2.5">
@@ -173,7 +188,7 @@ export function OrgMembersModal({
               <Users className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-zinc-900">
+              <h2 id="org-members-modal-title" className="text-base font-semibold text-zinc-900">
                 Team Members
               </h2>
               <p className="text-xs text-zinc-500">
@@ -183,6 +198,7 @@ export function OrgMembersModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-1.5 text-zinc-400 hover:text-zinc-600 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { X, Sparkles } from "lucide-react";
 import { notify } from "@/lib/toast";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 export interface NewChatDialogProps {
   isOpen: boolean;
@@ -17,6 +18,11 @@ export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps)
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
+    isOpen,
+    onClose,
+  });
 
   if (!isOpen) return null;
 
@@ -44,10 +50,20 @@ export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps)
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="w-full max-w-lg bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+    >
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-chat-dialog-title"
+        className="w-full max-w-lg bg-white border border-zinc-200 rounded-3xl p-6 shadow-xl relative animate-in fade-in zoom-in-95 duration-150"
+      >
         <button
           onClick={onClose}
+          aria-label="Close dialog"
           className="absolute top-5 right-5 text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
@@ -57,7 +73,7 @@ export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps)
           <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
           </div>
-          <h2 className="text-lg font-bold text-zinc-900">New Simulation</h2>
+          <h2 id="new-chat-dialog-title" className="text-lg font-bold text-zinc-900">New Simulation</h2>
         </div>
         <p className="text-xs text-zinc-500 mb-5">
           Enter what you are pitching to start the practice session.

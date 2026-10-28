@@ -5,6 +5,7 @@ import { X, MessageSquare, Bot, User, Coins, FileText, Trophy, XCircle } from "l
 import { Loader } from "@/components/ui/Loader";
 import { Badge } from "@/components/ui/Badge";
 import { notify } from "@/lib/toast";
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 export interface TranscriptDrawerProps {
   chatId: string | null;
@@ -36,6 +37,11 @@ export function TranscriptDrawer({ chatId, onClose }: TranscriptDrawerProps) {
   const [chat, setChat] = useState<ChatDetail | null>(null);
   const [messages, setMessages] = useState<MessageDetail[]>([]);
   const [showPitch, setShowPitch] = useState(false);
+
+  const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
+    isOpen: Boolean(chatId),
+    onClose,
+  });
 
   useEffect(() => {
     if (!chatId) {
@@ -83,8 +89,17 @@ export function TranscriptDrawer({ chatId, onClose }: TranscriptDrawerProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col border-l border-zinc-200 animate-in slide-in-from-right duration-200">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-[60] flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-150"
+    >
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="transcript-drawer-title"
+        className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col border-l border-zinc-200 animate-in slide-in-from-right duration-200"
+      >
         {/* Header */}
         <div className="p-4 sm:px-6 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-zinc-50/70">
           <div className="min-w-0 pr-3">
@@ -116,7 +131,7 @@ export function TranscriptDrawer({ chatId, onClose }: TranscriptDrawerProps) {
                 {formatDate(chat?.created_at)}
               </span>
             </div>
-            <h2 className="text-base font-bold text-zinc-900 truncate">
+            <h2 id="transcript-drawer-title" className="text-base font-bold text-zinc-900 truncate">
               {chat?.product_name || "Conversation Transcript"}
             </h2>
           </div>
