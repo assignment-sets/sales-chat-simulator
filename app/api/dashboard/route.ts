@@ -256,12 +256,14 @@ async function loadDashboard(
       overallScoredCount += 1;
     }
 
-    let existing = memberMap.get(c.user_id);
+    const chatUserId = c.user_id || "former-member";
+    let existing = memberMap.get(chatUserId);
     if (!existing) {
+      const displayId = c.user_id ? c.user_id.slice(0, 8) : "anonymized";
       existing = {
-        userId: c.user_id,
-        email: `Former Member (${c.user_id.slice(0, 8)})`,
-        fullName: `Former Member (${c.user_id.slice(0, 8)})`,
+        userId: chatUserId,
+        email: `Former Member (${displayId})`,
+        fullName: `Former Member (${displayId})`,
         role: "member",
         joinedAt: c.created_at,
         simulationsCount: 0,
@@ -275,7 +277,7 @@ async function loadDashboard(
         totalScore: 0,
         scoredCount: 0,
       };
-      memberMap.set(c.user_id, existing);
+      memberMap.set(chatUserId, existing);
     }
 
     existing.simulationsCount += 1;
