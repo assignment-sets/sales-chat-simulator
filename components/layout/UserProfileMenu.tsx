@@ -3,11 +3,11 @@
 import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { updateProfile, logout } from "@/app/auth/actions";
 import { notify } from "@/lib/toast";
+import { AccountSettingsModal } from "./AccountSettingsModal";
 import {
   ChevronDown,
   Settings,
@@ -29,6 +29,7 @@ export function UserProfileMenu({
 }: UserProfileMenuProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(userName || userEmail.split("@")[0] || "");
   const [currentName, setCurrentName] = useState(userName);
@@ -88,7 +89,8 @@ export function UserProfileMenu({
   };
 
   const handleSettingsClick = () => {
-    notify.info("Settings will be available in a future update");
+    setIsOpen(false);
+    setIsSettingsOpen(true);
   };
 
   const handleSignOut = () => {
@@ -203,7 +205,7 @@ export function UserProfileMenu({
               </button>
             )}
 
-            {/* Settings (Placeholder button) */}
+            {/* Settings */}
             <button
               type="button"
               onClick={handleSettingsClick}
@@ -213,9 +215,6 @@ export function UserProfileMenu({
                 <Settings className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Settings</span>
               </div>
-              <Badge variant="muted" className="text-[9px] px-1.5 py-0 text-zinc-400">
-                Soon
-              </Badge>
             </button>
           </div>
 
@@ -233,6 +232,14 @@ export function UserProfileMenu({
           </div>
         </div>
       )}
+
+      {/* Account Settings Modal */}
+      <AccountSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        userEmail={userEmail}
+        userName={displayName}
+      />
     </div>
   );
 }
