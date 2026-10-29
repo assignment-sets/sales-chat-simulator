@@ -141,6 +141,11 @@ export const RATE_LIMITS = {
     window: "15 m",
     description: "Resend verification requests per IP address",
   },
+  "auth.password_update.ip": {
+    limit: 5,
+    window: "15 m",
+    description: "Password updates per IP address",
+  },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMITS;

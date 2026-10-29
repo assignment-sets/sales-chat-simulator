@@ -199,6 +199,15 @@ export async function updatePassword(formData: FormData) {
     redirect("/reset-password?error=" + encodeURIComponent("Passwords do not match"));
   }
 
+  const clientIp = await getClientIp();
+  const ipLimit = await enforceRateLimit("auth.password_update.ip", `ip:${clientIp}`);
+  if (!ipLimit.ok) {
+    redirect(
+      "/reset-password?error=" +
+        encodeURIComponent("Too many password update attempts. Please try again later.")
+    );
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },

@@ -303,6 +303,25 @@ describe("app/auth/actions.ts", () => {
   });
 
   describe("updatePassword action", () => {
+    it("redirects with rate limit error when password update limit is exceeded", async () => {
+      setupMockAuth();
+      vi.spyOn(rateLimitModule, "enforceRateLimit").mockImplementation(async (name) => {
+        if (name === "auth.password_update.ip") {
+          return { ok: false, response: null as any };
+        }
+        return { ok: true };
+      });
+
+      const formData = new FormData();
+      formData.set("password", "newsecret123");
+      formData.set("confirmPassword", "newsecret123");
+
+      await expect(updatePassword(formData)).rejects.toThrow("NEXT_REDIRECT:/reset-password?error=");
+      expect(mockRedirect).toHaveBeenCalledWith(
+        expect.stringContaining(encodeURIComponent("Too many password update attempts"))
+      );
+    });
+
     it("redirects with error if passwords do not match or are missing", async () => {
       setupMockAuth();
       const formData = new FormData();
