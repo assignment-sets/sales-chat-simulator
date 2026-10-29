@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useSearchParams } from "next/navigation";
+import { useTransition, Suspense } from "react";
 import { login } from "@/app/auth/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { MessageSquare, ArrowRight } from "lucide-react";
-
-import { Suspense } from "react";
 import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "";
+  const initialEmail = searchParams.get("email") || "";
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -21,6 +23,84 @@ export default function LoginPage() {
     });
   };
 
+  return (
+    <>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {next && <input type="hidden" name="next" value={next} />}
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          label="Email Address"
+          placeholder="name@company.com"
+          defaultValue={initialEmail}
+          required
+          autoComplete="email"
+          disabled={isPending}
+        />
+
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label
+              htmlFor="password"
+              className="text-xs font-semibold text-zinc-700 select-none"
+            >
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            required
+            autoComplete="current-password"
+            disabled={isPending}
+          />
+        </div>
+
+        <Button
+          type="submit"
+          size="md"
+          className="w-full mt-2 font-semibold"
+          isLoading={isPending}
+          rightIcon={<ArrowRight className="w-4 h-4" />}
+        >
+          {isPending ? "Signing in..." : "Sign In"}
+        </Button>
+      </form>
+
+      <div className="mt-6 flex flex-col items-center gap-1.5 text-center text-xs text-zinc-500">
+        <p>
+          Don&apos;t have an account?{" "}
+          <Link
+            href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
+            className="font-semibold text-zinc-900 hover:underline"
+          >
+            Create an account
+          </Link>
+        </p>
+        <p className="text-[11px] text-zinc-400">
+          Need another verification link?{" "}
+          <Link
+            href="/resend-verification"
+            className="font-medium text-zinc-600 hover:underline"
+          >
+            Resend email
+          </Link>
+        </p>
+      </div>
+    </>
+  );
+}
+
+export default function LoginPage() {
   return (
     <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
       <Suspense fallback={null}>
@@ -42,75 +122,9 @@ export default function LoginPage() {
           Sign in to your account to continue your sales simulation practice.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            label="Email Address"
-            placeholder="name@company.com"
-            required
-            autoComplete="email"
-            disabled={isPending}
-          />
-
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label
-                htmlFor="password"
-                className="text-xs font-semibold text-zinc-700 select-none"
-              >
-                Password
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              autoComplete="current-password"
-              disabled={isPending}
-            />
-          </div>
-
-          <Button
-            type="submit"
-            size="md"
-            className="w-full mt-2 font-semibold"
-            isLoading={isPending}
-            rightIcon={<ArrowRight className="w-4 h-4" />}
-          >
-            {isPending ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
-
-        <div className="mt-6 flex flex-col items-center gap-1.5 text-center text-xs text-zinc-500">
-          <p>
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/register"
-              className="font-semibold text-zinc-900 hover:underline"
-            >
-              Create an account
-            </Link>
-          </p>
-          <p className="text-[11px] text-zinc-400">
-            Need another verification link?{" "}
-            <Link
-              href="/resend-verification"
-              className="font-medium text-zinc-600 hover:underline"
-            >
-              Resend email
-            </Link>
-          </p>
-        </div>
+        <Suspense fallback={<div className="h-48" />}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   );

@@ -115,6 +115,18 @@ export const RATE_LIMITS = {
     description: "Account deletion attempts per user",
   },
 
+  // --- Invitations --------------------------------------------------------
+  "invitations.view": {
+    limit: 60,
+    window: "1 m",
+    description: "Invitation page views per IP address",
+  },
+  "invitations.accept": {
+    limit: 10,
+    window: "1 m",
+    description: "Invitation acceptance attempts per user",
+  },
+
   // --- Authentication & Abuse Prevention ----------------------------------
   "auth.login.ip": {
     limit: 10,

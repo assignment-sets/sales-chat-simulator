@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createAdminSupabaseClient } from "@/utils/supabase/admin";
 import {
   apiSuccess,
   badRequest,
@@ -69,11 +70,18 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   // 2. If caller is owner or admin, fetch pending invitations
-  let invitations: Array<{ id: string; email: string; role: string; created_at: string }> = [];
+  let invitations: Array<{
+    id: string;
+    email: string;
+    role: string;
+    created_at: string;
+    token: string;
+    expires_at: string;
+  }> = [];
   if (role === "owner" || role === "admin") {
     const { data: inviteRows, error: inviteError } = await supabase
       .from("organization_invitations")
-      .select("id, email, role, created_at")
+      .select("id, email, role, created_at, token, expires_at")
       .eq("organization_id", orgId)
       .order("created_at", { ascending: false });
 
@@ -164,7 +172,32 @@ export async function POST(request: Request, context: RouteContext) {
   // Seat usage and member lists changed; invalidate centralized org member caches.
   await invalidateOrgMembers(orgId);
 
-  return apiSuccess({ success: true, result }, 201);
+  const resObj = (result && typeof result === "object" ? result : {}) as Record<string, unknown>;
+  const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const token = typeof resObj.token === "string" ? resObj.token : null;
+  const inviteUrl = token ? `${origin.replace(/\/$/, "")}/invite/${token}` : null;
+
+  // Best-effort attempt to trigger Supabase's built-in invite email if service-role key is present
+  if (resObj.status === "invited" && inviteUrl) {
+    try {
+      const adminClient = createAdminSupabaseClient();
+      if (adminClient) {
+        await adminClient.auth.admin.inviteUserByEmail(email, {
+          redirectTo: inviteUrl,
+        });
+      }
+    } catch {
+      // Non-fatal: Supabase default mailer or auth user state might skip/throw
+    }
+  }
+
+  return apiSuccess({
+    success: true,
+    result: {
+      ...resObj,
+      ...(inviteUrl ? { invite_url: inviteUrl } : {}),
+    },
+  }, 201);
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -258,8 +291,33 @@ export async function DELETE(request: Request, context: RouteContext) {
   }
 
   const { searchParams } = new URL(request.url);
+  const inviteId = searchParams.get("inviteId");
   const memberId = searchParams.get("memberId");
   const targetUserId = searchParams.get("userId");
+
+  // Revoke pending invitation if inviteId is provided
+  if (inviteId) {
+    if (role !== "owner" && role !== "admin") {
+      return forbidden("Only organization owners and admins can revoke invitations");
+    }
+
+    const { error: inviteDelErr } = await supabase
+      .from("organization_invitations")
+      .delete()
+      .eq("id", inviteId)
+      .eq("organization_id", orgId);
+
+    if (inviteDelErr) {
+      return internalError(
+        "Failed to revoke invitation",
+        inviteDelErr,
+        "DELETE /api/organizations/[id]/members:invite"
+      );
+    }
+
+    await invalidateOrgMembers(orgId);
+    return apiSuccess({ success: true, revoked: true });
+  }
 
   if (!memberId && !targetUserId) {
     return badRequest("memberId or userId query parameter is required");

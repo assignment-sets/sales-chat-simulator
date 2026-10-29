@@ -7,6 +7,14 @@ import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { ACTIVE_ORG_COOKIE_NAME } from "@/lib/tenant";
 
+function sanitizeRedirect(url: string | null | undefined): string {
+  if (!url) return "/chats";
+  if (url.startsWith("/") && !url.startsWith("//") && !url.includes("\\")) {
+    return url;
+  }
+  return "/chats";
+}
+
 async function getClientIp(): Promise<string> {
   try {
     const reqHeaders = await headers();
@@ -85,8 +93,9 @@ export async function login(formData: FormData) {
     }
   }
 
+  const nextTarget = sanitizeRedirect((formData.get("next") as string)?.trim());
   revalidatePath("/", "layout");
-  redirect("/chats");
+  redirect(nextTarget);
 }
 
 export async function signup(formData: FormData) {
@@ -109,6 +118,7 @@ export async function signup(formData: FormData) {
 
   const defaultName = fullName || email.split("@")[0];
   const origin = await getRequestOrigin();
+  const nextTarget = sanitizeRedirect((formData.get("next") as string)?.trim());
 
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.signUp({
@@ -119,7 +129,7 @@ export async function signup(formData: FormData) {
         full_name: defaultName,
         name: defaultName,
       },
-      emailRedirectTo: `${origin}/auth/confirm`,
+      emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(nextTarget)}`,
     },
   });
 
@@ -142,7 +152,7 @@ export async function signup(formData: FormData) {
     }
 
     revalidatePath("/", "layout");
-    redirect("/chats");
+    redirect(nextTarget);
   }
 
   // If email confirmation is required

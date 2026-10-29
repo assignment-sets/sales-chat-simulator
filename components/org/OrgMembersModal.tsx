@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { Avatar } from "@/components/ui/Avatar";
-import { X, Users, UserPlus, Trash2, ShieldCheck } from "lucide-react";
+import { X, Users, UserPlus, Trash2, ShieldCheck, Copy, Check } from "lucide-react";
 import Link from "next/link";
 import { getPlanConfig, getQuotaLimit } from "@/lib/plans";
 import { notify } from "@/lib/toast";
@@ -35,6 +35,8 @@ interface InvitationItem {
   email: string;
   role: string;
   created_at: string;
+  token?: string;
+  expires_at?: string;
 }
 
 export function OrgMembersModal({
@@ -47,6 +49,7 @@ export function OrgMembersModal({
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   // Invite form state
   const [inviteEmail, setInviteEmail] = useState("");
@@ -115,7 +118,16 @@ export function OrgMembersModal({
       if (result.result?.status === "added") {
         notify.success(`${inviteEmail} added to organization`);
       } else {
-        notify.success(`Invitation sent to ${inviteEmail}`);
+        notify.success(`Invitation created for ${inviteEmail}`);
+        if (result.result?.token && typeof window !== "undefined") {
+          try {
+            const inviteUrl = `${window.location.origin}/invite/${result.result.token}`;
+            await navigator.clipboard.writeText(inviteUrl);
+            notify.success("Invite link copied to clipboard!");
+          } catch {
+            // Non-fatal
+          }
+        }
       }
 
       setInviteEmail("");
@@ -124,6 +136,42 @@ export function OrgMembersModal({
       notify.error(err instanceof Error ? err.message : "Failed to invite member");
     } finally {
       setIsInviting(false);
+    }
+  };
+
+  const handleCopyLink = async (token?: string) => {
+    if (!token) return;
+    const inviteUrl = `${window.location.origin}/invite/${token}`;
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopiedToken(token);
+      notify.success("Invite link copied to clipboard");
+      setTimeout(() => {
+        setCopiedToken((prev) => (prev === token ? null : prev));
+      }, 2000);
+    } catch {
+      notify.error("Failed to copy link to clipboard");
+    }
+  };
+
+  const handleRevokeInvite = async (invite: InvitationItem) => {
+    if (!confirm(`Revoke invitation for ${invite.email}?`)) return;
+
+    try {
+      const res = await fetch(
+        `/api/organizations/${organization.id}/members?inviteId=${invite.id}`,
+        { method: "DELETE" }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to revoke invitation");
+      }
+
+      notify.success("Invitation revoked");
+      setInvitations((prev) => prev.filter((i) => i.id !== invite.id));
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to revoke invitation");
     }
   };
 
@@ -340,9 +388,37 @@ export function OrgMembersModal({
                           {invite.email}
                         </span>
                       </div>
-                      <Badge variant="muted" className="text-[10px]">
-                        Pending ({invite.role})
-                      </Badge>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="muted" className="text-[10px]">
+                          Pending ({invite.role})
+                        </Badge>
+                        {invite.token && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyLink(invite.token)}
+                            className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-amber-100/60 rounded-lg transition-colors cursor-pointer"
+                            title="Copy invitation link"
+                            aria-label={`Copy invitation link for ${invite.email}`}
+                          >
+                            {copiedToken === invite.token ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        )}
+                        {isOwnerOrAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeInvite(invite)}
+                            className="p-1 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Revoke invitation"
+                            aria-label={`Revoke invitation for ${invite.email}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

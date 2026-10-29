@@ -895,4 +895,38 @@ describe("DELETE /api/organizations/[id]/members", () => {
     const json = await res.json();
     expect(json.success).toBe(true);
   });
+
+  it("successfully revokes an invitation when caller is owner or admin", async () => {
+    const { mockClient } = setupMockAuth({ userId: "admin-1", orgId: "org-1", role: "admin" });
+
+    vi.spyOn(tenantModule, "validateOrgMembership").mockResolvedValue({
+      isMember: true,
+      role: "admin",
+    });
+
+    const deleteMock = vi.fn().mockReturnThis();
+    const eqMock = vi.fn().mockResolvedValue({ error: null });
+
+    mockClient.from = vi.fn((tableName: string) => {
+      if (tableName === "organization_invitations") {
+        return {
+          delete: deleteMock,
+          eq: vi.fn().mockReturnValue({
+            eq: eqMock,
+          }),
+        };
+      }
+      return {} as any;
+    }) as any;
+
+    const req = new Request("http://localhost:3000/api/organizations/org-1/members?inviteId=inv-target", {
+      method: "DELETE",
+    });
+
+    const res = await DELETE(req, { params: Promise.resolve({ id: "org-1" }) });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.revoked).toBe(true);
+  });
 });

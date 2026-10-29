@@ -143,26 +143,32 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          expires_at: string
           id: string
           invited_by: string | null
           organization_id: string
           role: string
+          token: string
         }
         Insert: {
           created_at?: string
           email: string
+          expires_at?: string
           id?: string
           invited_by?: string | null
           organization_id: string
           role?: string
+          token?: string
         }
         Update: {
           created_at?: string
           email?: string
+          expires_at?: string
           id?: string
           invited_by?: string | null
           organization_id?: string
           role?: string
+          token?: string
         }
         Relationships: [
           {
@@ -279,8 +285,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_organization_invitation: {
+        Args: { invite_token: string }
+        Returns: Json
+      }
       claim_pending_org_invitations: {
-        Args: { user_email: string; user_id: string }
+        Args: Record<PropertyKey, never> | { user_email?: string; user_id?: string }
         Returns: undefined
       }
       create_chat_with_quota: {
@@ -306,6 +316,10 @@ export type Database = {
           role: string
           user_id: string
         }[]
+      }
+      get_invitation_by_token: {
+        Args: { invite_token: string }
+        Returns: Json
       }
       invite_or_add_org_member: {
         Args: {
