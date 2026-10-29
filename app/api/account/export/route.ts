@@ -3,6 +3,16 @@ import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { unauthorized, internalError } from "@/lib/api-response";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
+interface ExportMessageItem {
+  id: string;
+  role: string;
+  content: string;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  totalTokens: number | null;
+  createdAt: string;
+}
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -60,7 +70,7 @@ export async function GET() {
     const chatIds = (userChats || []).map((c) => c.id);
 
     // 3. Fetch all messages in the user's simulations
-    let messagesByChatId: Record<string, any[]> = {};
+    let messagesByChatId: Record<string, ExportMessageItem[]> = {};
     if (chatIds.length > 0) {
       const { data: messageRows, error: messagesError } = await supabase
         .from("messages")

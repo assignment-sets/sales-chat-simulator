@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "supabase:config:diff": "supabase config diff",
-    "supabase:config:push": "supabase config push"
+    "supabase:config:push": "supabase config push",
+    "types:db": "supabase gen types --linked > types/database.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

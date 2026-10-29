@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { DbChatUpdate, Json } from "@/types/database";
 import { groq, DEFAULT_GROQ_MODEL, isGroqAbortError } from "@/lib/groq";
 import {
   extractBubbles,
@@ -220,10 +221,10 @@ export async function POST(request: Request, context: RouteContext) {
         });
 
         // Update chat record with evaluation outcome and score
-        const updatePayload: Record<string, unknown> = {
+        const updatePayload: DbChatUpdate = {
           score: Math.round(evaluationResult.score),
           evaluation_outcome: evaluationResult.outcome,
-          evaluation_summary: evaluationResult,
+          evaluation_summary: evaluationResult as unknown as Json,
         };
 
         if (evaluationResult.outcome === "deal_won") {

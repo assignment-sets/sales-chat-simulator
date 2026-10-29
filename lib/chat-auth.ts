@@ -2,6 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { internalError, notFound } from "@/lib/api-response";
 import { OrgRole } from "@/lib/tenant";
+import { DbChat } from "@/types/database";
 
 export type ChatAccessResult<T> =
   | { ok: true; chat: T; role: OrgRole }
@@ -17,8 +18,8 @@ export interface ValidateChatOptions {
  * Validates that a chat exists, belongs to the user's organization,
  * and that the user has appropriate permissions (owner/admin sees all org chats, member sees own).
  */
-export async function validateChatAccess<T extends Record<string, unknown> = Record<string, unknown>>(
-  supabase: SupabaseClient,
+export async function validateChatAccess<T = DbChat>(
+  supabase: SupabaseClient<any>,
   chatId: string,
   userId: string,
   optionsOrSelectFields?: string | ValidateChatOptions,

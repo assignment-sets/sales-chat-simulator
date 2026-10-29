@@ -39,6 +39,17 @@ export async function GET() {
   });
 }
 
+interface CreateOrgRpcResult {
+  id: string;
+  name: string;
+  slug: string;
+  plan_tier?: string;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  role: string;
+}
+
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -99,14 +110,16 @@ export async function POST(request: Request) {
   const cleanSlug = `${name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")}-${Math.random().toString(36).substring(2, 8)}`;
 
   // Create organization + owner membership atomically via RPC
-  const { data: result, error: rpcError } = await supabase.rpc(
+  const { data: rawResult, error: rpcError } = await supabase.rpc(
     "create_organization_with_owner",
     { org_name: name, org_slug: cleanSlug }
   );
 
-  if (rpcError || !result) {
+  if (rpcError || !rawResult) {
     return internalError("Failed to create organization", rpcError, "POST /api/organizations:create");
   }
+
+  const result = rawResult as unknown as CreateOrgRpcResult;
 
   const org = {
     id: result.id,

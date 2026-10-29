@@ -12,6 +12,7 @@ import { transcriptKey } from "@/lib/cache/keys";
 import { CACHE_TTLS } from "@/lib/cache/policies";
 import { requireFeature } from "@/lib/entitlements";
 import { getActiveOrganization } from "@/lib/tenant";
+import { DbChat, DbMessage } from "@/types/database";
 
 interface RouteContext {
   params: Promise<{
@@ -20,8 +21,8 @@ interface RouteContext {
 }
 
 interface ChatTranscript {
-  chat: Record<string, unknown>;
-  messages: Record<string, unknown>[];
+  chat: DbChat | Record<string, unknown>;
+  messages: (DbMessage | Record<string, unknown>)[];
 }
 
 class TranscriptLoadError extends Error {
