@@ -1,4 +1,8 @@
 import type { NextConfig } from "next";
+import { validateEnv } from "./lib/env";
+
+// Validate environment variables at build & boot time
+validateEnv();
 
 const securityHeaders = [
   {
