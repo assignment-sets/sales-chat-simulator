@@ -25,7 +25,7 @@ describe("POST /api/account/delete (GDPR Art. 17 Account Deletion)", () => {
 
     vi.spyOn(rateLimitModule, "enforceRateLimit").mockResolvedValue({
       ok: false,
-      response: rateLimited("Too many account deletion attempts", 3600),
+      response: rateLimited(3600000, 5, 0),
     });
 
     const req = new Request("http://localhost:3000/api/account/delete", {

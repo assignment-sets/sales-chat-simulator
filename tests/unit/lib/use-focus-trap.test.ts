@@ -59,7 +59,7 @@ describe("lib/hooks/useFocusTrap.ts (Accessibility & Focus Management)", () => {
       id,
       isConnected,
       focus: vi.fn(() => {
-        global.document.activeElement = el;
+        (global.document as any).activeElement = el;
       }),
     };
     return el;
@@ -181,7 +181,7 @@ describe("lib/hooks/useFocusTrap.ts (Accessibility & Focus Management)", () => {
 
   it("captures previous activeElement and restores focus when closed if still connected to DOM", () => {
     const triggerButton = createMockElement("trigger-button", true);
-    global.document.activeElement = triggerButton;
+    (global.document as any).activeElement = triggerButton;
 
     const inputInsideModal = createMockElement("modal-input", true);
     const container: any = {
@@ -205,7 +205,7 @@ describe("lib/hooks/useFocusTrap.ts (Accessibility & Focus Management)", () => {
 
   it("does not restore focus if trigger element was removed from DOM (isConnected: false)", () => {
     const triggerButton = createMockElement("trigger-button", false);
-    global.document.activeElement = triggerButton;
+    (global.document as any).activeElement = triggerButton;
 
     const hook = simulateHookLifecycle({
       isOpen: true,
@@ -230,7 +230,7 @@ describe("lib/hooks/useFocusTrap.ts (Accessibility & Focus Management)", () => {
     hook.containerRef.current = container;
 
     // Active element is currently the last focusable element
-    global.document.activeElement = lastBtn;
+    (global.document as any).activeElement = lastBtn;
 
     const tabEvent = {
       key: "Tab",
@@ -260,7 +260,7 @@ describe("lib/hooks/useFocusTrap.ts (Accessibility & Focus Management)", () => {
     hook.containerRef.current = container;
 
     // Active element is currently the first focusable element
-    global.document.activeElement = firstBtn;
+    (global.document as any).activeElement = firstBtn;
 
     const shiftTabEvent = {
       key: "Tab",

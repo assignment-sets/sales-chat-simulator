@@ -22,7 +22,7 @@ describe("GET /api/account/export (GDPR Art. 20 Data Portability)", () => {
 
     vi.spyOn(rateLimitModule, "enforceRateLimit").mockResolvedValue({
       ok: false,
-      response: rateLimited("Too many export requests", 3600),
+      response: rateLimited(3600000, 5, 0),
     });
 
     const res = await GET();
