@@ -53,7 +53,7 @@ export type Database = {
           status: string
           tokens_used: number | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           ai_feedback?: string | null
@@ -68,7 +68,7 @@ export type Database = {
           status?: string
           tokens_used?: number | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           ai_feedback?: string | null
@@ -83,7 +83,7 @@ export type Database = {
           status?: string
           tokens_used?: number | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -105,7 +105,7 @@ export type Database = {
           prompt_tokens: number | null
           role: string
           total_tokens: number | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           chat_id: string
@@ -116,7 +116,7 @@ export type Database = {
           prompt_tokens?: number | null
           role: string
           total_tokens?: number | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           chat_id?: string
@@ -127,7 +127,7 @@ export type Database = {
           prompt_tokens?: number | null
           role?: string
           total_tokens?: number | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -135,6 +135,44 @@ export type Database = {
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_ai_usage: {
+        Row: {
+          completion_tokens: number
+          estimated_cost_usd: number
+          organization_id: string
+          period_start: string
+          prompt_tokens: number
+          total_tokens: number
+          updated_at: string
+        }
+        Insert: {
+          completion_tokens?: number
+          estimated_cost_usd?: number
+          organization_id: string
+          period_start: string
+          prompt_tokens?: number
+          total_tokens?: number
+          updated_at?: string
+        }
+        Update: {
+          completion_tokens?: number
+          estimated_cost_usd?: number
+          organization_id?: string
+          period_start?: string
+          prompt_tokens?: number
+          total_tokens?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_ai_usage_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -158,7 +196,7 @@ export type Database = {
           invited_by?: string | null
           organization_id: string
           role?: string
-          token?: string
+          token: string
         }
         Update: {
           created_at?: string
@@ -242,44 +280,6 @@ export type Database = {
         }
         Relationships: []
       }
-      organization_ai_usage: {
-        Row: {
-          completion_tokens: number
-          estimated_cost_usd: number
-          organization_id: string
-          period_start: string
-          prompt_tokens: number
-          total_tokens: number
-          updated_at: string
-        }
-        Insert: {
-          completion_tokens?: number
-          estimated_cost_usd?: number
-          organization_id: string
-          period_start: string
-          prompt_tokens?: number
-          total_tokens?: number
-          updated_at?: string
-        }
-        Update: {
-          completion_tokens?: number
-          estimated_cost_usd?: number
-          organization_id?: string
-          period_start?: string
-          prompt_tokens?: number
-          total_tokens?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "organization_ai_usage_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -289,10 +289,7 @@ export type Database = {
         Args: { invite_token: string }
         Returns: Json
       }
-      claim_pending_org_invitations: {
-        Args: Record<PropertyKey, never> | { user_email?: string; user_id?: string }
-        Returns: undefined
-      }
+      claim_pending_org_invitations: { Args: never; Returns: undefined }
       create_chat_with_quota: {
         Args: {
           target_org_id: string
@@ -305,6 +302,7 @@ export type Database = {
         Args: { org_name: string; org_slug: string }
         Returns: Json
       }
+      get_invitation_by_token: { Args: { invite_token: string }; Returns: Json }
       get_organization_members: {
         Args: { target_org_id: string }
         Returns: {
@@ -317,10 +315,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_invitation_by_token: {
-        Args: { invite_token: string }
-        Returns: Json
-      }
       invite_or_add_org_member: {
         Args: {
           target_email: string
@@ -328,6 +322,16 @@ export type Database = {
           target_role?: string
         }
         Returns: Json
+      }
+      record_org_ai_usage: {
+        Args: {
+          completion_tokens: number
+          estimated_cost_usd?: number
+          prompt_tokens: number
+          target_org_id: string
+          total_tokens: number
+        }
+        Returns: undefined
       }
       update_organization_plan_tier: {
         Args: { new_tier: string; target_org_id: string }
