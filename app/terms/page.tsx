@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { AlertCircle } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 
+export const dynamic = "force-static";
+export const revalidate = false;
+
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "Terms and conditions governing the use of SalesChat's AI sales training and simulation platform.",

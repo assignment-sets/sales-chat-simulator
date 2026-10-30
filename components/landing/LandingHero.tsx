@@ -182,6 +182,9 @@ export function LandingHero() {
             <Link href="/privacy" className="hover:text-zinc-900 transition-colors">
               Privacy Policy
             </Link>
+            <Link href="/cookies" className="hover:text-zinc-900 transition-colors">
+              Cookie Policy
+            </Link>
           </div>
         </div>
       </footer>

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
+
+export const dynamic = "force-static";
+export const revalidate = false;
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -150,10 +154,23 @@ export default function PrivacyPage() {
         </p>
       </section>
 
-      {/* 6. Contact */}
+      {/* 6. Cookies & Tracking Technologies */}
+      <section className="space-y-3">
+        <h2 className="text-base sm:text-lg font-bold text-zinc-900">
+          6. Cookies & Essential Session Storage
+        </h2>
+        <p>
+          SalesChat uses only strictly necessary cookies for user authentication, security, and workspace multi-tenancy. We do not use third-party advertising cookies, marketing pixels, or cross-site tracking technologies. For full details on our cookie inventory and storage practices, please visit our dedicated{" "}
+          <Link href="/cookies" className="text-zinc-900 underline font-medium">
+            Cookie Policy
+          </Link>.
+        </p>
+      </section>
+
+      {/* 7. Contact */}
       <section className="space-y-3 border-t border-zinc-200/80 pt-6">
         <h2 className="text-base sm:text-lg font-bold text-zinc-900">
-          6. Privacy Inquiries & Contact
+          7. Privacy Inquiries & Contact
         </h2>
         <p>
           If you have questions regarding this Privacy Policy or data processing practices, please email{" "}
