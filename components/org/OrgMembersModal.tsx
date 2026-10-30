@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { Avatar } from "@/components/ui/Avatar";
-import { X, Users, UserPlus, Trash2, ShieldCheck, Copy, Check } from "lucide-react";
+import { X, Users, UserPlus, Trash2, ShieldCheck, Copy, Check, RotateCw, Crown } from "lucide-react";
 import Link from "next/link";
 import { getPlanConfig, getQuotaLimit } from "@/lib/plans";
 import { notify } from "@/lib/toast";
@@ -55,6 +55,12 @@ export function OrgMembersModal({
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"member" | "admin">("member");
   const [isInviting, setIsInviting] = useState(false);
+
+  // Role modification and ownership transfer state
+  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
+  const [transferTarget, setTransferTarget] = useState<MemberItem | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [resendingInviteId, setResendingInviteId] = useState<string | null>(null);
 
   const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
     isOpen,
@@ -206,6 +212,116 @@ export function OrgMembersModal({
     }
   };
 
+  const handleRoleChange = async (member: MemberItem, newRole: "admin" | "member") => {
+    if (member.role === newRole) return;
+    try {
+      setUpdatingMemberId(member.id);
+      const res = await fetch(`/api/organizations/${organization.id}/members`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: member.id, role: newRole }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update member role");
+      }
+
+      setMembers((prev) =>
+        prev.map((m) => (m.id === member.id ? { ...m, role: newRole } : m))
+      );
+      notify.success(
+        `Updated ${member.full_name || member.email || "member"}'s role to ${newRole}`
+      );
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to update member role");
+    } finally {
+      setUpdatingMemberId(null);
+    }
+  };
+
+  const confirmTransferOwnership = async () => {
+    if (!transferTarget) return;
+
+    try {
+      setIsTransferring(true);
+      const res = await fetch(
+        `/api/organizations/${organization.id}/transfer-ownership`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newOwnerUserId: transferTarget.user_id }),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to transfer ownership");
+      }
+
+      notify.success(
+        `Ownership transferred to ${transferTarget.full_name || transferTarget.email}. You are now an Admin.`
+      );
+      setTransferTarget(null);
+      onClose();
+      window.location.reload();
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to transfer ownership");
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
+  const handleResendInvite = async (invite: InvitationItem) => {
+    try {
+      setResendingInviteId(invite.id);
+      const res = await fetch(
+        `/api/organizations/${organization.id}/invitations/${invite.id}/resend`,
+        { method: "POST" }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to resend invitation");
+      }
+
+      const data = await res.json();
+      const updated = data.invitation;
+
+      if (updated?.token) {
+        setInvitations((prev) =>
+          prev.map((i) =>
+            i.id === invite.id
+              ? { ...i, token: updated.token, expires_at: updated.expires_at }
+              : i
+          )
+        );
+
+        if (typeof window !== "undefined") {
+          try {
+            const inviteUrl =
+              updated.invite_url || `${window.location.origin}/invite/${updated.token}`;
+            await navigator.clipboard.writeText(inviteUrl);
+            setCopiedToken(updated.token);
+            notify.success("Invitation refreshed & new link copied to clipboard!");
+            setTimeout(() => {
+              setCopiedToken((prev) => (prev === updated.token ? null : prev));
+            }, 2000);
+            return;
+          } catch {
+            // Non-fatal
+          }
+        }
+      }
+
+      notify.success(`Invitation refreshed for ${invite.email}`);
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to resend invitation");
+    } finally {
+      setResendingInviteId(null);
+    }
+  };
+
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case "owner":
@@ -351,10 +467,38 @@ export function OrgMembersModal({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant={getRoleBadgeVariant(member.role)}>
-                        {member.role.toUpperCase()}
-                      </Badge>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {userRole === "owner" && !isSelf && member.role !== "owner" ? (
+                        <select
+                          value={member.role}
+                          onChange={(e) =>
+                            handleRoleChange(member, e.target.value as "admin" | "member")
+                          }
+                          disabled={updatingMemberId === member.id}
+                          aria-label={`Change role for ${displayName}`}
+                          className="h-7 px-2 text-[11px] font-medium bg-white border border-zinc-200 rounded-lg text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-900 cursor-pointer disabled:opacity-50"
+                        >
+                          <option value="member">MEMBER</option>
+                          <option value="admin">ADMIN</option>
+                        </select>
+                      ) : (
+                        <Badge variant={getRoleBadgeVariant(member.role)}>
+                          {member.role.toUpperCase()}
+                        </Badge>
+                      )}
+
+                      {/* Transfer ownership button (owner-only, target not self and not owner) */}
+                      {userRole === "owner" && !isSelf && member.role !== "owner" && (
+                        <button
+                          type="button"
+                          onClick={() => setTransferTarget(member)}
+                          className="p-1 text-zinc-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                          title="Transfer workspace ownership"
+                          aria-label={`Transfer ownership to ${displayName}`}
+                        >
+                          <Crown className="w-3.5 h-3.5" />
+                        </button>
+                      )}
 
                       {/* Remove button if permitted */}
                       {(isOwnerOrAdmin || isSelf) && member.role !== "owner" && (
@@ -410,6 +554,22 @@ export function OrgMembersModal({
                         {isOwnerOrAdmin && (
                           <button
                             type="button"
+                            onClick={() => handleResendInvite(invite)}
+                            disabled={resendingInviteId === invite.id}
+                            className="p-1 text-zinc-500 hover:text-zinc-800 hover:bg-amber-100/60 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                            title="Resend invitation & refresh link"
+                            aria-label={`Resend invitation for ${invite.email}`}
+                          >
+                            <RotateCw
+                              className={`w-3.5 h-3.5 ${
+                                resendingInviteId === invite.id ? "animate-spin text-zinc-800" : ""
+                              }`}
+                            />
+                          </button>
+                        )}
+                        {isOwnerOrAdmin && (
+                          <button
+                            type="button"
                             onClick={() => handleRevokeInvite(invite)}
                             className="p-1 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                             title="Revoke invitation"
@@ -426,6 +586,46 @@ export function OrgMembersModal({
             </>
           )}
         </div>
+
+        {/* Transfer Ownership Confirmation Overlay */}
+        {transferTarget && (
+          <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-xs rounded-3xl p-6 flex flex-col justify-center items-center text-center animate-in fade-in duration-150">
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-600 mb-3">
+              <Crown className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-semibold text-zinc-900 mb-1">
+              Transfer Workspace Ownership
+            </h3>
+            <p className="text-xs text-zinc-500 max-w-sm leading-relaxed mb-5">
+              Are you sure you want to transfer ownership of{" "}
+              <strong className="text-zinc-800">{organization.name}</strong> to{" "}
+              <strong className="text-zinc-800">
+                {transferTarget.full_name || transferTarget.email || "this member"}
+              </strong>
+              ? You will step down to an Admin role.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setTransferTarget(null)}
+                disabled={isTransferring}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={confirmTransferOwnership}
+                isLoading={isTransferring}
+              >
+                Confirm Transfer
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="pt-3 border-t border-zinc-100 flex justify-end">

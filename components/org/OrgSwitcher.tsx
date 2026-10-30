@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ChevronDown, Check, Plus, Users, LayoutDashboard, CreditCard } from "lucide-react";
+import { Building2, ChevronDown, Check, Plus, Users, LayoutDashboard, CreditCard, Settings } from "lucide-react";
 import Link from "next/link";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 import { Badge } from "@/components/ui/Badge";
@@ -10,6 +10,7 @@ import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
 import { CreateOrgDialog } from "@/components/org/CreateOrgDialog";
 import { OrgMembersModal } from "@/components/org/OrgMembersModal";
+import { OrgSettingsModal } from "@/components/org/OrgSettingsModal";
 
 export interface OrgSwitcherProps {
   currentOrg: Organization;
@@ -25,6 +26,7 @@ export function OrgSwitcher({
   const [isOpen, setIsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isMembersOpen, setIsMembersOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [targetOrgId, setTargetOrgId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -203,6 +205,17 @@ export function OrgSwitcher({
                 <span>Team Members</span>
               </button>
 
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsSettingsOpen(true);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors cursor-pointer"
+              >
+                <Settings className="w-3.5 h-3.5 text-zinc-500" />
+                <span>Workspace Settings</span>
+              </button>
+
               <Link
                 href="/pricing"
                 onClick={() => setIsOpen(false)}
@@ -251,6 +264,18 @@ export function OrgSwitcher({
         onClose={() => setIsMembersOpen(false)}
         organization={currentOrg}
         userRole={currentRole}
+      />
+
+      <OrgSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        organization={currentOrg}
+        userRole={currentRole}
+        totalWorkspacesCount={organizations.length}
+        currentUserId={organizations[0]?.user_id}
+        onOrgRenamed={() => {
+          router.refresh();
+        }}
       />
     </>
   );
