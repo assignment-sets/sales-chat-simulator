@@ -115,6 +115,11 @@ export async function evaluateSimulationTurn(params: {
       state: {
         product_name: productName,
         product_offering: productDescription,
+        evaluation_context:
+          "This is a sales-training SIMULATION. The Potential Customer is an AI persona that cannot actually sign or purchase, so the best achievable result is a committed next step. " +
+          "Mark the deal WON when the prospect accepts any concrete next step: requests or agrees to receive a quote, proposal, pricing, or email; agrees to (or says they will) book a meeting, demo, or calendar slot; agrees to a follow-up call, trial, or pilot. " +
+          "Normal buying-process hedges do NOT block a win once a next step is accepted, e.g. 'need to run it by my COO/boss', 'will review the numbers', 'will check my calendar', 'will let you know'. " +
+          "If goodbyes were exchanged after a next step was accepted, the conversation is OVER, not in progress.",
         sales_dialogue: dialogue,
       },
       questions: {
@@ -122,11 +127,11 @@ export async function evaluateSimulationTurn(params: {
           "What is the current status of this sales conversation?",
           {
             deal_won:
-              "Success / Won: The prospect agreed to a meeting, demo, call, pilot, trial, or purchase, or confirmed next steps / calendar invite and wrapped up warmly.",
+              "Won: The prospect accepted a concrete next step (quote/proposal/pricing via email, meeting, demo, calendar booking, follow-up call, trial, pilot, or purchase). Still Won even if they mention internal approval, budget review, or will 'get back to you', and even if goodbyes have not been exchanged yet.",
             deal_lost:
-              "Lost: The prospect explicitly refused, walked away, rejected the offer, or the conversation was terminated due to hostility, profanity, or impasse.",
+              "Lost: The prospect explicitly refused, disengaged, rejected the offer, or the conversation ended due to hostility, profanity, or impasse with no next step.",
             in_progress:
-              "In Progress: The conversation is still actively going back and forth with questions, negotiations, or unresolved objections without agreement yet.",
+              "In Progress: Still in discovery or objection handling. The prospect is asking questions or raising concerns and has NOT yet accepted any next step.",
           }
         ),
         rep_score: score(
