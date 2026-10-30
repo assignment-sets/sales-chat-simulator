@@ -60,6 +60,11 @@ export const RATE_LIMITS = {
     window: "1 d",
     description: "Simulation creations per user (daily)",
   },
+  "chats.update.user": {
+    limit: 30,
+    window: "1 m",
+    description: "Simulation updates (rename/archive/resume) per user",
+  },
   "messages.create.user": {
     limit: 20,
     window: "1 m",
@@ -101,6 +106,31 @@ export const RATE_LIMITS = {
     limit: 10,
     window: "1 h",
     description: "Plan tier changes per organization",
+  },
+  "orgs.rename.org": {
+    limit: 10,
+    window: "1 h",
+    description: "Organization rename attempts per organization",
+  },
+  "orgs.delete.user": {
+    limit: 3,
+    window: "1 h",
+    description: "Organization deletion attempts per user",
+  },
+  "orgs.transfer.org": {
+    limit: 5,
+    window: "1 h",
+    description: "Organization ownership transfers per organization",
+  },
+  "orgs.invite.resend": {
+    limit: 15,
+    window: "1 h",
+    description: "Invitation resends per organization",
+  },
+  "orgs.member.role": {
+    limit: 20,
+    window: "1 h",
+    description: "Member role modifications per organization",
   },
 
   // --- Account & GDPR -----------------------------------------------------

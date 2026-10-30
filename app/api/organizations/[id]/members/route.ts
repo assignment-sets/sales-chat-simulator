@@ -221,6 +221,12 @@ export async function PATCH(request: Request, context: RouteContext) {
     return forbidden("Only organization owners and admins can update member roles");
   }
 
+  // Throttle role updates
+  const rateLimit = await enforceRateLimits(["orgs.member.role", `o:${orgId}`]);
+  if (!rateLimit.ok) {
+    return rateLimit.response;
+  }
+
   let body: { memberId?: unknown; role?: unknown };
   try {
     body = await request.json();
@@ -254,6 +260,14 @@ export async function PATCH(request: Request, context: RouteContext) {
   // Prevent demoting an owner
   if (targetMember.role === "owner") {
     return forbidden("Organization owners cannot be demoted");
+  }
+
+  // Only the workspace owner can grant or revoke admin status
+  if (newRole === "admin" && role !== "owner") {
+    return forbidden("Only the workspace owner can promote members to Admin");
+  }
+  if (targetMember.role === "admin" && role !== "owner") {
+    return forbidden("Only the workspace owner can demote an Admin");
   }
 
   const { data: updatedMember, error: updateError } = await supabase

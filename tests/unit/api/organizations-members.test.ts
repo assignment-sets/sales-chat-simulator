@@ -642,6 +642,78 @@ describe("PATCH /api/organizations/[id]/members", () => {
     expect(json.error).toContain("Organization owners cannot be demoted");
   });
 
+  it("returns 403 forbidden when an admin attempts to promote a member to admin", async () => {
+    const { mockClient } = setupMockAuth({
+      userId: "admin-1",
+      orgId: "org-1",
+      role: "admin",
+    });
+
+    vi.spyOn(tenantModule, "validateOrgMembership").mockResolvedValue({
+      isMember: true,
+      role: "admin",
+    });
+
+    const targetMember = {
+      id: "target-mem-id",
+      user_id: "target-user-id",
+      role: "member",
+    };
+
+    mockClient.from = vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: targetMember, error: null }),
+    })) as any;
+
+    const req = new Request("http://localhost:3000/api/organizations/org-1/members", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memberId: "target-mem-id", role: "admin" }),
+    });
+
+    const res = await PATCH(req, { params: Promise.resolve({ id: "org-1" }) });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toContain("Only the workspace owner can promote members to Admin");
+  });
+
+  it("returns 403 forbidden when an admin attempts to demote another admin", async () => {
+    const { mockClient } = setupMockAuth({
+      userId: "admin-1",
+      orgId: "org-1",
+      role: "admin",
+    });
+
+    vi.spyOn(tenantModule, "validateOrgMembership").mockResolvedValue({
+      isMember: true,
+      role: "admin",
+    });
+
+    const targetAdmin = {
+      id: "admin-2-id",
+      user_id: "user-admin-2",
+      role: "admin",
+    };
+
+    mockClient.from = vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: targetAdmin, error: null }),
+    })) as any;
+
+    const req = new Request("http://localhost:3000/api/organizations/org-1/members", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ memberId: "admin-2-id", role: "member" }),
+    });
+
+    const res = await PATCH(req, { params: Promise.resolve({ id: "org-1" }) });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toContain("Only the workspace owner can demote an Admin");
+  });
+
   it("successfully updates member role to admin", async () => {
     const { mockClient } = setupMockAuth({
       userId: "owner-1",
