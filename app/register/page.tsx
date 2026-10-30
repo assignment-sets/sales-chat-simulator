@@ -15,6 +15,12 @@ function RegisterForm() {
   const initialEmail = searchParams.get("email") || "";
   const [isPending, startTransition] = useTransition();
 
+  const loginQuery = new URLSearchParams({
+    ...(next ? { next } : {}),
+    ...(initialEmail ? { email: initialEmail } : {}),
+  }).toString();
+  const loginHref = loginQuery ? `/login?${loginQuery}` : "/login";
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -76,7 +82,7 @@ function RegisterForm() {
       <p className="mt-6 text-center text-xs text-zinc-500">
         Already have an account?{" "}
         <Link
-          href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
+          href={loginHref}
           className="font-semibold text-zinc-900 hover:underline"
         >
           Sign in

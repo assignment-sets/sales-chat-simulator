@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { normalizePlanTier, PlanTier } from "@/lib/plans";
 
 export const ACTIVE_ORG_COOKIE_NAME = "saleschat_active_org_id";
+export const INVITATION_INTENT_COOKIE_NAME = "saleschat_pending_invite_token";
 
 export const ACTIVE_ORG_COOKIE_OPTIONS = {
   path: "/",

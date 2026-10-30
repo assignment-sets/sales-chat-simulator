@@ -62,6 +62,7 @@ describe("GET /api/invitations/[token]", () => {
     const { mockClient } = setupMockAuth({
       userId: "user-123",
       email: "colleague@example.com",
+      tables: { organization_members: [] },
     });
     vi.spyOn(rateLimitModule, "enforceRateLimit").mockResolvedValue({ ok: true });
 
@@ -97,6 +98,57 @@ describe("GET /api/invitations/[token]", () => {
       id: "user-123",
       email: "colleague@example.com",
     });
+    expect(json.is_already_member).toBe(false);
+  });
+
+  it("detects when authenticated user is already a member of the organization", async () => {
+    const { mockClient } = setupMockAuth({
+      userId: "user-123",
+      email: "colleague@example.com",
+    });
+    vi.spyOn(rateLimitModule, "enforceRateLimit").mockResolvedValue({ ok: true });
+
+    const mockInvite = {
+      id: "inv-1",
+      email: "colleague@example.com",
+      role: "member",
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 86400000).toISOString(),
+      is_expired: false,
+      organization: {
+        id: "org-123",
+        name: "Acme Corp",
+        slug: "acme-corp",
+      },
+    };
+
+    mockClient.rpc = vi.fn(async (fnName: string) => {
+      if (fnName === "get_invitation_by_token") {
+        return { data: mockInvite, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    mockClient.from = vi.fn((table: string) => {
+      if (table === "organization_members") {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { id: "existing-member-id" },
+            error: null,
+          }),
+        } as any;
+      }
+      return {} as any;
+    });
+
+    const req = new Request("http://localhost:3000/api/invitations/valid-token-123");
+    const res = await GET(req, { params: Promise.resolve({ token: "valid-token-123" }) });
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.is_already_member).toBe(true);
   });
 });
 
@@ -182,6 +234,7 @@ describe("POST /api/invitations/[token]", () => {
     const mockCookieStore = {
       set: vi.fn(),
       get: vi.fn(),
+      delete: vi.fn(),
       getAll: vi.fn(),
     };
     (cookies as any).mockResolvedValue(mockCookieStore);

@@ -108,4 +108,21 @@ describe("GET /auth/confirm", () => {
     expect(res.status).toBe(307);
     expect(res.headers.get("location")).toContain("/login?error=");
   });
+
+  it("redirects to invite URL and skips claim_pending_org_invitations when next is an invite link", async () => {
+    const { mockClient } = setupMockAuth();
+    mockClient.auth.verifyOtp = vi.fn().mockResolvedValue({
+      data: { user: { id: "confirmed-invitee" }, session: {} },
+      error: null,
+    });
+
+    const req = new Request(
+      "http://localhost:3000/auth/confirm?token_hash=valid-hash&type=signup&next=/invite/token-email-confirm"
+    ) as NextRequest;
+
+    const res = await GET(req);
+    expect(mockClient.rpc).not.toHaveBeenCalledWith("claim_pending_org_invitations");
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("http://localhost:3000/invite/token-email-confirm");
+  });
 });

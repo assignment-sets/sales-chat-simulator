@@ -23,6 +23,13 @@ vi.mock("next/cache", () => ({
   revalidatePath: (...args: any[]) => mockRevalidatePath(...args),
 }));
 
+const mockCookieStore = {
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  getAll: vi.fn(),
+};
+
 vi.mock("next/headers", () => ({
   headers: () =>
     Promise.resolve(
@@ -31,12 +38,16 @@ vi.mock("next/headers", () => ({
         "x-forwarded-for": "203.0.113.195",
       })
     ),
+  cookies: () => Promise.resolve(mockCookieStore),
 }));
 
 describe("app/auth/actions.ts", () => {
   beforeEach(() => {
     mockRedirect.mockClear();
     mockRevalidatePath.mockClear();
+    mockCookieStore.get.mockReset();
+    mockCookieStore.set.mockReset();
+    mockCookieStore.delete.mockReset();
     vi.spyOn(rateLimitModule, "enforceRateLimit").mockResolvedValue({ ok: true });
   });
 
@@ -149,6 +160,49 @@ describe("app/auth/actions.ts", () => {
       await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT:/chats");
       expect(mockRedirect).toHaveBeenCalledWith("/chats");
     });
+
+    it("redirects to next invite URL on login without calling claim_pending_org_invitations", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.signInWithPassword = vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "user-123", email: "rep@saleschat.io" },
+          session: { access_token: "fake-jwt" },
+        },
+        error: null,
+      });
+
+      const formData = new FormData();
+      formData.set("email", "rep@saleschat.io");
+      formData.set("password", "password123");
+      formData.set("next", "/invite/token-abc-123");
+
+      await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT:/invite/token-abc-123");
+      expect(mockClient.rpc).not.toHaveBeenCalledWith("claim_pending_org_invitations");
+      expect(mockRedirect).toHaveBeenCalledWith("/invite/token-abc-123");
+      expect(mockCookieStore.delete).toHaveBeenCalledWith("saleschat_pending_invite_token");
+    });
+
+    it("falls back to saleschat_pending_invite_token cookie when next is default", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.signInWithPassword = vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "user-123", email: "rep@saleschat.io" },
+          session: { access_token: "fake-jwt" },
+        },
+        error: null,
+      });
+
+      mockCookieStore.get.mockReturnValue({ value: "cookie-token-999" });
+
+      const formData = new FormData();
+      formData.set("email", "rep@saleschat.io");
+      formData.set("password", "password123");
+
+      await expect(login(formData)).rejects.toThrow("NEXT_REDIRECT:/invite/cookie-token-999");
+      expect(mockClient.rpc).not.toHaveBeenCalledWith("claim_pending_org_invitations");
+      expect(mockRedirect).toHaveBeenCalledWith("/invite/cookie-token-999");
+      expect(mockCookieStore.delete).toHaveBeenCalledWith("saleschat_pending_invite_token");
+    });
   });
 
   describe("signup action", () => {
@@ -242,6 +296,54 @@ describe("app/auth/actions.ts", () => {
       expect(mockClient.rpc).not.toHaveBeenCalledWith("claim_pending_org_invitations");
       expect(mockRedirect).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent("Account created! You can now sign in."))
+      );
+    });
+
+    it("redirects to next invite URL on signup session without calling claim_pending_org_invitations", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.signUp = vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "new-user-123", email: "fresh@saleschat.io" },
+          session: { access_token: "fake-jwt" },
+        },
+        error: null,
+      });
+
+      const formData = new FormData();
+      formData.set("email", "fresh@saleschat.io");
+      formData.set("password", "securepassword");
+      formData.set("next", "/invite/token-signup-456");
+
+      await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/invite/token-signup-456");
+      expect(mockClient.rpc).not.toHaveBeenCalledWith("claim_pending_org_invitations");
+      expect(mockRedirect).toHaveBeenCalledWith("/invite/token-signup-456");
+    });
+
+    it("preserves next in emailRedirectTo and login redirect when confirmation is required", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.signUp = vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "unconfirmed-user", email: "unconfirmed@saleschat.io" },
+          session: null,
+        },
+        error: null,
+      });
+
+      const formData = new FormData();
+      formData.set("email", "unconfirmed@saleschat.io");
+      formData.set("password", "securepassword");
+      formData.set("next", "/invite/token-confirm-789");
+
+      await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/login?message=");
+      expect(mockClient.auth.signUp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          options: expect.objectContaining({
+            emailRedirectTo: expect.stringContaining("next=%2Finvite%2Ftoken-confirm-789"),
+          }),
+        })
+      );
+      expect(mockRedirect).toHaveBeenCalledWith(
+        expect.stringContaining("next=%2Finvite%2Ftoken-confirm-789")
       );
     });
   });

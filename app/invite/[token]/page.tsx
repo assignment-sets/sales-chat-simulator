@@ -53,8 +53,17 @@ export default function InvitePage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null);
   const [invitation, setInvitation] = useState<InvitationDetails | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [isAlreadyMember, setIsAlreadyMember] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    if (typeof document !== "undefined" && token) {
+      document.cookie = `saleschat_pending_invite_token=${encodeURIComponent(
+        token
+      )}; Path=/; Max-Age=7200; SameSite=Lax`;
+    }
+  }, [token]);
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +83,7 @@ export default function InvitePage({ params }: PageProps) {
         if (mounted) {
           setInvitation(data.invitation);
           setCurrentUser(data.current_user);
+          setIsAlreadyMember(Boolean(data.is_already_member));
         }
       } catch (err) {
         if (mounted) {
@@ -239,8 +249,37 @@ export default function InvitePage({ params }: PageProps) {
                   </div>
                 </div>
 
+                {/* Scenario 0: Already a Member */}
+                {isAlreadyMember && (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/70 text-xs">
+                      <div className="flex items-center gap-2 font-semibold text-emerald-900 mb-1">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Already a Team Member</span>
+                      </div>
+                      <p className="text-emerald-800 leading-relaxed text-[11px]">
+                        You are already an active member of{" "}
+                        <strong className="text-zinc-900">
+                          {invitation.organization.name}
+                        </strong>
+                        .
+                      </p>
+                    </div>
+
+                    <Link href="/chats" className="block w-full">
+                      <Button
+                        size="md"
+                        className="w-full font-semibold"
+                        rightIcon={<ArrowRight className="w-4 h-4" />}
+                      >
+                        Enter Workspace
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+
                 {/* Scenario 1: Not Logged In */}
-                {!currentUser && (
+                {!isAlreadyMember && !currentUser && (
                   <div className="space-y-3">
                     <p className="text-[11px] text-zinc-500 text-center">
                       Sign in or create an account with{" "}
@@ -282,7 +321,7 @@ export default function InvitePage({ params }: PageProps) {
                 )}
 
                 {/* Scenario 2: Logged In, Email Mismatch */}
-                {currentUser && isEmailMismatch && (
+                {!isAlreadyMember && currentUser && isEmailMismatch && (
                   <div className="space-y-4">
                     <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/70 text-xs">
                       <p className="font-semibold text-amber-900 mb-1">
@@ -315,7 +354,7 @@ export default function InvitePage({ params }: PageProps) {
                 )}
 
                 {/* Scenario 3: Logged In, Matching Email */}
-                {currentUser && !isEmailMismatch && (
+                {!isAlreadyMember && currentUser && !isEmailMismatch && (
                   <div className="space-y-3">
                     <Button
                       size="md"

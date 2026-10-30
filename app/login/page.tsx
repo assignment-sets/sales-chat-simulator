@@ -15,6 +15,18 @@ function LoginForm() {
   const initialEmail = searchParams.get("email") || "";
   const [isPending, startTransition] = useTransition();
 
+  const registerQuery = new URLSearchParams({
+    ...(next ? { next } : {}),
+    ...(initialEmail ? { email: initialEmail } : {}),
+  }).toString();
+  const registerHref = registerQuery ? `/register?${registerQuery}` : "/register";
+
+  const forgotQuery = new URLSearchParams({
+    ...(next ? { next } : {}),
+    ...(initialEmail ? { email: initialEmail } : {}),
+  }).toString();
+  const forgotHref = forgotQuery ? `/forgot-password?${forgotQuery}` : "/forgot-password";
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -48,7 +60,7 @@ function LoginForm() {
               Password
             </label>
             <Link
-              href="/forgot-password"
+              href={forgotHref}
               className="text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
             >
               Forgot password?
@@ -80,7 +92,7 @@ function LoginForm() {
         <p>
           Don&apos;t have an account?{" "}
           <Link
-            href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
+            href={registerHref}
             className="font-semibold text-zinc-900 hover:underline"
           >
             Create an account

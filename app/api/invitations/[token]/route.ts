@@ -12,6 +12,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import {
   ACTIVE_ORG_COOKIE_NAME,
   ACTIVE_ORG_COOKIE_OPTIONS,
+  INVITATION_INTENT_COOKIE_NAME,
 } from "@/lib/tenant";
 import { invalidateOrgMembers } from "@/lib/cache";
 
@@ -58,9 +59,26 @@ export async function GET(request: Request, context: RouteContext) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let isAlreadyMember = false;
+  const invOrgId = (invitation as any)?.organization?.id;
+
+  if (user && invOrgId) {
+    const { data: memberRecord } = await supabase
+      .from("organization_members")
+      .select("id")
+      .eq("organization_id", invOrgId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (memberRecord) {
+      isAlreadyMember = true;
+    }
+  }
+
   return apiSuccess({
     invitation,
     current_user: user ? { id: user.id, email: user.email } : null,
+    is_already_member: isAlreadyMember,
   });
 }
 
@@ -119,6 +137,7 @@ export async function POST(request: Request, context: RouteContext) {
       result.organization_id,
       ACTIVE_ORG_COOKIE_OPTIONS
     );
+    cookieStore.delete(INVITATION_INTENT_COOKIE_NAME);
 
     // Invalidate cached member lists
     await invalidateOrgMembers(result.organization_id, user.id);

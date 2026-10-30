@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { headers, cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { ACTIVE_ORG_COOKIE_NAME } from "@/lib/tenant";
+import { ACTIVE_ORG_COOKIE_NAME, INVITATION_INTENT_COOKIE_NAME } from "@/lib/tenant";
 
 function sanitizeRedirect(url: string | null | undefined): string {
   if (!url) return "/chats";
@@ -13,6 +13,18 @@ function sanitizeRedirect(url: string | null | undefined): string {
     return url;
   }
   return "/chats";
+}
+
+function buildAuthRedirectUrl(
+  path: "/login" | "/register",
+  params: { error?: string; message?: string; next?: string | null; email?: string | null }
+): string {
+  const parts: string[] = [];
+  if (params.error) parts.push(`error=${encodeURIComponent(params.error)}`);
+  if (params.message) parts.push(`message=${encodeURIComponent(params.message)}`);
+  if (params.next && params.next !== "/chats") parts.push(`next=${encodeURIComponent(params.next)}`);
+  if (params.email) parts.push(`email=${encodeURIComponent(params.email)}`);
+  return parts.length > 0 ? `${path}?${parts.join("&")}` : path;
 }
 
 async function getClientIp(): Promise<string> {
@@ -46,27 +58,40 @@ async function getRequestOrigin(): Promise<string> {
 }
 
 export async function login(formData: FormData) {
-  const email = (formData.get("email") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim() || "";
   const password = formData.get("password") as string;
+  const rawNext = (formData.get("next") as string)?.trim() || null;
 
   if (!email || !password) {
-    redirect("/login?error=" + encodeURIComponent("Please enter email and password"));
+    redirect(
+      buildAuthRedirectUrl("/login", {
+        error: "Please enter email and password",
+        next: rawNext,
+        email,
+      })
+    );
   }
 
   const clientIp = await getClientIp();
   const ipLimit = await enforceRateLimit("auth.login.ip", `ip:${clientIp}`);
   if (!ipLimit.ok) {
     redirect(
-      "/login?error=" +
-        encodeURIComponent("Too many sign-in attempts. Please try again in a few moments.")
+      buildAuthRedirectUrl("/login", {
+        error: "Too many sign-in attempts. Please try again in a few moments.",
+        next: rawNext,
+        email,
+      })
     );
   }
 
   const emailLimit = await enforceRateLimit("auth.login.email", `email:${email.toLowerCase()}`);
   if (!emailLimit.ok) {
     redirect(
-      "/login?error=" +
-        encodeURIComponent("Too many sign-in attempts for this account. Please try again later or reset your password.")
+      buildAuthRedirectUrl("/login", {
+        error: "Too many sign-in attempts for this account. Please try again later or reset your password.",
+        next: rawNext,
+        email,
+      })
     );
   }
 
@@ -81,11 +106,30 @@ export async function login(formData: FormData) {
     if (error.message.toLowerCase().includes("email not confirmed")) {
       msg = "Please verify your email address. You can resend the link below.";
     }
-    redirect(`/login?error=${encodeURIComponent(msg)}`);
+    redirect(
+      buildAuthRedirectUrl("/login", {
+        error: msg,
+        next: rawNext,
+        email,
+      })
+    );
   }
 
-  // Claim any pending organization invitations for this email
-  if (data?.user) {
+  let nextTarget = sanitizeRedirect(rawNext);
+
+  // If next is default, check for short-lived intent cookie
+  const cookieStore = await cookies();
+  if (nextTarget === "/chats") {
+    const intentToken = cookieStore.get(INVITATION_INTENT_COOKIE_NAME)?.value?.trim();
+    if (intentToken) {
+      nextTarget = `/invite/${encodeURIComponent(intentToken)}`;
+    }
+  }
+
+  if (nextTarget.startsWith("/invite/")) {
+    cookieStore.delete(INVITATION_INTENT_COOKIE_NAME);
+  } else if (data?.user) {
+    // Only auto-claim and delete invitations if NOT navigating directly to an invite acceptance page
     try {
       await supabase.rpc("claim_pending_org_invitations");
     } catch {
@@ -93,32 +137,49 @@ export async function login(formData: FormData) {
     }
   }
 
-  const nextTarget = sanitizeRedirect((formData.get("next") as string)?.trim());
   revalidatePath("/", "layout");
   redirect(nextTarget);
 }
 
 export async function signup(formData: FormData) {
-  const email = (formData.get("email") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim() || "";
   const password = formData.get("password") as string;
   const fullName = (formData.get("fullName") as string)?.trim();
+  const rawNext = (formData.get("next") as string)?.trim() || null;
 
   if (!email || !password) {
-    redirect("/register?error=" + encodeURIComponent("Please enter email and password"));
+    redirect(
+      buildAuthRedirectUrl("/register", {
+        error: "Please enter email and password",
+        next: rawNext,
+        email,
+      })
+    );
   }
 
   const clientIp = await getClientIp();
   const ipLimit = await enforceRateLimit("auth.signup.ip", `ip:${clientIp}`);
   if (!ipLimit.ok) {
     redirect(
-      "/register?error=" +
-        encodeURIComponent("Too many accounts created from this network. Please try again later.")
+      buildAuthRedirectUrl("/register", {
+        error: "Too many accounts created from this network. Please try again later.",
+        next: rawNext,
+        email,
+      })
     );
   }
 
   const defaultName = fullName || email.split("@")[0];
   const origin = await getRequestOrigin();
-  const nextTarget = sanitizeRedirect((formData.get("next") as string)?.trim());
+  let nextTarget = sanitizeRedirect(rawNext);
+
+  const cookieStore = await cookies();
+  if (nextTarget === "/chats") {
+    const intentToken = cookieStore.get(INVITATION_INTENT_COOKIE_NAME)?.value?.trim();
+    if (intentToken) {
+      nextTarget = `/invite/${encodeURIComponent(intentToken)}`;
+    }
+  }
 
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.signUp({
@@ -140,15 +201,25 @@ export async function signup(formData: FormData) {
     } else if (msg.toLowerCase().includes("at least 6 characters")) {
       msg = "Password must be at least 6 characters";
     }
-    redirect(`/register?error=${encodeURIComponent(msg)}`);
+    redirect(
+      buildAuthRedirectUrl("/register", {
+        error: msg,
+        next: rawNext,
+        email,
+      })
+    );
   }
 
   // If user session is created immediately (e.g. autoconfirm enabled)
   if (data?.session && data.user) {
-    try {
-      await supabase.rpc("claim_pending_org_invitations");
-    } catch {
-      // Non-fatal
+    if (nextTarget.startsWith("/invite/")) {
+      cookieStore.delete(INVITATION_INTENT_COOKIE_NAME);
+    } else {
+      try {
+        await supabase.rpc("claim_pending_org_invitations");
+      } catch {
+        // Non-fatal
+      }
     }
 
     revalidatePath("/", "layout");
@@ -156,7 +227,13 @@ export async function signup(formData: FormData) {
   }
 
   // If email confirmation is required
-  redirect("/login?message=" + encodeURIComponent("Account created! You can now sign in."));
+  redirect(
+    buildAuthRedirectUrl("/login", {
+      message: "Account created! You can now sign in.",
+      next: rawNext,
+      email,
+    })
+  );
 }
 
 export async function requestPasswordReset(formData: FormData) {

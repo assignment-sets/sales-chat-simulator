@@ -1,6 +1,8 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { INVITATION_INTENT_COOKIE_NAME } from "@/lib/tenant";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -9,9 +11,22 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next") || "";
 
+  let targetPath = rawNext;
+  const cookieStore = await cookies();
+  if (!targetPath || targetPath === "/chats") {
+    const intentToken = cookieStore.get(INVITATION_INTENT_COOKIE_NAME)?.value?.trim();
+    if (intentToken) {
+      targetPath = `/invite/${encodeURIComponent(intentToken)}`;
+    }
+  }
+
   // Sanitize next redirect target to prevent open-redirect vulnerabilities
-  const isSafeRelativeUrl = rawNext.startsWith("/") && !rawNext.startsWith("//");
-  const next = isSafeRelativeUrl ? rawNext : "/chats";
+  const isSafeRelativeUrl = targetPath.startsWith("/") && !targetPath.startsWith("//");
+  const next = isSafeRelativeUrl ? targetPath : "/chats";
+
+  if (next.startsWith("/invite/")) {
+    cookieStore.delete(INVITATION_INTENT_COOKIE_NAME);
+  }
 
   const supabase = await createServerSupabaseClient();
 
@@ -23,8 +38,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      // Auto-claim any pending invitations on confirmed signup or invite
-      if (type === "signup" || type === "invite") {
+      // Auto-claim any pending invitations on confirmed signup or invite (unless heading to specific token page)
+      if ((type === "signup" || type === "invite") && !next.startsWith("/invite/")) {
         try {
           await supabase.rpc("claim_pending_org_invitations");
         } catch {
@@ -50,10 +65,12 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      try {
-        await supabase.rpc("claim_pending_org_invitations");
-      } catch {
-        // Non-fatal
+      if (!next.startsWith("/invite/")) {
+        try {
+          await supabase.rpc("claim_pending_org_invitations");
+        } catch {
+          // Non-fatal
+        }
       }
 
       if (rawNext === "/reset-password") {
