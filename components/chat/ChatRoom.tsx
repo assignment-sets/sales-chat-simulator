@@ -35,6 +35,8 @@ export function ChatRoom({
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
 
   // Simulation Evaluation & Status State
+  const [productName, setProductName] = useState(chat.product_name);
+  const [productDescription, setProductDescription] = useState(chat.product_description);
   const [status, setStatus] = useState<string>(chat.status || "ACTIVE");
   const [evaluationOutcome, setEvaluationOutcome] = useState<string>(
     chat.evaluation_outcome ||
@@ -42,6 +44,7 @@ export function ChatRoom({
   );
   const [score, setScore] = useState<number | null>(chat.score ?? null);
 
+  const isArchived = status === "ARCHIVED";
   const isConcluded =
     status === "WON" ||
     status === "LOST" ||
@@ -325,9 +328,34 @@ export function ChatRoom({
     }
   }, [messages, isProspectTyping, triggerProspectTurn]);
 
+  // Resume archived simulation
+  const handleResume = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/chats/${chat.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "resume" }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to resume simulation");
+      }
+      const json = await res.json();
+      const restoredStatus = json.chat?.status || "ACTIVE";
+      setStatus(restoredStatus);
+      notify.success("Simulation resumed");
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to resume simulation");
+    }
+  }, [chat.id]);
+
   // Handle salesperson sending messages
   const handleSendMessage = async (content: string) => {
     if (isConcluded) return;
+    if (isArchived) {
+      notify.error("Cannot send messages to an archived chat. Resume the chat to continue.");
+      return;
+    }
 
     // 1. Settle any unrevealed bubbles in progress
     flushPendingBubbles();
@@ -376,7 +404,20 @@ export function ChatRoom({
   const hasUnrepliedUserMessage = lastMessage?.role === "user";
 
   let turnStatusHint: React.ReactNode = null;
-  if (hasUnrepliedUserMessage && !isProspectTyping) {
+  if (isArchived) {
+    turnStatusHint = (
+      <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-medium">
+        <span>Simulation is archived.</span>
+        <button
+          type="button"
+          onClick={handleResume}
+          className="text-zinc-900 font-semibold underline underline-offset-2 hover:text-black cursor-pointer transition-colors"
+        >
+          Resume practice
+        </button>
+      </div>
+    );
+  } else if (hasUnrepliedUserMessage && !isProspectTyping) {
     if (isComposing) {
       turnStatusHint = (
         <>
@@ -414,16 +455,27 @@ export function ChatRoom({
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-white min-h-0">
       {/* 1. Single Unified Fixed Header */}
       <ChatHeader
-        productName={chat.product_name}
-        productDescription={chat.product_description}
+        chatId={chat.id}
+        productName={productName}
+        productDescription={productDescription}
         messageCount={messages.length}
         planTier={planTier}
+        status={status}
+        onRename={(newName, newDesc) => {
+          setProductName(newName);
+          if (typeof newDesc === "string") {
+            setProductDescription(newDesc);
+          }
+        }}
+        onArchiveToggle={(newStatus) => {
+          setStatus(newStatus);
+        }}
       />
 
       {/* 2. ONLY Message Bubbles Scroll Area */}
       <ChatMessageList
         chatId={chat.id}
-        productName={chat.product_name}
+        productName={productName}
         messages={messages}
         isProspectTyping={isProspectTyping}
         hasMore={hasMore}
@@ -442,10 +494,12 @@ export function ChatRoom({
           <ChatInput
             onSend={handleSendMessage}
             onDraftChange={handleDraftChange}
-            turnStatusHint={!isConcluded ? turnStatusHint : null}
-            disabled={isConcluded}
+            turnStatusHint={!isConcluded || isArchived ? turnStatusHint : null}
+            disabled={isConcluded || isArchived}
             placeholder={
-              isConcluded
+              isArchived
+                ? "Simulation is archived • Click resume to continue"
+                : isConcluded
                 ? "Simulation concluded • Practice session complete"
                 : "Type a message and press Enter..."
             }

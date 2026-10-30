@@ -32,7 +32,7 @@ export default async function ChatsLayout({
 
   let chatsQuery = supabase
     .from("chats")
-    .select("id, product_name, created_at, organization_id, user_id")
+    .select("id, product_name, product_description, status, created_at, organization_id, user_id")
     .order("created_at", { ascending: false });
 
   if (activeContext) {
