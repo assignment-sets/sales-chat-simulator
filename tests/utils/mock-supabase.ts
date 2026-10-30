@@ -45,6 +45,8 @@ export function createMockQueryBuilder(initialData: any = null, error: any = nul
     delete: vi.fn(() => builder),
     eq: vi.fn((_col: string, _val: any) => builder),
     neq: vi.fn((_col: string, _val: any) => builder),
+    or: vi.fn((_filters: string) => builder),
+    ilike: vi.fn((_col: string, _val: any) => builder),
     in: vi.fn((_col: string, _vals: any[]) => builder),
     gte: vi.fn((_col: string, _val: any) => builder),
     lte: vi.fn((_col: string, _val: any) => builder),

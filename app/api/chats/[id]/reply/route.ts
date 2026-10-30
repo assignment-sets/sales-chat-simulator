@@ -64,18 +64,23 @@ export async function POST(request: Request, context: RouteContext) {
     id: string;
     product_name: string;
     product_description: string;
+    status: string;
     organization_id?: string;
   }>(
     supabase,
     id,
     user.id,
-    "id, product_name, product_description",
+    "id, product_name, product_description, status",
     "POST /api/chats/[id]/reply:validateChat"
   );
   if (!chatCheck.ok) {
     return chatCheck.response;
   }
   const chat = chatCheck.chat;
+
+  if (chat.status === "ARCHIVED") {
+    return badRequest("Cannot generate AI replies for an archived chat. Resume the chat to continue.");
+  }
 
   // 2. Throttle expensive generation per user and per organization
   const orgIdentifier = chat.organization_id

@@ -35,13 +35,17 @@ export async function GET(request: Request) {
   const { organization, role } = activeContext;
   const { searchParams } = new URL(request.url);
   const scope = searchParams.get("scope"); // 'personal' | 'team'
+  const search = searchParams.get("search") || searchParams.get("q");
+  const statusParam = searchParams.get("status")?.toUpperCase();
 
   // Dual-check tenant scoping:
   // - Default: personal practice simulations for the current user
   // - 'team' scope is only permitted for owner or admin roles
   let query = supabase
     .from("chats")
-    .select("id, product_name, user_id, organization_id, created_at")
+    .select(
+      "id, product_name, product_description, status, score, evaluation_outcome, user_id, organization_id, created_at, updated_at"
+    )
     .eq("organization_id", organization.id);
 
   if (scope === "team" && (role === "owner" || role === "admin")) {
@@ -49,6 +53,28 @@ export async function GET(request: Request) {
   } else {
     // Personal practice simulations
     query = query.eq("user_id", user.id);
+  }
+
+  // Search filter across title and scenario description
+  if (search?.trim()) {
+    const cleanSearch = search.trim().replace(/[,()]/g, "");
+    if (cleanSearch) {
+      query = query.or(
+        `product_name.ilike.%${cleanSearch}%,product_description.ilike.%${cleanSearch}%`
+      );
+    }
+  }
+
+  // Status filter: default to non-archived simulations
+  if (statusParam === "ARCHIVED") {
+    query = query.eq("status", "ARCHIVED");
+  } else if (statusParam === "ACTIVE") {
+    query = query.eq("status", "ACTIVE");
+  } else if (statusParam === "ALL") {
+    // No status restriction
+  } else {
+    // Default aligned in design interview: return active and completed drills, hide archived
+    query = query.neq("status", "ARCHIVED");
   }
 
   const { data: chats, error } = await query.order("created_at", { ascending: false });

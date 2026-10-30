@@ -106,16 +106,22 @@ export async function POST(request: Request, context: RouteContext) {
   // 1. Dual-check: verify chat exists and belongs to user
   const chatCheck = await validateChatAccess<{
     id: string;
+    status: string;
     organization_id?: string;
   }>(
     supabase,
     id,
     user.id,
-    "id",
+    "id, status",
     "POST /api/chats/[id]/messages:validateChat"
   );
   if (!chatCheck.ok) {
     return chatCheck.response;
+  }
+
+  // Prevent sending messages to archived simulations
+  if (chatCheck.chat.status === "ARCHIVED") {
+    return badRequest("Cannot send messages to an archived chat. Resume the chat to continue.");
   }
 
   // 2. Throttle message writes before parsing the body

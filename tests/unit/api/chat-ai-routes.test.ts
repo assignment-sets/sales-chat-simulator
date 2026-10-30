@@ -139,6 +139,28 @@ beforeEach(() => {
 });
 
 describe("POST /api/chats/[id]/reply", () => {
+  it("returns 400 bad request when chat is archived", async () => {
+    setupMockAuth({ userId: "user-1", orgId: "org-1" });
+
+    vi.spyOn(chatAuthModule, "validateChatAccess").mockResolvedValue({
+      ok: true,
+      chat: {
+        id: "chat-1",
+        status: "ARCHIVED",
+        product_name: "CRM",
+        product_description: "Sales CRM",
+      },
+      role: "member",
+    });
+
+    const req = new Request("http://localhost:3000/api/chats/chat-1/reply", { method: "POST" });
+    const res = await replyRoute(req, { params: Promise.resolve({ id: "chat-1" }) });
+
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe("Cannot generate AI replies for an archived chat. Resume the chat to continue.");
+  });
+
   it("returns 200 with empty messages if latest message is not from user", async () => {
     const { mockClient } = setupMockAuth({ userId: "user-1", orgId: "org-1" });
 

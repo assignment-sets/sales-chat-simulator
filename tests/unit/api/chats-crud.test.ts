@@ -27,11 +27,14 @@ describe("GET /api/chats", () => {
     const mockChats = [
       { id: "c1", product_name: "Sales AI", user_id: "user-rep-1", organization_id: "org-1" },
     ];
-    mockClient.from = vi.fn(() => ({
+    const mockBuilder = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: mockChats, error: null }),
-    })) as any;
+    };
+    mockClient.from = vi.fn(() => mockBuilder) as any;
 
     const req = new Request("http://localhost:3000/api/chats");
     const res = await GET(req);
@@ -41,6 +44,7 @@ describe("GET /api/chats", () => {
     expect(json.chats).toHaveLength(1);
     expect(json.role).toBe("member");
     expect(json.scope).toBe("personal");
+    expect(mockBuilder.neq).toHaveBeenCalledWith("status", "ARCHIVED");
   });
 
   it("returns team simulations when scope=team and caller is owner or admin", async () => {
@@ -54,11 +58,14 @@ describe("GET /api/chats", () => {
       { id: "c1", product_name: "Sales AI", user_id: "rep-1", organization_id: "org-1" },
       { id: "c2", product_name: "Sales AI", user_id: "rep-2", organization_id: "org-1" },
     ];
-    mockClient.from = vi.fn(() => ({
+    const mockBuilder = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: mockTeamChats, error: null }),
-    })) as any;
+    };
+    mockClient.from = vi.fn(() => mockBuilder) as any;
 
     const req = new Request("http://localhost:3000/api/chats?scope=team");
     const res = await GET(req);
@@ -68,6 +75,81 @@ describe("GET /api/chats", () => {
     expect(json.chats).toHaveLength(2);
     expect(json.role).toBe("admin");
     expect(json.scope).toBe("team");
+    expect(mockBuilder.neq).toHaveBeenCalledWith("status", "ARCHIVED");
+  });
+
+  it("filters chats by explicit status when requested (e.g. ?status=ARCHIVED)", async () => {
+    const { mockClient } = setupMockAuth({
+      userId: "user-1",
+      role: "member",
+      orgId: "org-1",
+    });
+
+    const mockBuilder = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [], error: null }),
+    };
+    mockClient.from = vi.fn(() => mockBuilder) as any;
+
+    const req = new Request("http://localhost:3000/api/chats?status=ARCHIVED");
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    expect(mockBuilder.eq).toHaveBeenCalledWith("status", "ARCHIVED");
+    expect(mockBuilder.neq).not.toHaveBeenCalled();
+  });
+
+  it("returns all chats without status filter when ?status=ALL", async () => {
+    const { mockClient } = setupMockAuth({
+      userId: "user-1",
+      role: "member",
+      orgId: "org-1",
+    });
+
+    const mockBuilder = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [], error: null }),
+    };
+    mockClient.from = vi.fn(() => mockBuilder) as any;
+
+    const req = new Request("http://localhost:3000/api/chats?status=ALL");
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    expect(mockBuilder.neq).not.toHaveBeenCalled();
+    // eq should only be called for org and user scoping, not for status
+    expect(mockBuilder.eq).not.toHaveBeenCalledWith("status", "ALL");
+  });
+
+  it("applies search filter matching product_name and product_description via ?q or ?search", async () => {
+    const { mockClient } = setupMockAuth({
+      userId: "user-1",
+      role: "member",
+      orgId: "org-1",
+    });
+
+    const mockBuilder = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      neq: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [], error: null }),
+    };
+    mockClient.from = vi.fn(() => mockBuilder) as any;
+
+    const req = new Request("http://localhost:3000/api/chats?q=enterprise%20crm");
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    expect(mockBuilder.or).toHaveBeenCalledWith(
+      "product_name.ilike.%enterprise crm%,product_description.ilike.%enterprise crm%"
+    );
   });
 });
 
