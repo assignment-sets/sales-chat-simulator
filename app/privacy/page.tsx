@@ -174,8 +174,8 @@ export default function PrivacyPage() {
         </h2>
         <p>
           If you have questions regarding this Privacy Policy or data processing practices, please email{" "}
-          <a href="mailto:privacy@saleschat.io" className="text-zinc-900 underline font-medium">
-            privacy@saleschat.io
+          <a href="mailto:privacy@chat2sell.in" className="text-zinc-900 underline font-medium">
+            privacy@chat2sell.in
           </a>.
         </p>
       </section>

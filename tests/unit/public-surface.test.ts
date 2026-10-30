@@ -6,6 +6,7 @@ import PricingPage, { metadata as pricingMetadata } from "@/app/pricing/page";
 import TermsPage, { metadata as termsMetadata } from "@/app/terms/page";
 import PrivacyPage, { metadata as privacyMetadata } from "@/app/privacy/page";
 import CookiePage, { metadata as cookieMetadata } from "@/app/cookies/page";
+import SupportPage, { metadata as supportMetadata } from "@/app/support/page";
 import { GET as getLlmsTxt } from "@/app/llms.txt/route";
 import { setupMockAuth } from "../utils/mock-supabase";
 
@@ -48,7 +49,7 @@ describe("Public Surface & SEO Infrastructure", () => {
       const wildcardRule = rulesArray.find((r) => r.userAgent === "*");
       expect(wildcardRule).toBeDefined();
 
-      const allowedPaths = ["/", "/pricing", "/login", "/terms", "/privacy", "/cookies"];
+      const allowedPaths = ["/", "/pricing", "/login", "/terms", "/privacy", "/cookies", "/support"];
       for (const path of allowedPaths) {
         expect(wildcardRule?.allow).toContain(path);
       }
@@ -79,11 +80,12 @@ describe("Public Surface & SEO Infrastructure", () => {
       expect(entries.length).toBeGreaterThanOrEqual(5);
 
       const urls = entries.map((e) => e.url);
-      expect(urls.some((u) => u.endsWith("/") || u.includes("saleschat.vercel.app"))).toBe(true);
+      expect(urls.some((u) => u.endsWith("/") || u.includes("chat2sell.in"))).toBe(true);
       expect(urls.some((u) => u.includes("/pricing"))).toBe(true);
       expect(urls.some((u) => u.includes("/terms"))).toBe(true);
       expect(urls.some((u) => u.includes("/privacy"))).toBe(true);
       expect(urls.some((u) => u.includes("/cookies"))).toBe(true);
+      expect(urls.some((u) => u.includes("/support"))).toBe(true);
 
       const pricingEntry = entries.find((e) => e.url.includes("/pricing"));
       expect(pricingEntry?.priority).toBe(0.8);
@@ -176,6 +178,17 @@ describe("Public Surface & SEO Infrastructure", () => {
       const component = CookiePage();
       expect(component).toBeDefined();
       expect(component.props.title).toBe("Cookie Policy");
+    });
+  });
+
+  describe("app/support/page.tsx (Support & Contact)", () => {
+    it("exports valid metadata and renders support page with contact email", () => {
+      expect(supportMetadata.title).toBe("Support & Contact");
+      expect(supportMetadata.description).toBeDefined();
+
+      const component = SupportPage();
+      expect(component).toBeDefined();
+      expect(component.props.title).toBe("Help & Support");
     });
   });
 

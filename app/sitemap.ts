@@ -4,7 +4,7 @@ export const dynamic = "force-static";
 export const revalidate = 86400;
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://saleschat.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chat2sell.in";
   const now = new Date();
 
   return [
@@ -37,6 +37,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/support`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
   ];
 }

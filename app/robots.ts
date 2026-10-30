@@ -4,9 +4,9 @@ export const dynamic = "force-static";
 export const revalidate = 86400;
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://saleschat.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chat2sell.in";
 
-  const publicRoutes = ["/", "/pricing", "/login", "/terms", "/privacy", "/cookies"];
+  const publicRoutes = ["/", "/pricing", "/login", "/terms", "/privacy", "/cookies", "/support"];
   const protectedRoutes = [
     "/api/",
     "/chats/",

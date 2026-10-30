@@ -154,8 +154,8 @@ export default function CookiePage() {
         </h2>
         <p>
           If you have any questions regarding our use of cookies or privacy practices, please contact us at{" "}
-          <a href="mailto:privacy@saleschat.io" className="text-zinc-900 underline font-medium">
-            privacy@saleschat.io
+          <a href="mailto:privacy@chat2sell.in" className="text-zinc-900 underline font-medium">
+            privacy@chat2sell.in
           </a>{" "}
           or review our{" "}
           <Link href="/privacy" className="text-zinc-900 underline font-medium">

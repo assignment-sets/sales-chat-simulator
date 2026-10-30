@@ -105,8 +105,8 @@ export default function TermsPage() {
         </h2>
         <p>
           For questions regarding these Terms of Service or to submit legal notices, please reach out to our team at{" "}
-          <a href="mailto:legal@saleschat.io" className="text-zinc-900 underline font-medium">
-            legal@saleschat.io
+          <a href="mailto:legal@chat2sell.in" className="text-zinc-900 underline font-medium">
+            legal@chat2sell.in
           </a>.
         </p>
       </section>
