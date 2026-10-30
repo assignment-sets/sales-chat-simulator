@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +12,7 @@ import { AccountSettingsModal } from "./AccountSettingsModal";
 import {
   ChevronDown,
   Settings,
+  HelpCircle,
   User,
   LogOut,
   Check,
@@ -216,6 +218,18 @@ export function UserProfileMenu({
                 <span>Settings</span>
               </div>
             </button>
+
+            {/* Help & Support */}
+            <Link
+              href="/support"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer text-left mt-0.5"
+            >
+              <div className="flex items-center gap-2">
+                <HelpCircle className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Help & Support</span>
+              </div>
+            </Link>
           </div>
 
           {/* Sign Out Option inside Menu */}

@@ -97,6 +97,9 @@ export function LegalPageShell({
             <Link href="/cookies" className="hover:text-zinc-900 transition-colors">
               Cookie Policy
             </Link>
+            <Link href="/support" className="hover:text-zinc-900 transition-colors">
+              Support
+            </Link>
           </div>
         </div>
       </footer>
