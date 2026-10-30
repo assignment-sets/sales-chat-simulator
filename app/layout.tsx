@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 import { Toaster } from "sonner";
 
 const appBaseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "https://saleschat.io";
+  process.env.NEXT_PUBLIC_APP_URL || "https://saleschat.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(appBaseUrl),

@@ -5,6 +5,8 @@ import HomePage from "@/app/page";
 import PricingPage, { metadata as pricingMetadata } from "@/app/pricing/page";
 import TermsPage, { metadata as termsMetadata } from "@/app/terms/page";
 import PrivacyPage, { metadata as privacyMetadata } from "@/app/privacy/page";
+import CookiePage, { metadata as cookieMetadata } from "@/app/cookies/page";
+import { GET as getLlmsTxt } from "@/app/llms.txt/route";
 import { setupMockAuth } from "../utils/mock-supabase";
 
 const mockRedirect = vi.fn((url: string) => {
@@ -32,31 +34,56 @@ describe("Public Surface & SEO Infrastructure", () => {
       const result = robots();
       expect(result.rules).toBeDefined();
 
-      const rules = Array.isArray(result.rules) ? result.rules[0] : result.rules;
-      expect(rules.userAgent).toBe("*");
-      expect(rules.allow).toContain("/");
-      expect(rules.allow).toContain("/pricing");
-      expect(rules.allow).toContain("/login");
-      expect(rules.allow).toContain("/terms");
-      expect(rules.allow).toContain("/privacy");
+      const rulesArray = Array.isArray(result.rules) ? result.rules : [result.rules];
+      expect(rulesArray.length).toBeGreaterThanOrEqual(2);
 
-      expect(rules.disallow).toContain("/api/");
-      expect(rules.disallow).toContain("/chats/");
-      expect(rules.disallow).toContain("/dashboard/");
+      // Verify AI Search / Citation bots rule
+      const aiRule = rulesArray.find((r) => Array.isArray(r.userAgent) && r.userAgent.includes("OAI-SearchBot"));
+      expect(aiRule).toBeDefined();
+      expect(aiRule?.userAgent).toContain("PerplexityBot");
+      expect(aiRule?.userAgent).toContain("Claude-SearchBot");
+      expect(aiRule?.userAgent).toContain("Applebot-Extended");
+
+      // Verify general crawler wildcard rule
+      const wildcardRule = rulesArray.find((r) => r.userAgent === "*");
+      expect(wildcardRule).toBeDefined();
+
+      const allowedPaths = ["/", "/pricing", "/login", "/terms", "/privacy", "/cookies"];
+      for (const path of allowedPaths) {
+        expect(wildcardRule?.allow).toContain(path);
+      }
+
+      const disallowedPaths = [
+        "/api/",
+        "/chats/",
+        "/dashboard/",
+        "/settings/",
+        "/auth/",
+        "/invite/",
+        "/reset-password",
+        "/forgot-password",
+        "/resend-verification",
+      ];
+      for (const path of disallowedPaths) {
+        expect(wildcardRule?.disallow).toContain(path);
+      }
+
       expect(result.sitemap).toContain("/sitemap.xml");
+      expect(result.host).toBeDefined();
     });
   });
 
   describe("app/sitemap.ts", () => {
     it("returns valid sitemap entries for all public pages", () => {
       const entries = sitemap();
-      expect(entries.length).toBeGreaterThanOrEqual(4);
+      expect(entries.length).toBeGreaterThanOrEqual(5);
 
       const urls = entries.map((e) => e.url);
-      expect(urls.some((u) => u.endsWith("/") || u.includes("saleschat.io"))).toBe(true);
+      expect(urls.some((u) => u.endsWith("/") || u.includes("saleschat.vercel.app"))).toBe(true);
       expect(urls.some((u) => u.includes("/pricing"))).toBe(true);
       expect(urls.some((u) => u.includes("/terms"))).toBe(true);
       expect(urls.some((u) => u.includes("/privacy"))).toBe(true);
+      expect(urls.some((u) => u.includes("/cookies"))).toBe(true);
 
       const pricingEntry = entries.find((e) => e.url.includes("/pricing"));
       expect(pricingEntry?.priority).toBe(0.8);
@@ -138,6 +165,37 @@ describe("Public Surface & SEO Infrastructure", () => {
       const component = PrivacyPage();
       expect(component).toBeDefined();
       expect(component.props.title).toBe("Privacy Policy");
+    });
+  });
+
+  describe("app/cookies/page.tsx (Cookie Policy)", () => {
+    it("exports valid metadata and renders cookie policy with essential cookie table", () => {
+      expect(cookieMetadata.title).toBe("Cookie Policy");
+      expect(cookieMetadata.description).toBeDefined();
+
+      const component = CookiePage();
+      expect(component).toBeDefined();
+      expect(component.props.title).toBe("Cookie Policy");
+    });
+  });
+
+  describe("app/llms.txt/route.ts (AI Agent Discovery Specification)", () => {
+    it("returns clean markdown with H1 title, pricing, capabilities, and security pledges", async () => {
+      const response = await getLlmsTxt();
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toContain("text/markdown");
+      expect(response.headers.get("Cache-Control")).toContain("max-age=86400");
+
+      const text = await response.text();
+      expect(text).toContain("# SalesChat");
+      expect(text).toContain("Overview & Core Capabilities");
+      expect(text).toContain("Pricing Plans & Workspace Tiers");
+      expect(text).toContain("Zero Foundation Model Training");
+      expect(text).toContain("Canonical Public Links");
+      expect(text).toContain("/pricing");
+      expect(text).toContain("/terms");
+      expect(text).toContain("/privacy");
+      expect(text).toContain("/cookies");
     });
   });
 });
