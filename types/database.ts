@@ -333,6 +333,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      resend_organization_invitation: {
+        Args: { target_invite_id: string; target_org_id: string }
+        Returns: Json
+      }
+      transfer_organization_ownership: {
+        Args: { new_owner_user_id: string; target_org_id: string }
+        Returns: Json
+      }
       update_organization_plan_tier: {
         Args: { new_tier: string; target_org_id: string }
         Returns: Json
