@@ -114,6 +114,12 @@ export default function PrivacyPage() {
             </tbody>
           </table>
         </div>
+        <p className="text-xs text-zinc-500">
+          For our complete registry of infrastructure partners, transfer safeguards, and 30-day change notification policies, visit our dedicated{" "}
+          <Link href="/subprocessors" className="text-zinc-900 underline font-medium">
+            Subprocessors Directory
+          </Link>.
+        </p>
       </section>
 
       {/* 3. Retention & Deletion */}

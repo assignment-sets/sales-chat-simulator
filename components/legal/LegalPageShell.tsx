@@ -84,9 +84,21 @@ export function LegalPageShell({
       <footer className="border-t border-zinc-200/80 bg-white py-8 mt-12">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
           <div>© {new Date().getFullYear()} SalesChat. All rights reserved.</div>
-          <div className="flex items-center gap-6 font-medium">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-medium">
             <Link href="/pricing" className="hover:text-zinc-900 transition-colors">
               Pricing
+            </Link>
+            <Link href="/about" className="hover:text-zinc-900 transition-colors">
+              About
+            </Link>
+            <Link href="/docs" className="hover:text-zinc-900 transition-colors">
+              Docs
+            </Link>
+            <Link href="/changelog" className="hover:text-zinc-900 transition-colors">
+              Changelog
+            </Link>
+            <Link href="/support" className="hover:text-zinc-900 transition-colors">
+              Support
             </Link>
             <Link href="/terms" className="hover:text-zinc-900 transition-colors">
               Terms of Service
@@ -94,11 +106,20 @@ export function LegalPageShell({
             <Link href="/privacy" className="hover:text-zinc-900 transition-colors">
               Privacy Policy
             </Link>
+            <Link href="/acceptable-use" className="hover:text-zinc-900 transition-colors">
+              Acceptable Use
+            </Link>
+            <Link href="/security" className="hover:text-zinc-900 transition-colors">
+              Security
+            </Link>
+            <Link href="/subprocessors" className="hover:text-zinc-900 transition-colors">
+              Subprocessors
+            </Link>
             <Link href="/cookies" className="hover:text-zinc-900 transition-colors">
               Cookie Policy
             </Link>
-            <Link href="/support" className="hover:text-zinc-900 transition-colors">
-              Support
+            <Link href="/refund" className="hover:text-zinc-900 transition-colors">
+              Refund Policy
             </Link>
           </div>
         </div>
