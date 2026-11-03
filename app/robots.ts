@@ -6,7 +6,22 @@ export const revalidate = 86400;
 export default function robots(): MetadataRoute.Robots {
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chat2sell.in";
 
-  const publicRoutes = ["/", "/pricing", "/login", "/terms", "/privacy", "/cookies", "/support"];
+  const publicRoutes = [
+    "/",
+    "/pricing",
+    "/about",
+    "/docs",
+    "/changelog",
+    "/login",
+    "/terms",
+    "/privacy",
+    "/acceptable-use",
+    "/security",
+    "/subprocessors",
+    "/cookies",
+    "/refund",
+    "/support",
+  ];
   const protectedRoutes = [
     "/api/",
     "/chats/",

@@ -35,6 +35,9 @@ export async function GET() {
 - [Pricing Plans](${siteUrl}/pricing): Detailed subscription breakdown, seat capacity, and quota limits.
 - [Terms of Service](${siteUrl}/terms): Platform terms, acceptable use policy, and AI simulation disclaimers.
 - [Privacy Policy](${siteUrl}/privacy): Data protection practices, subprocessor disclosures, and GDPR/CCPA rights.
+- [AI Safety & Acceptable Use Policy](${siteUrl}/acceptable-use): Guidelines for responsible AI roleplay simulation, prohibited prompt injection, and platform security.
+- [Security & AI Data Training Disclosure](${siteUrl}/security): Multi-tenant architecture, zero public model training commitment, and encryption safeguards.
+- [Subprocessors Directory](${siteUrl}/subprocessors): Complete listing of vetted third-party data processing infrastructure partners.
 - [Cookie Policy](${siteUrl}/cookies): Inventory of strictly necessary authentication cookies and zero-tracking commitment.
 `;
 
