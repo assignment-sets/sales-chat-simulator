@@ -30,7 +30,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
 
   // 2. Active organization resolution failure
   it("returns 500 internal error when active organization cannot be resolved", async () => {
-    setupMockAuth({ role: "owner", planTier: "pro" });
+    setupMockAuth({ role: "owner", planTier: "team" });
     vi.spyOn(tenantModule, "getActiveOrganization").mockResolvedValue(null);
 
     const req = new Request(`http://localhost:3000/api/dashboard/chats/${targetChatId}`);
@@ -45,7 +45,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("returns 403 forbidden for member role", async () => {
     setupMockAuth({
       role: "member",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -77,7 +77,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("allows access for admin role on pro plan", async () => {
     setupMockAuth({
       role: "admin",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -109,7 +109,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("returns 404 Not Found when chat belongs to another organization (cross-tenant isolation)", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-tenant-a",
     });
 
@@ -152,7 +152,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("uses cached with transcriptKey(orgId, chatId) and CACHE_TTLS.transcript", async () => {
     setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-key-org",
     });
 
@@ -176,7 +176,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("ensures 404 Not Found is never written to cache", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-no-cache-404",
     });
 
@@ -246,7 +246,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("fetches chat metadata and ordered messages from database on cache miss", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-success",
     });
 
@@ -320,7 +320,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("returns 500 internalError when chat query fails", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -352,7 +352,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("returns 500 internalError when messages query fails", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -394,7 +394,7 @@ describe("GET /api/dashboard/chats/[chatId]", () => {
   it("returns 500 internalError when an unexpected error occurs during loading", async () => {
     setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 

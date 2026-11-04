@@ -117,7 +117,7 @@ function mockFeedbackChat() {
 
   vi.spyOn(entitlementsModule, "requireOrgFeature").mockResolvedValue({
     ok: true,
-    planTier: "pro",
+    planTier: "team",
   });
 
   vi.spyOn(rateLimitModule, "acquireChatLock").mockResolvedValue(true);
@@ -333,7 +333,7 @@ describe("POST /api/chats/[id]/feedback", () => {
   });
 
   it("returns cached feedback immediately if already generated on the chat row", async () => {
-    setupMockAuth({ userId: "user-1", orgId: "org-1", planTier: "pro" });
+    setupMockAuth({ userId: "user-1", orgId: "org-1", planTier: "team" });
 
     vi.spyOn(chatAuthModule, "validateChatAccess").mockResolvedValue({
       ok: true,
@@ -347,7 +347,7 @@ describe("POST /api/chats/[id]/feedback", () => {
 
     vi.spyOn(entitlementsModule, "requireOrgFeature").mockResolvedValue({
       ok: true,
-      planTier: "pro",
+      planTier: "team",
     });
 
     const req = new Request("http://localhost:3000/api/chats/chat-1/feedback", { method: "POST" });

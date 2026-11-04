@@ -1,6 +1,6 @@
 import { vi } from "vitest";
-import { OrgRole } from "@/lib/tenant";
-import { PlanTier } from "@/lib/plans";
+import { OrgRole, Organization } from "@/lib/tenant";
+import { PlanTier, normalizePlanTier } from "@/lib/plans";
 
 export interface MockUserContext {
   userId?: string;
@@ -8,7 +8,8 @@ export interface MockUserContext {
   role?: OrgRole;
   orgId?: string;
   orgName?: string;
-  planTier?: PlanTier;
+  planTier?: PlanTier | "pro";
+  dodoCustomerId?: string | null;
   tables?: Record<string, any[]>;
   rpcHandlers?: Record<string, (params: any) => Promise<{ data?: any; error?: any }> | { data?: any; error?: any }>;
 }
@@ -38,6 +39,10 @@ export function createMockQueryBuilder(initialData: any = null, error: any = nul
       resolvedData = Array.isArray(payload) ? payload : [payload];
       return builder;
     }),
+    upsert: vi.fn((payload: any) => {
+      resolvedData = Array.isArray(payload) ? payload : [payload];
+      return builder;
+    }),
     update: vi.fn((payload: any) => {
       resolvedData = payload;
       return builder;
@@ -45,6 +50,7 @@ export function createMockQueryBuilder(initialData: any = null, error: any = nul
     delete: vi.fn(() => builder),
     eq: vi.fn((_col: string, _val: any) => builder),
     neq: vi.fn((_col: string, _val: any) => builder),
+    not: vi.fn((_col: string, _operator?: any, _val?: any) => builder),
     or: vi.fn((_filters: string) => builder),
     ilike: vi.fn((_col: string, _val: any) => builder),
     in: vi.fn((_col: string, _vals: any[]) => builder),
@@ -176,13 +182,15 @@ export function setupMockAuth(options: MockUserContext | null = {}) {
   const role: OrgRole = options.role || "owner";
   const orgId = options.orgId || "test-org-id";
   const orgName = options.orgName || "Acme Sales";
-  const planTier: PlanTier = options.planTier || "starter";
+  const planTier: PlanTier = normalizePlanTier(options.planTier || "starter");
 
-  const organization = {
+  const organization: Organization = {
     id: orgId,
     name: orgName,
     slug: "acme-sales",
     plan_tier: planTier,
+    dodo_customer_id: options.dodoCustomerId ?? null,
+    dodo_subscription_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };

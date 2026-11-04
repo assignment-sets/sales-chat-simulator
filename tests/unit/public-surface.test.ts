@@ -125,7 +125,7 @@ describe("Public Surface & SEO Infrastructure", () => {
       const { mockClient } = setupMockAuth({
         userId: "user-1",
         orgId: "org-1",
-        planTier: "pro",
+        planTier: "team",
       });
 
       mockClient.from = vi.fn((tableName: string) => ({
@@ -143,7 +143,7 @@ describe("Public Surface & SEO Infrastructure", () => {
       expect(component).toBeDefined();
       expect(mockRedirect).not.toHaveBeenCalled();
       expect(component.props.organizationName).toBe("Acme Sales");
-      expect(component.props.currentTier).toBe("pro");
+      expect(component.props.currentTier).toBe("team");
       expect(pricingMetadata.title).toContain("Pricing");
     });
   });

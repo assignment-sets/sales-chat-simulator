@@ -199,7 +199,37 @@ describe("POST /api/organizations/tier", () => {
     mockClient.rpc = vi.fn(async (fnName: string, params: any) => {
       if (fnName === "update_organization_plan_tier") {
         expect(params.target_org_id).toBe("org-123");
-        expect(params.new_tier).toBe("pro");
+        expect(params.new_tier).toBe("team");
+        return { data: { success: true }, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const req = new Request("http://localhost:3000/api/organizations/tier", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan_tier: "team" }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.organization_id).toBe("org-123");
+    expect(json.plan_tier).toBe("team");
+  });
+
+  it("normalizes legacy 'pro' tier payload to 'team' on update", async () => {
+    process.env.ALLOW_SELF_SERVE_TIER_SWITCH = "true";
+    const { mockClient } = setupMockAuth({
+      userId: "user-admin",
+      orgId: "org-123",
+      role: "admin",
+    });
+
+    mockClient.rpc = vi.fn(async (fnName: string, params: any) => {
+      if (fnName === "update_organization_plan_tier") {
+        expect(params.target_org_id).toBe("org-123");
+        expect(params.new_tier).toBe("team");
         return { data: { success: true }, error: null };
       }
       return { data: null, error: null };
@@ -215,6 +245,6 @@ describe("POST /api/organizations/tier", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.organization_id).toBe("org-123");
-    expect(json.plan_tier).toBe("pro");
+    expect(json.plan_tier).toBe("team");
   });
 });

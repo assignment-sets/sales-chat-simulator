@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   AI_TOKEN_CEILINGS,
+  TIER_TOKEN_LIMITS,
   checkAiTokenCeiling,
   estimateGroqCostUsd,
   normalizeUsage,
@@ -77,7 +78,7 @@ describe("estimateGroqCostUsd", () => {
 describe("checkAiTokenCeiling", () => {
   it("allows requests below the tier ceiling", async () => {
     const supabase = fakeSupabase({
-      organizations: builder({ id: "org-1", plan_tier: "pro" }),
+      organizations: builder({ id: "org-1", plan_tier: "team" }),
       organization_ai_usage: builder({ total_tokens: 1000 }),
     });
 
@@ -86,7 +87,7 @@ describe("checkAiTokenCeiling", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.usedTokens).toBe(1000);
-      expect(result.ceilingTokens).toBe(AI_TOKEN_CEILINGS.pro);
+      expect(result.ceilingTokens).toBe(TIER_TOKEN_LIMITS.team);
       expect(result.periodStart).toBe(getStartOfCurrentMonthUTC());
     }
   });

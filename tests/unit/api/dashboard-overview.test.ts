@@ -24,7 +24,7 @@ describe("GET /api/dashboard", () => {
 
   // 2. Active organization resolution failure
   it("returns 500 internal error when active organization cannot be resolved", async () => {
-    setupMockAuth({ role: "owner", planTier: "pro" });
+    setupMockAuth({ role: "owner", planTier: "team" });
     vi.spyOn(tenantModule, "getActiveOrganization").mockResolvedValue(null);
 
     const res = await GET();
@@ -37,7 +37,7 @@ describe("GET /api/dashboard", () => {
   it("returns 403 forbidden for member role with standard oversight restriction message", async () => {
     setupMockAuth({
       role: "member",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -65,7 +65,7 @@ describe("GET /api/dashboard", () => {
   it("allows access for admin role on pro plan", async () => {
     setupMockAuth({
       role: "admin",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -103,7 +103,7 @@ describe("GET /api/dashboard", () => {
   it("uses read-through cache with dashboardKey(orgId) and CACHE_TTLS.dashboard", async () => {
     setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-42",
     });
 
@@ -191,7 +191,7 @@ describe("GET /api/dashboard", () => {
     const { mockClient } = setupMockAuth({
       userId: "user-owner-1",
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-aggregates",
     });
 
@@ -418,7 +418,7 @@ describe("GET /api/dashboard", () => {
     const { mockClient } = setupMockAuth({
       userId: "user-owner-1",
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-fallback",
     });
 
@@ -506,7 +506,7 @@ describe("GET /api/dashboard", () => {
   it("returns 500 internalError when organization query fails", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -536,7 +536,7 @@ describe("GET /api/dashboard", () => {
   it("returns 500 internalError when organization members query fails", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -577,7 +577,7 @@ describe("GET /api/dashboard", () => {
   it("returns 500 internalError when chats query fails", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -622,7 +622,7 @@ describe("GET /api/dashboard", () => {
   it("returns 500 internalError when an unexpected exception is thrown", async () => {
     setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 

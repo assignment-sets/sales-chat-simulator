@@ -30,7 +30,7 @@ describe("GET /api/dashboard/members/[userId]/chats", () => {
 
   // 2. Active organization resolution failure
   it("returns 500 internal error when active organization cannot be resolved", async () => {
-    setupMockAuth({ role: "owner", planTier: "pro" });
+    setupMockAuth({ role: "owner", planTier: "team" });
     vi.spyOn(tenantModule, "getActiveOrganization").mockResolvedValue(null);
 
     const req = new Request(`http://localhost:3000/api/dashboard/members/${targetUserId}/chats`);
@@ -45,7 +45,7 @@ describe("GET /api/dashboard/members/[userId]/chats", () => {
   it("returns 403 forbidden for member role", async () => {
     setupMockAuth({
       role: "member",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -77,7 +77,7 @@ describe("GET /api/dashboard/members/[userId]/chats", () => {
   it("allows access for admin role on pro plan", async () => {
     setupMockAuth({
       role: "admin",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -110,7 +110,7 @@ describe("GET /api/dashboard/members/[userId]/chats", () => {
   it("enforces tenant and user isolation by querying chats with organization_id and target userId", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-tenant-abc",
     });
 
@@ -183,7 +183,7 @@ describe("GET /api/dashboard/members/[userId]/chats", () => {
   it("uses cached with memberChatsKey(orgId, userId) and CACHE_TTLS.memberChats", async () => {
     setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-key-test",
     });
 
@@ -247,7 +247,7 @@ describe("GET /api/dashboard/members/[userId]/chats", () => {
   it("returns 500 internalError when database query fails", async () => {
     const { mockClient } = setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 
@@ -274,7 +274,7 @@ describe("GET /api/dashboard/members/[userId]/chats", () => {
   it("returns 500 internalError when an unexpected error occurs during loading", async () => {
     setupMockAuth({
       role: "owner",
-      planTier: "pro",
+      planTier: "team",
       orgId: "org-1",
     });
 

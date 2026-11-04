@@ -30,7 +30,7 @@ describe("Test Infrastructure & Auth Harness (Phase 1)", () => {
       email: "rep@example.com",
       role: "admin",
       orgId: "org-888",
-      planTier: "pro",
+      planTier: "team",
     });
 
     const client = await createServerSupabaseClient();
@@ -41,6 +41,6 @@ describe("Test Infrastructure & Auth Harness (Phase 1)", () => {
     const resolvedOrg = await getActiveOrganization(client, data.user!.id, data.user!.email);
     expect(resolvedOrg?.organization.id).toBe("org-888");
     expect(resolvedOrg?.role).toBe("admin");
-    expect(resolvedOrg?.organization.plan_tier).toBe("pro");
+    expect(resolvedOrg?.organization.plan_tier).toBe("team");
   });
 });
