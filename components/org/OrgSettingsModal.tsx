@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   X,
@@ -9,12 +10,16 @@ import {
   Trash2,
   LogOut,
   Save,
+  CreditCard,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { notify } from "@/lib/toast";
 import { Organization, OrgRole } from "@/lib/tenant";
+import { normalizePlanTier } from "@/lib/plans";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 export interface OrgSettingsModalProps {
@@ -41,6 +46,7 @@ export function OrgSettingsModal({
   // General settings state
   const [nameInput, setNameInput] = useState(organization.name);
   const [isSaving, setIsSaving] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
   // Danger zone state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -72,6 +78,8 @@ export function OrgSettingsModal({
   const isAdminOrOwner = userRole === "owner" || userRole === "admin";
   const isNameChanged = nameInput.trim() !== organization.name;
   const isSoleWorkspace = totalWorkspacesCount <= 1;
+  const planTier = normalizePlanTier(organization.plan_tier);
+  const hasPaidBilling = planTier !== "starter" && Boolean(organization.dodo_customer_id);
 
   // 1. Handle Rename Organization
   const handleRename = async (e: React.FormEvent) => {
@@ -107,6 +115,26 @@ export function OrgSettingsModal({
       notify.error(err instanceof Error ? err.message : "Failed to rename workspace");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Handle Dodo Customer Billing Portal
+  const handleOpenBillingPortal = async () => {
+    try {
+      setIsOpeningPortal(true);
+      const res = await fetch("/api/payments/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnUrl: window.location.href }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to open billing portal");
+      if (!data.portalUrl) throw new Error("No portal URL returned");
+      window.location.href = data.portalUrl;
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to open billing portal");
+    } finally {
+      setIsOpeningPortal(false);
     }
   };
 
@@ -257,6 +285,72 @@ export function OrgSettingsModal({
               </div>
             )}
           </form>
+
+          {/* Subscription & Billing */}
+          <div className="p-4 border border-zinc-200 rounded-2xl bg-white space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-zinc-500" />
+                <h3 className="text-xs font-semibold text-zinc-900 uppercase tracking-wider">
+                  Subscription & Billing
+                </h3>
+              </div>
+              <Badge
+                variant={planTier === "starter" ? "muted" : "accent"}
+                className="text-[10px] uppercase font-semibold"
+              >
+                {planTier} PLAN
+              </Badge>
+            </div>
+
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              {hasPaidBilling
+                ? "Manage payment methods, download invoices, or modify your subscription in the self-service billing portal."
+                : "Your workspace is currently on the free Starter plan. Upgrade to unlock higher simulation quotas, team seats, and advanced AI coaching."}
+            </p>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-zinc-100">
+              <Link
+                href="/pricing"
+                onClick={onClose}
+                className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+              >
+                <span>View all plans & features</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+
+              {isAdminOrOwner ? (
+                hasPaidBilling ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    isLoading={isOpeningPortal}
+                    onClick={handleOpenBillingPortal}
+                    leftIcon={<CreditCard className="w-3.5 h-3.5" />}
+                  >
+                    Manage Subscription & Invoices
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      onClose();
+                      router.push("/pricing");
+                    }}
+                    leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                  >
+                    Upgrade Workspace Plan
+                  </Button>
+                )
+              ) : (
+                <span className="text-[11px] text-zinc-400">
+                  Workspace admin access required to manage billing
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Danger Zone */}
           <div className="p-4 border border-red-200 bg-red-50/30 rounded-2xl space-y-3">

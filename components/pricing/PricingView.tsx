@@ -14,6 +14,8 @@ import {
   getPlanConfig,
 } from "@/lib/plans";
 
+export type Currency = "USD" | "INR";
+
 export interface PricingViewProps {
   organizationName?: string;
   currentTier?: string | null;
@@ -27,16 +29,44 @@ interface TierFeatureRow {
   included: boolean;
 }
 
+interface TierPriceConfig {
+  symbol: string;
+  amount: string;
+  period: string;
+}
+
+const TIER_PRICING: Record<Currency, Record<PlanTier, TierPriceConfig>> = {
+  USD: {
+    starter: { symbol: "$", amount: "0", period: "/ month" },
+    solo: { symbol: "$", amount: "5", period: "/ month" },
+    team: { symbol: "$", amount: "29", period: "/ month" },
+    scale: { symbol: "$", amount: "79", period: "/ month" },
+  },
+  INR: {
+    starter: { symbol: "₹", amount: "0", period: "/ month" },
+    solo: { symbol: "₹", amount: "399", period: "/ month" },
+    team: { symbol: "₹", amount: "1,999", period: "/ month" },
+    scale: { symbol: "₹", amount: "5,499", period: "/ month" },
+  },
+};
+
 const TIER_FEATURE_LISTS: Record<PlanTier, TierFeatureRow[]> = {
   starter: [
-    { label: "15 practice simulations / month", included: true },
+    { label: "10 practice simulations / month", included: true },
     { label: "1 workspace seat (personal use)", included: true },
     { label: "Automated Jev Win/Loss & 1–5 score", included: true },
     { label: "Detailed AI Coaching Breakdown", included: false },
     { label: "Team Oversight Dashboard & analytics", included: false },
   ],
-  pro: [
-    { label: "150 practice simulations / month", included: true },
+  solo: [
+    { label: "50 practice simulations / month", included: true },
+    { label: "1 workspace seat (personal use)", included: true },
+    { label: "Automated Jev Win/Loss & 1–5 score", included: true },
+    { label: "Unlimited Detailed AI Coaching", included: true },
+    { label: "Team Oversight Dashboard & analytics", included: false },
+  ],
+  team: [
+    { label: "200 practice simulations / month", included: true },
     { label: "Up to 10 team seats", included: true },
     { label: "Automated Jev Win/Loss & 1–5 score", included: true },
     { label: "Unlimited Detailed AI Coaching", included: true },
@@ -59,36 +89,61 @@ export function PricingView({
   isAuthenticated = true,
 }: PricingViewProps) {
   const router = useRouter();
-  const [switchingTier, setSwitchingTier] = useState<PlanTier | null>(null);
+  const [currency, setCurrency] = useState<Currency>("USD");
+  const [loadingTier, setLoadingTier] = useState<PlanTier | null>(null);
+
   const activeTier = normalizePlanTier(currentTier);
   const activePlan = getPlanConfig(activeTier);
 
-  const handleSwitchTier = async (targetTier: PlanTier) => {
+  const handleAction = async (targetTier: PlanTier) => {
     if (!isAuthenticated) {
       router.push("/login");
       return;
     }
     if (targetTier === activeTier) return;
 
+    if (targetTier === "starter") {
+      // Free plan: Workspace is on a paid plan, user manages or cancels via customer portal
+      try {
+        setLoadingTier("starter");
+        const res = await fetch("/api/payments/portal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ returnUrl: window.location.href }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to open billing portal");
+        if (!data.portalUrl) throw new Error("No billing portal URL returned");
+        window.location.href = data.portalUrl;
+      } catch (err) {
+        notify.error(err instanceof Error ? err.message : "Failed to open billing portal");
+      } finally {
+        setLoadingTier(null);
+      }
+      return;
+    }
+
+    // Paid plan checkout
     try {
-      setSwitchingTier(targetTier);
-      const res = await fetch("/api/organizations/tier", {
+      setLoadingTier(targetTier);
+      const res = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan_tier: targetTier }),
+        body: JSON.stringify({
+          tier: targetTier,
+          currency,
+          returnUrl: `${window.location.origin}/pricing?checkout=success`,
+        }),
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to update plan");
-      }
-
-      notify.success(`Switched to ${PLAN_CONFIGS[targetTier].name} plan`);
-      router.refresh();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to start checkout");
+      if (!data.checkoutUrl) throw new Error("No checkout URL returned");
+      window.location.href = data.checkoutUrl;
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : "Error updating plan");
+      notify.error(err instanceof Error ? err.message : "Failed to start checkout");
     } finally {
-      setSwitchingTier(null);
+      setLoadingTier(null);
     }
   };
 
@@ -103,7 +158,7 @@ export function PricingView({
     Math.round((seatsUsed / Math.max(seatLimit, 1)) * 100)
   );
 
-  const tiers: PlanTier[] = ["starter", "pro", "scale"];
+  const tiers: PlanTier[] = ["starter", "solo", "team", "scale"];
 
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -132,14 +187,44 @@ export function PricingView({
             </p>
           </div>
 
-          {isAuthenticated && (
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <span className="text-xs text-zinc-400">Active Tier:</span>
-              <Badge variant="accent" className="text-xs px-2.5 py-0.5 uppercase tracking-wider">
-                {activePlan.name}
-              </Badge>
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+            {/* Currency toggle */}
+            <div className="flex items-center p-0.5 bg-zinc-100 border border-zinc-200/80 rounded-xl text-xs">
+              <button
+                type="button"
+                onClick={() => setCurrency("USD")}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currency === "USD"
+                    ? "bg-white text-zinc-900 shadow-2xs"
+                    : "text-zinc-500 hover:text-zinc-900"
+                }`}
+                aria-pressed={currency === "USD"}
+              >
+                USD ($)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrency("INR")}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currency === "INR"
+                    ? "bg-white text-zinc-900 shadow-2xs"
+                    : "text-zinc-500 hover:text-zinc-900"
+                }`}
+                aria-pressed={currency === "INR"}
+              >
+                INR (₹)
+              </button>
             </div>
-          )}
+
+            {isAuthenticated && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-zinc-400">Active Tier:</span>
+                <Badge variant="accent" className="text-xs px-2.5 py-0.5 uppercase tracking-wider">
+                  {activePlan.name}
+                </Badge>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Current Monthly Quota Summary Bar (Only for authenticated active orgs) */}
@@ -191,13 +276,14 @@ export function PricingView({
           </div>
         )}
 
-        {/* 3-Column Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* 4-Column Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {tiers.map((tierKey) => {
             const plan = PLAN_CONFIGS[tierKey];
             const isCurrent = isAuthenticated && tierKey === activeTier;
-            const isPopular = tierKey === "pro";
+            const isPopular = tierKey === "team";
             const features = TIER_FEATURE_LISTS[tierKey];
+            const price = TIER_PRICING[currency][tierKey];
 
             return (
               <div
@@ -232,10 +318,10 @@ export function PricingView({
                   {/* Price */}
                   <div className="my-5 pb-5 border-b border-zinc-100 flex items-baseline gap-1">
                     <span className="text-3xl font-black text-zinc-900 tracking-tight font-mono">
-                      ${plan.priceMonthly}
+                      {price.symbol}{price.amount}
                     </span>
                     <span className="text-xs text-zinc-400 font-medium">
-                      / month per workspace
+                      {price.period}
                     </span>
                   </div>
 
@@ -267,15 +353,15 @@ export function PricingView({
                     type="button"
                     variant={isPopular && !isCurrent ? "primary" : "outline"}
                     size="md"
-                    disabled={isCurrent || switchingTier !== null}
-                    isLoading={switchingTier === tierKey}
-                    onClick={() => handleSwitchTier(tierKey)}
+                    disabled={isCurrent || loadingTier !== null}
+                    isLoading={loadingTier === tierKey}
+                    onClick={() => handleAction(tierKey)}
                     className="w-full text-xs font-semibold cursor-pointer disabled:cursor-not-allowed"
                   >
                     {isCurrent
-                      ? "Active Plan"
+                      ? "Current Plan"
                       : tierKey === "starter"
-                        ? "Downgrade to Starter"
+                        ? "Manage in Portal"
                         : `Upgrade to ${plan.name}`}
                   </Button>
                 ) : (
@@ -288,9 +374,7 @@ export function PricingView({
                     >
                       {tierKey === "starter"
                         ? "Start Free"
-                        : tierKey === "pro"
-                          ? "Start with Pro"
-                          : `Start with ${plan.name}`}
+                        : `Start with ${plan.name}`}
                     </Button>
                   </Link>
                 )}

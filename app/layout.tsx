@@ -12,7 +12,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { Suspense } from "react";
 import { Toaster } from "sonner";
+import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
 
 const appBaseUrl =
   process.env.NEXT_PUBLIC_APP_URL || "https://chat2sell.in";
@@ -47,6 +49,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="h-full overflow-hidden flex flex-col">
         {children}
+        <Suspense fallback={null}>
+          <AuthToastWatcher />
+        </Suspense>
         <Toaster position="top-center" richColors closeButton duration={3500} />
       </body>
     </html>
