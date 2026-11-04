@@ -15,11 +15,14 @@ import { getPlanConfig, normalizePlanTier, PlanTier } from "@/lib/plans";
  * Ceilings sit at roughly 3x the maximum expected usage for each tier, so a
  * normal workspace should never touch them.
  */
-export const AI_TOKEN_CEILINGS: Record<PlanTier, number> = {
-  starter: 500_000,
-  pro: 5_000_000,
+export const TIER_TOKEN_LIMITS: Record<PlanTier, number> = {
+  starter: 300_000,
+  solo: 1_500_000,
+  team: 6_000_000,
   scale: 20_000_000,
 };
+
+export const AI_TOKEN_CEILINGS: Record<PlanTier, number> = TIER_TOKEN_LIMITS;
 
 export interface AiTokenUsage {
   prompt_tokens?: number | null;

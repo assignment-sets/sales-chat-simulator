@@ -20,6 +20,8 @@ export interface Organization {
   name: string;
   slug: string;
   plan_tier: PlanTier;
+  dodo_customer_id?: string | null;
+  dodo_subscription_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,7 +56,7 @@ export async function getUserOrganizations(
       user_id,
       role,
       created_at,
-      organization:organizations(id, name, slug, plan_tier, created_at, updated_at)
+      organization:organizations(id, name, slug, plan_tier, dodo_customer_id, dodo_subscription_id, created_at, updated_at)
     `)
     .eq("user_id", userId)
     .order("created_at", { ascending: true });

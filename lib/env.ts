@@ -27,6 +27,9 @@ export const serverEnvSchema = z.object({
   CACHE_DISABLED: z.enum(["true", "false"]).optional(),
   AI_CEILING_DISABLED: z.enum(["true", "false"]).optional(),
   ALLOW_SELF_SERVE_TIER_SWITCH: z.enum(["true", "false"]).optional(),
+  DODO_PAYMENTS_API_KEY: z.string().optional(),
+  DODO_PAYMENTS_ENVIRONMENT: z.enum(["test_mode", "live_mode"]).default("test_mode"),
+  DODO_PAYMENTS_WEBHOOK_KEY: z.string().optional(),
 });
 
 /**

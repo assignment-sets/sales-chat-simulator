@@ -1,4 +1,4 @@
-export type PlanTier = "starter" | "pro" | "scale";
+export type PlanTier = "starter" | "solo" | "team" | "scale";
 
 export type QuotaType =
   | "monthly_simulations"
@@ -24,7 +24,7 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanDefinition> = {
     tagline: "For individual reps practicing core pitches",
     priceMonthly: 0,
     quotas: {
-      monthly_simulations: 15,
+      monthly_simulations: 10,
       team_seats: 1,
     },
     features: {
@@ -32,13 +32,27 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanDefinition> = {
       team_dashboard: false,
     },
   },
-  pro: {
-    id: "pro",
-    name: "Pro",
-    tagline: "For small sales pods and SDR teams",
-    priceMonthly: 79,
+  solo: {
+    id: "solo",
+    name: "Solo",
+    tagline: "For solo SDRs, indie sales reps, and freelancers",
+    priceMonthly: 5,
     quotas: {
-      monthly_simulations: 150,
+      monthly_simulations: 50,
+      team_seats: 1,
+    },
+    features: {
+      detailed_ai_feedback: true,
+      team_dashboard: false,
+    },
+  },
+  team: {
+    id: "team",
+    name: "Team",
+    tagline: "For sales pods and small SDR teams",
+    priceMonthly: 29,
+    quotas: {
+      monthly_simulations: 200,
       team_seats: 10,
     },
     features: {
@@ -49,8 +63,8 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanDefinition> = {
   scale: {
     id: "scale",
     name: "Scale",
-    tagline: "For scaling sales organizations",
-    priceMonthly: 249,
+    tagline: "For scaling sales organizations and revenue teams",
+    priceMonthly: 79,
     quotas: {
       monthly_simulations: 600,
       team_seats: 50,
@@ -66,7 +80,10 @@ export const MAX_USER_TURNS = 40;
 export const MAX_OWNED_ORGS_PER_USER = 3;
 
 export function normalizePlanTier(tier?: string | null): PlanTier {
-  if (tier === "pro" || tier === "scale") {
+  if (tier === "pro") {
+    return "team";
+  }
+  if (tier === "solo" || tier === "team" || tier === "scale") {
     return tier;
   }
   return "starter";
