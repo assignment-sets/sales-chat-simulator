@@ -157,6 +157,18 @@ export const RATE_LIMITS = {
     description: "Invitation acceptance attempts per user",
   },
 
+  // --- Payments & Billing -------------------------------------------------
+  "payments.checkout.user": {
+    limit: 10,
+    window: "10 m",
+    description: "Checkout session creations per user",
+  },
+  "payments.portal.user": {
+    limit: 10,
+    window: "10 m",
+    description: "Customer portal session creations per user",
+  },
+
   // --- Authentication & Abuse Prevention ----------------------------------
   "auth.login.ip": {
     limit: 10,
