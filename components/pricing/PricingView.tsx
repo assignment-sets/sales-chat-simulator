@@ -288,10 +288,12 @@ export function PricingView({
             return (
               <div
                 key={tierKey}
-                className={`rounded-3xl p-6 flex flex-col justify-between border transition-all bg-white ${
-                  isPopular
-                    ? "border-zinc-900 shadow-md ring-1 ring-zinc-900/5"
-                    : "border-zinc-200/90 shadow-2xs"
+                className={`rounded-3xl p-6 flex flex-col justify-between border transition-all bg-white relative ${
+                  isCurrent
+                    ? "border-zinc-900 shadow-md ring-2 ring-zinc-900"
+                    : isPopular && !isAuthenticated
+                      ? "border-zinc-900 shadow-md ring-1 ring-zinc-900/5"
+                      : "border-zinc-200/90 shadow-2xs hover:border-zinc-300"
                 }`}
               >
                 <div>
@@ -301,12 +303,12 @@ export function PricingView({
                       {plan.name}
                     </h2>
                     {isCurrent ? (
-                      <Badge variant="success" className="text-[10px] px-2 py-0.5 uppercase tracking-wider">
+                      <Badge variant="accent" className="text-[10px] px-2 py-0.5 uppercase tracking-wider font-semibold">
                         Current Plan
                       </Badge>
                     ) : isPopular ? (
-                      <Badge variant="accent" className="text-[10px] px-2 py-0.5 uppercase tracking-wider">
-                        Recommended
+                      <Badge variant="muted" className="text-[10px] px-2 py-0.5 uppercase tracking-wider">
+                        Popular
                       </Badge>
                     ) : null}
                   </div>
