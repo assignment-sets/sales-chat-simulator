@@ -94,6 +94,7 @@ export function PricingView({
 
   const activeTier = normalizePlanTier(currentTier);
   const activePlan = getPlanConfig(activeTier);
+  const hasActivePaidPlan = isAuthenticated && activeTier !== "starter";
 
   const handleAction = async (targetTier: PlanTier) => {
     if (!isAuthenticated) {
@@ -102,10 +103,10 @@ export function PricingView({
     }
     if (targetTier === activeTier) return;
 
-    if (targetTier === "starter") {
-      // Free plan: Workspace is on a paid plan, user manages or cancels via customer portal
+    if (hasActivePaidPlan || targetTier === "starter") {
+      // Subscribed users manage upgrades, downgrades, and cancellations via the Customer Portal
       try {
-        setLoadingTier("starter");
+        setLoadingTier(targetTier);
         const res = await fetch("/api/payments/portal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -123,7 +124,7 @@ export function PricingView({
       return;
     }
 
-    // Paid plan checkout
+    // Free tier user initiating paid plan checkout
     try {
       setLoadingTier(targetTier);
       const res = await fetch("/api/payments/checkout", {
@@ -276,6 +277,37 @@ export function PricingView({
           </div>
         )}
 
+        {/* Subscribed Plan Self-Service Portal Banner */}
+        {hasActivePaidPlan && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                  Subscribed Workspace
+                </span>
+                <span className="text-zinc-600">•</span>
+                <span className="text-xs text-zinc-300 font-medium">
+                  {activePlan.name} Plan Active
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">
+                Plan upgrades, downgrades, saved payment methods, and invoice downloads are managed seamlessly via your Customer Portal.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={loadingTier !== null}
+              isLoading={loadingTier === "starter"}
+              onClick={() => handleAction("starter")}
+              className="shrink-0 bg-white text-zinc-900 hover:bg-zinc-100 border-transparent text-xs font-semibold cursor-pointer"
+            >
+              Manage Subscription
+            </Button>
+          </div>
+        )}
+
         {/* 4-Column Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {tiers.map((tierKey) => {
@@ -353,7 +385,7 @@ export function PricingView({
                 {isAuthenticated ? (
                   <Button
                     type="button"
-                    variant={isPopular && !isCurrent ? "primary" : "outline"}
+                    variant={isPopular && !hasActivePaidPlan && !isCurrent ? "primary" : "outline"}
                     size="md"
                     disabled={isCurrent || loadingTier !== null}
                     isLoading={loadingTier === tierKey}
@@ -362,7 +394,7 @@ export function PricingView({
                   >
                     {isCurrent
                       ? "Current Plan"
-                      : tierKey === "starter"
+                      : hasActivePaidPlan
                         ? "Manage in Portal"
                         : `Upgrade to ${plan.name}`}
                   </Button>
