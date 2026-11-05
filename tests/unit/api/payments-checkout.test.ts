@@ -109,6 +109,31 @@ describe("POST /api/payments/checkout", () => {
     expect(res2.status).toBe(400);
   });
 
+  it("returns 400 bad request when workspace already has an active subscription", async () => {
+    setupMockAuth({
+      userId: "user-1",
+      orgId: "org-1",
+      role: "owner",
+      tables: {
+        dodo_subscriptions: [
+          {
+            id: "sub_active_scale",
+            organization_id: "org-1",
+            status: "active",
+            plan_tier: "scale",
+          },
+        ],
+      },
+    });
+
+    const req = createRequest({ tier: "solo" });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("Workspace already has an active scale subscription");
+    expect(mockDodoClient.checkoutSessions.create).not.toHaveBeenCalled();
+  });
+
   it("returns 400 bad request on unsupported currency", async () => {
     setupMockAuth({ userId: "user-1", orgId: "org-1", role: "owner" });
 

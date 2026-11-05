@@ -111,7 +111,23 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 6. Look up product details
+  // 6. Enforce Single Active Subscription: Prevent duplicate subscriptions if workspace already has an active subscription
+  const { data: activeSub } = await supabase
+    .from("dodo_subscriptions")
+    .select("id, status, plan_tier")
+    .eq("organization_id", organization.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (activeSub) {
+    return badRequest(
+      `Workspace already has an active ${activeSub.plan_tier} subscription. Please manage upgrades, downgrades, or cancellations via the customer billing portal.`,
+      undefined,
+      "payments/checkout"
+    );
+  }
+
+  // 7. Look up product details
   const product = getDodoProductByTier(tier);
   if (!product) {
     return badRequest(`No product found for plan tier: ${tier}`, undefined, "payments/checkout");
