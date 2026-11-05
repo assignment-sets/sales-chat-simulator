@@ -9,6 +9,14 @@ export interface WebhookEventResult {
   error?: string;
 }
 
+export const TIER_WEIGHT: Record<string, number> = {
+  starter: 0,
+  solo: 1,
+  team: 2,
+  pro: 2,
+  scale: 3,
+};
+
 /**
  * Resolves the target organization UUID through a 3-layer lookup strategy:
  * 1. Explicit metadata: metadata.organization_id (set during checkout)
@@ -251,6 +259,37 @@ export async function handleSubscriptionActive(
     { onConflict: "id" }
   );
 
+  // Check if organization already holds an active subscription of higher tier
+  const { data: existingOrg } = await supabase
+    .from("organizations")
+    .select("plan_tier, dodo_subscription_id")
+    .eq("id", orgId)
+    .maybeSingle();
+
+  const currentWeight = TIER_WEIGHT[existingOrg?.plan_tier || "starter"] ?? 0;
+  const newWeight = TIER_WEIGHT[planTier] ?? 0;
+
+  // If the existing active subscription has higher precedence, do not demote org tier
+  if (
+    existingOrg?.dodo_subscription_id &&
+    existingOrg.dodo_subscription_id !== subscriptionId &&
+    currentWeight > newWeight
+  ) {
+    const { data: activeSub } = await supabase
+      .from("dodo_subscriptions")
+      .select("status")
+      .eq("id", existingOrg.dodo_subscription_id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (activeSub) {
+      console.warn(
+        `[Dodo Webhook] Org ${orgId} has active higher tier (${existingOrg.plan_tier}). Skipping demotion to ${planTier}.`
+      );
+      return { handled: true, action: "subscription_activated_secondary", organizationId: orgId };
+    }
+  }
+
   // 2. Update public.organizations plan_tier and IDs
   const { error: orgError } = await supabase
     .from("organizations")
@@ -361,16 +400,40 @@ export async function handleSubscriptionCancelled(
     })
     .eq("id", subscriptionId);
 
-  // If period has elapsed (or no future period), immediately revert to starter
+  // If period has elapsed (or no future period), check if org has another active subscription
   if (orgId && (!nextBillingDate || nextBillingDate <= now)) {
-    await supabase
-      .from("organizations")
-      .update({
-        plan_tier: "starter",
-        updated_at: now.toISOString(),
-      })
-      .eq("id", orgId);
-    console.log(`[Dodo Webhook] Subscription period elapsed for org ${orgId}. Reverted to starter.`);
+    const { data: otherActiveSub } = await supabase
+      .from("dodo_subscriptions")
+      .select("id, plan_tier")
+      .eq("organization_id", orgId)
+      .eq("status", "active")
+      .neq("id", subscriptionId)
+      .order("updated_at", { ascending: false })
+      .maybeSingle();
+
+    if (otherActiveSub) {
+      await supabase
+        .from("organizations")
+        .update({
+          plan_tier: otherActiveSub.plan_tier,
+          dodo_subscription_id: otherActiveSub.id,
+          updated_at: now.toISOString(),
+        })
+        .eq("id", orgId);
+      console.log(
+        `[Dodo Webhook] Subscription ${subscriptionId} cancelled, but org ${orgId} has active ${otherActiveSub.plan_tier} sub.`
+      );
+    } else {
+      await supabase
+        .from("organizations")
+        .update({
+          plan_tier: "starter",
+          dodo_subscription_id: null,
+          updated_at: now.toISOString(),
+        })
+        .eq("id", orgId);
+      console.log(`[Dodo Webhook] Subscription period elapsed for org ${orgId}. Reverted to starter.`);
+    }
   }
 
   return { handled: true, action: "subscription_cancelled", organizationId: orgId };
@@ -418,12 +481,75 @@ export async function handleSubscriptionPlanChanged(
     .from("organizations")
     .update({
       plan_tier: newTier,
+      dodo_subscription_id: subscriptionId,
       updated_at: new Date().toISOString(),
     })
     .eq("id", orgId);
 
   console.log(`[Dodo Webhook] Organization ${orgId} plan changed to ${newTier}`);
   return { handled: true, action: "plan_changed", organizationId: orgId };
+}
+
+/**
+ * Handler for subscription.updated
+ */
+export async function handleSubscriptionUpdated(
+  supabase: SupabaseClient<Database>,
+  payload: any
+): Promise<WebhookEventResult> {
+  const sub = payload.data;
+  const subscriptionId = sub.subscription_id;
+  const status = sub.status;
+  const productId = sub.product_id;
+  const customerId = sub.customer?.customer_id;
+  const metadataOrgId = sub.metadata?.organization_id || null;
+
+  const orgId = await resolveOrganizationId(supabase, {
+    metadataOrgId,
+    subscriptionId,
+    customerId,
+  });
+
+  if (!orgId) {
+    return { handled: false, action: "unresolved_organization" };
+  }
+
+  const updates: Database["public"]["Tables"]["dodo_subscriptions"]["Update"] = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (status) {
+    updates.status = status;
+  }
+  if (sub.previous_billing_date) {
+    updates.current_period_start = sub.previous_billing_date;
+  }
+  if (sub.next_billing_date) {
+    updates.current_period_end = sub.next_billing_date;
+  }
+  if (productId) {
+    updates.plan_tier = resolveTierFromProduct(productId);
+  }
+
+  await supabase
+    .from("dodo_subscriptions")
+    .update(updates)
+    .eq("id", subscriptionId);
+
+  // If status is active and product changed, also sync organization plan_tier
+  if (productId && status === "active") {
+    const newTier = resolveTierFromProduct(productId);
+    await supabase
+      .from("organizations")
+      .update({
+        plan_tier: newTier,
+        dodo_subscription_id: subscriptionId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orgId);
+  }
+
+  return { handled: true, action: "subscription_updated", organizationId: orgId };
 }
 
 /**

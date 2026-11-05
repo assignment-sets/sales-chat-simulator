@@ -268,6 +268,76 @@ describe("POST /api/payments/webhook", () => {
     expect(json.result.action).toBe("plan_changed");
   });
 
+  it("handles subscription.active with tier hierarchy: does not demote organization if higher tier is active", async () => {
+    const mockAdmin = createMockSupabaseClient({
+      tables: {
+        organizations: [
+          {
+            id: "org-1",
+            name: "Test Org",
+            plan_tier: "scale",
+            dodo_subscription_id: "sub_scale_active",
+          },
+        ],
+        dodo_subscriptions: [
+          {
+            id: "sub_scale_active",
+            organization_id: "org-1",
+            plan_tier: "scale",
+            status: "active",
+          },
+        ],
+      },
+    });
+    testState.adminClient = mockAdmin;
+
+    // Incoming activation for a lower Solo subscription
+    mockDodoClient.webhooks.unwrap.mockReturnValue({
+      type: "subscription.active",
+      data: {
+        subscription_id: "sub_solo_rogue",
+        customer: { customer_id: "cus_dodo_111" },
+        product_id: "pdt_0NrCqCpQLfiaQSDlhGxoC", // Solo
+        metadata: { organization_id: "org-1", target_tier: "solo" },
+      },
+    });
+
+    const req = createRequest(JSON.stringify({ type: "subscription.active" }));
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.result.action).toBe("subscription_activated_secondary");
+  });
+
+  it("handles subscription.updated: syncs status and billing dates", async () => {
+    const mockAdmin = createMockSupabaseClient({
+      tables: {
+        organizations: [{ id: "org-1", name: "Test Org", plan_tier: "team" }],
+        dodo_subscriptions: [
+          { id: "sub_active_777", organization_id: "org-1", plan_tier: "team", status: "active" },
+        ],
+      },
+    });
+    testState.adminClient = mockAdmin;
+
+    mockDodoClient.webhooks.unwrap.mockReturnValue({
+      type: "subscription.updated",
+      data: {
+        subscription_id: "sub_active_777",
+        status: "active",
+        product_id: "pdt_0NrCqD1GfGTlFxBTIfmdg", // Scale
+        next_billing_date: "2026-12-04T10:00:00Z",
+        metadata: { organization_id: "org-1" },
+      },
+    });
+
+    const req = createRequest(JSON.stringify({ type: "subscription.updated" }));
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.result.action).toBe("subscription_updated");
+  });
+
   it("ignores unhandled event types gracefully with 200 and ignored: true", async () => {
     mockDodoClient.webhooks.unwrap.mockReturnValue({
       type: "dispute.opened",

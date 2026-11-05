@@ -12,6 +12,7 @@ import {
   handleSubscriptionOnHold,
   handleSubscriptionCancelled,
   handleSubscriptionPlanChanged,
+  handleSubscriptionUpdated,
   handleSubscriptionFailed,
 } from "@/lib/dodo/webhook-handlers";
 
@@ -112,6 +113,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       case "subscription.plan_changed":
         result = await handleSubscriptionPlanChanged(supabase, event);
+        break;
+
+      case "subscription.updated":
+        result = await handleSubscriptionUpdated(supabase, event);
         break;
 
       case "subscription.failed":
