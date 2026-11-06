@@ -14,14 +14,17 @@ import {
 } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { Button } from "@/components/ui/Button";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Refund & Cancellation Policy",
-  description: "Review SalesChat's cancellation terms, 14-day refund eligibility criteria, and Dodo Payments Merchant of Record (MoR) disclosures.",
-};
+  description:
+    "Review SalesChat's cancellation terms, 14-day refund eligibility criteria, and Dodo Payments Merchant of Record (MoR) disclosures.",
+  path: "/refund",
+});
 
 const SUPPORT_EMAIL = "support@chat2sell.in";
 
@@ -32,15 +35,15 @@ export default function RefundPage() {
       subtitle="Transparent terms on subscription cancellations, refund review criteria, and payment processing."
       lastUpdated="November 2026"
     >
-      {/* Merchant of Record (MoR) Notice Callout */}
-      <section className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 text-blue-950 not-prose space-y-2">
-        <div className="flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+      {/* Merchant of Record (MoR) Notice Card */}
+      <section className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 not-prose">
+        <div className="flex items-start gap-3.5">
+          <ShieldCheck className="w-5 h-5 text-zinc-900 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h2 className="text-sm font-bold text-blue-900">
+            <h2 className="text-sm font-semibold text-zinc-900">
               Merchant of Record Notice (Dodo Payments)
             </h2>
-            <p className="text-xs leading-relaxed text-blue-900/90">
+            <p className="text-xs leading-relaxed text-zinc-600">
               SalesChat partners with <strong>Dodo Payments</strong> as our Merchant of Record (MoR) for digital product sales, subscription billing, and tax compliance. Dodo Payments is the legal entity that processes your transactions, calculates applicable global sales tax (VAT/GST), and issues official invoices. On your credit card or bank account statements, charges will typically be identified as <strong>DODO* SALESCHAT</strong> or <strong>DODOPAYMENTS</strong>.
             </p>
           </div>
@@ -76,7 +79,7 @@ export default function RefundPage() {
 
           <div className="p-4 bg-white border border-zinc-200/80 rounded-xl space-y-1">
             <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-600" />
+              <AlertCircle className="w-4 h-4 text-zinc-600" />
               No Mid-Cycle Prorating
             </h3>
             <p className="text-xs text-zinc-600 leading-relaxed">
@@ -86,7 +89,7 @@ export default function RefundPage() {
 
           <div className="p-4 bg-white border border-zinc-200/80 rounded-xl space-y-1">
             <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 text-blue-600" />
+              <RefreshCw className="w-4 h-4 text-zinc-600" />
               Plan Upgrades & Downgrades
             </h3>
             <p className="text-xs text-zinc-600 leading-relaxed">
@@ -96,7 +99,7 @@ export default function RefundPage() {
 
           <div className="p-4 bg-white border border-zinc-200/80 rounded-xl space-y-1">
             <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-zinc-600" />
               Automatic Transition to Free Tier
             </h3>
             <p className="text-xs text-zinc-600 leading-relaxed">
@@ -119,8 +122,8 @@ export default function RefundPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose my-4">
-          <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-5 space-y-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+          <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 space-y-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-900">
               Eligible for Refund Review
             </span>
             <ul className="text-xs text-zinc-600 space-y-1.5 list-disc pl-4 leading-relaxed">

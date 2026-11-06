@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldAlert, AlertTriangle, FileCode, CheckCircle2 } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "AI Safety & Acceptable Use Policy",
   description:
     "Acceptable use guidelines, prohibited prompt abuse, and AI safety guardrails for SalesChat's simulation platform.",
-};
+  path: "/acceptable-use",
+});
 
 export default function AcceptableUsePage() {
   return (
@@ -19,15 +21,15 @@ export default function AcceptableUsePage() {
       subtitle="Guiding responsible, safe, and fair usage of our AI sales training simulation engine."
       lastUpdated="October 2026"
     >
-      {/* Safety Commitment Highlight Callout */}
-      <section className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-5 text-amber-950 not-prose">
-        <div className="flex items-start gap-3">
-          <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="space-y-1.5">
-            <h2 className="text-sm font-bold text-amber-900">
+      {/* Safety Commitment Highlight Card */}
+      <section className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 not-prose">
+        <div className="flex items-start gap-3.5">
+          <ShieldAlert className="w-5 h-5 text-zinc-900 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-zinc-900">
               Zero Tolerance for Prompt Injection, Jailbreaking & Guardrail Evasion
             </h2>
-            <p className="text-xs leading-relaxed text-amber-900/90">
+            <p className="text-xs leading-relaxed text-zinc-600">
               SalesChat simulations are strictly dedicated to commercial sales training, objection practice, and skill assessment. Any attempt to manipulate model system prompts, bypass ethical guardrails, induce adversarial behavior, or extract underlying platform heuristics is strictly prohibited and subject to immediate account termination.
             </p>
           </div>

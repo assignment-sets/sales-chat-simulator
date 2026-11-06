@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Cookie Policy",
-  description: "Cookie Policy for SalesChat detailing essential cookies, authentication session storage, and our zero-tracking commitment.",
-};
+  description:
+    "Cookie Policy for SalesChat detailing essential cookies, authentication session storage, and our zero-tracking commitment.",
+  path: "/cookies",
+});
 
 interface CookieItem {
   name: string;
@@ -43,15 +46,15 @@ export default function CookiePage() {
       subtitle="How SalesChat utilizes essential cookies for authentication and workspace security."
       lastUpdated="October 2026"
     >
-      {/* Commitment Highlight Callout */}
-      <section className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 text-emerald-950 not-prose">
-        <div className="flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="space-y-1.5">
-            <h2 className="text-sm font-bold text-emerald-900">
+      {/* Commitment Highlight Card */}
+      <section className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 not-prose">
+        <div className="flex items-start gap-3.5">
+          <ShieldCheck className="w-5 h-5 text-zinc-900 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-zinc-900">
               Our Zero-Tracking Commitment
             </h2>
-            <p className="text-xs leading-relaxed text-emerald-900/90">
+            <p className="text-xs leading-relaxed text-zinc-600">
               SalesChat does not use advertising cookies, marketing pixels, social media widgets, or cross-site behavioral trackers. We deploy only strictly necessary cookies required to authenticate your account and ensure secure workspace operation.
             </p>
           </div>

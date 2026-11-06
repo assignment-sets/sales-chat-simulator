@@ -281,8 +281,8 @@ export function PricingView({
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-white shadow-xs">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                  Subscribed Workspace
+                <span className="text-xs font-semibold text-emerald-400">
+                  Active subscription
                 </span>
                 <span className="text-zinc-600">•</span>
                 <span className="text-xs text-zinc-300 font-medium">
@@ -319,12 +319,12 @@ export function PricingView({
             return (
               <div
                 key={tierKey}
-                className={`rounded-3xl p-6 flex flex-col justify-between border transition-all bg-white relative ${
+                className={`rounded-3xl p-6 flex flex-col justify-between border transition-all relative ${
                   isCurrent
-                    ? "border-zinc-900 shadow-md ring-2 ring-zinc-900"
+                    ? "bg-zinc-100/70 border-zinc-900 ring-1 ring-zinc-900"
                     : isPopular && !isAuthenticated
-                      ? "border-zinc-900 shadow-md ring-1 ring-zinc-900/5"
-                      : "border-zinc-200/90 shadow-2xs hover:border-zinc-300"
+                      ? "bg-white border-zinc-900"
+                      : "bg-white border-zinc-200/90 hover:border-zinc-300"
                 }`}
               >
                 <div>

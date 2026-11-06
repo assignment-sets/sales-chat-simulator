@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Privacy Policy",
-  description: "Privacy Policy and Subprocessor disclosures for SalesChat's AI sales training and simulation platform.",
-};
+  description:
+    "Privacy Policy and Subprocessor disclosures for SalesChat's AI sales training and simulation platform.",
+  path: "/privacy",
+});
 
 interface SubprocessorEntry {
   name: string;
@@ -52,15 +55,15 @@ export default function PrivacyPage() {
       subtitle="How SalesChat protects, processes, and respects your simulation data and account privacy."
       lastUpdated="October 2026"
     >
-      {/* Commitment Highlight Callout */}
-      <section className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 text-emerald-950 not-prose">
-        <div className="flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="space-y-1.5">
-            <h2 className="text-sm font-bold text-emerald-900">
+      {/* Commitment Highlight Card */}
+      <section className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 not-prose">
+        <div className="flex items-start gap-3.5">
+          <ShieldCheck className="w-5 h-5 text-zinc-900 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-zinc-900">
               Our Core Commitment: We Do Not Train Public Models on Your Conversations
             </h2>
-            <p className="text-xs leading-relaxed text-emerald-900/90">
+            <p className="text-xs leading-relaxed text-zinc-600">
               Your sales chat transcripts, customer objection handling drills, and internal sales playbooks remain your confidential workspace property. SalesChat does not use customer simulation content to train public AI foundation models without explicit organizational authorization.
             </p>
           </div>

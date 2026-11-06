@@ -162,7 +162,7 @@ export default function InvitePage({ params }: PageProps) {
         {/* Error / Not Found State */}
         {!isLoading && error && (
           <div className="flex flex-col items-center text-center py-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center mb-4">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <h1 className="text-lg font-bold text-zinc-900 mb-2">
@@ -204,12 +204,12 @@ export default function InvitePage({ params }: PageProps) {
 
             {/* Expired Banner */}
             {invitation.is_expired ? (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/60 mb-6">
-                <div className="flex items-center gap-2 text-amber-800 text-xs font-semibold mb-1">
-                  <AlertTriangle className="w-4 h-4" />
+              <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 mb-6">
+                <div className="flex items-center gap-2 text-zinc-900 text-xs font-semibold mb-1">
+                  <AlertTriangle className="w-4 h-4 text-zinc-700" />
                   <span>Invitation Expired</span>
                 </div>
-                <p className="text-xs text-amber-700">
+                <p className="text-xs text-zinc-600">
                   This invitation expired on{" "}
                   {new Date(invitation.expires_at).toLocaleDateString()}. Please
                   ask an organization admin to send you a new link.
@@ -251,12 +251,12 @@ export default function InvitePage({ params }: PageProps) {
                 {/* Scenario 0: Already a Member */}
                 {isAlreadyMember && (
                   <div className="space-y-4">
-                    <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/70 text-xs">
-                      <div className="flex items-center gap-2 font-semibold text-emerald-900 mb-1">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-xs">
+                      <div className="flex items-center gap-2 font-semibold text-zinc-900 mb-1">
+                        <CheckCircle2 className="w-4 h-4 text-zinc-700" />
                         <span>Already a Team Member</span>
                       </div>
-                      <p className="text-emerald-800 leading-relaxed text-[11px]">
+                      <p className="text-zinc-600 leading-relaxed text-[11px]">
                         You are already an active member of{" "}
                         <strong className="text-zinc-900">
                           {invitation.organization.name}
@@ -322,11 +322,11 @@ export default function InvitePage({ params }: PageProps) {
                 {/* Scenario 2: Logged In, Email Mismatch */}
                 {!isAlreadyMember && currentUser && isEmailMismatch && (
                   <div className="space-y-4">
-                    <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/70 text-xs">
-                      <p className="font-semibold text-amber-900 mb-1">
+                    <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-xs">
+                      <p className="font-semibold text-zinc-900 mb-1">
                         Different Account Signed In
                       </p>
-                      <p className="text-amber-800 leading-relaxed text-[11px]">
+                      <p className="text-zinc-600 leading-relaxed text-[11px]">
                         You are currently signed in as{" "}
                         <strong className="font-mono text-zinc-900">
                           {currentUser.email}

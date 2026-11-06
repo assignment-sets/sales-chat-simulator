@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Bell, Mail } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Subprocessors Directory",
   description:
     "Listing of third-party subprocessors and infrastructure partners authorized to process data on behalf of SalesChat.",
-};
+  path: "/subprocessors",
+});
 
 interface SubprocessorEntry {
   name: string;
@@ -78,15 +80,15 @@ export default function SubprocessorsPage() {
       subtitle="Authorized infrastructure partners and service providers that process customer data on behalf of SalesChat."
       lastUpdated="October 2026"
     >
-      {/* Commitment Highlight Callout */}
-      <section className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-5 text-emerald-950 not-prose">
-        <div className="flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="space-y-1.5">
-            <h2 className="text-sm font-bold text-emerald-900">
+      {/* Commitment Highlight Card */}
+      <section className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 not-prose">
+        <div className="flex items-start gap-3.5">
+          <ShieldCheck className="w-5 h-5 text-zinc-900 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-zinc-900">
               Vetted for Enterprise Privacy & Zero Public Model Training
             </h2>
-            <p className="text-xs leading-relaxed text-emerald-900/90">
+            <p className="text-xs leading-relaxed text-zinc-600">
               In accordance with Article 28 of the General Data Protection Regulation (GDPR) and global data privacy standards, all third-party subprocessors engaged by SalesChat are contractually bound by rigorous Data Processing Addendums (DPAs). We mandate that AI inference vendors adhere to strict zero-training and transient processing agreements.
             </p>
           </div>

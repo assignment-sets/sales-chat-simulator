@@ -11,14 +11,17 @@ import {
 } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { Button } from "@/components/ui/Button";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Documentation & User Playbook",
-  description: "Learn how to craft high-impact sales simulations, master objection handling drills, and interpret Jev coaching scores in SalesChat.",
-};
+  description:
+    "Learn how to craft high-impact sales simulations, master objection handling drills, and interpret Jev coaching scores in SalesChat.",
+  path: "/docs",
+});
 
 export default function DocsPage() {
   return (
@@ -81,11 +84,11 @@ export default function DocsPage() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose my-4">
-          <div className="bg-red-50/50 border border-red-200/80 rounded-2xl p-5 space-y-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-red-600">
-              ❌ Weak Description
+          <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 space-y-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              Avoid: Vague Specification
             </span>
-            <p className="text-xs text-zinc-700 font-mono bg-white p-3 rounded-lg border border-red-100">
+            <p className="text-xs text-zinc-700 font-mono bg-white p-3 rounded-lg border border-zinc-200/80">
               &ldquo;We sell an AI tool for marketing teams to make content faster and cheaper.&rdquo;
             </p>
             <p className="text-[11px] text-zinc-500">
@@ -93,11 +96,11 @@ export default function DocsPage() {
             </p>
           </div>
 
-          <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-5 space-y-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-              ✅ Strong Description
+          <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 space-y-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-900">
+              Recommended: Concrete Parameters
             </span>
-            <p className="text-xs text-zinc-700 font-mono bg-white p-3 rounded-lg border border-emerald-100">
+            <p className="text-xs text-zinc-700 font-mono bg-white p-3 rounded-lg border border-zinc-200/80">
               &ldquo;B2B SaaS churn prediction platform for Series B+ companies. Starts at $18k/yr. Integrates with Stripe & HubSpot. Main objection is long implementation timelines.&rdquo;
             </p>
             <p className="text-[11px] text-zinc-500">
@@ -121,7 +124,7 @@ export default function DocsPage() {
         <div className="space-y-3 not-prose">
           <div className="p-4 bg-white border border-zinc-200/80 rounded-xl">
             <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">
-              💰 Budget & Priority Pushback
+              Budget & Priority Pushback
             </h3>
             <p className="text-xs text-zinc-600 mt-1">
               &ldquo;We don&apos;t have budget allocated for this quarter,&rdquo; or &ldquo;Our executive team froze non-essential software spend.&rdquo;
@@ -129,7 +132,7 @@ export default function DocsPage() {
           </div>
           <div className="p-4 bg-white border border-zinc-200/80 rounded-xl">
             <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">
-              🔒 Security & Technical Compliance
+              Security & Technical Compliance
             </h3>
             <p className="text-xs text-zinc-600 mt-1">
               &ldquo;Our infosec policy requires on-premise deployment or strict SOC2 Type II compliance with isolated tenant databases.&rdquo;
@@ -137,7 +140,7 @@ export default function DocsPage() {
           </div>
           <div className="p-4 bg-white border border-zinc-200/80 rounded-xl">
             <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">
-              ⚔️ Competitor & Status Quo Loyalty
+              Competitor & Status Quo Loyalty
             </h3>
             <p className="text-xs text-zinc-600 mt-1">
               &ldquo;We already use an established incumbent solution and switching costs are too high for our team.&rdquo;
@@ -159,8 +162,8 @@ export default function DocsPage() {
         </p>
 
         <div className="space-y-2.5 not-prose my-3">
-          <div className="flex items-start gap-3 p-3.5 bg-red-50/60 border border-red-100 rounded-xl">
-            <span className="font-mono text-xs font-bold text-red-700 shrink-0 w-8">
+          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
               1 / 5
             </span>
             <div className="text-xs">
@@ -168,8 +171,8 @@ export default function DocsPage() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-amber-50/60 border border-amber-100 rounded-xl">
-            <span className="font-mono text-xs font-bold text-amber-800 shrink-0 w-8">
+          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
               2 / 5
             </span>
             <div className="text-xs">
@@ -177,8 +180,8 @@ export default function DocsPage() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-zinc-100/70 border border-zinc-200 rounded-xl">
-            <span className="font-mono text-xs font-bold text-zinc-700 shrink-0 w-8">
+          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
               3 / 5
             </span>
             <div className="text-xs">
@@ -186,8 +189,8 @@ export default function DocsPage() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-blue-50/60 border border-blue-100 rounded-xl">
-            <span className="font-mono text-xs font-bold text-blue-700 shrink-0 w-8">
+          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
               4 / 5
             </span>
             <div className="text-xs">
@@ -195,8 +198,8 @@ export default function DocsPage() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-xl">
-            <span className="font-mono text-xs font-bold text-emerald-700 shrink-0 w-8">
+          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
               5 / 5
             </span>
             <div className="text-xs">

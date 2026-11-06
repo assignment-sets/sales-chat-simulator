@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, Lock, Database, Server, Key, EyeOff } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Security & AI Data Training Disclosure",
   description:
     "Security architecture, multi-tenant isolation, data encryption, and zero foundation model training disclosures for SalesChat.",
-};
+  path: "/security",
+});
 
 export default function SecurityPage() {
   return (
@@ -19,15 +21,15 @@ export default function SecurityPage() {
       subtitle="How we protect your workspace data, enforce tenant isolation, and ensure zero public model training."
       lastUpdated="October 2026"
     >
-      {/* Zero Training Commitment Highlight Callout */}
-      <section className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-5 text-emerald-950 not-prose">
-        <div className="flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="space-y-1.5">
-            <h2 className="text-sm font-bold text-emerald-900">
+      {/* Zero Training Commitment Highlight Card */}
+      <section className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-5 not-prose">
+        <div className="flex items-start gap-3.5">
+          <ShieldCheck className="w-5 h-5 text-zinc-900 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold text-zinc-900">
               Zero Foundation Model Training Commitment
             </h2>
-            <p className="text-xs leading-relaxed text-emerald-900/90">
+            <p className="text-xs leading-relaxed text-zinc-600">
               Your company&apos;s sales pitch scripts, practice conversation transcripts, rep objection handling logs, and internal coaching feedback remain strictly confidential to your workspace. Neither SalesChat nor our cloud inference partners (including Groq Inc.) use your proprietary simulation inputs or outputs to train, fine-tune, or improve public foundation models.
             </p>
           </div>
@@ -45,7 +47,7 @@ export default function SecurityPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 not-prose">
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 space-y-1.5">
             <div className="flex items-center gap-2 text-zinc-900 font-bold text-xs">
-              <EyeOff className="w-4 h-4 text-emerald-600 shrink-0" />
+              <EyeOff className="w-4 h-4 text-zinc-900 shrink-0" />
               <span>Zero Public Model Training</span>
             </div>
             <p className="text-xs text-zinc-600 leading-relaxed">
@@ -55,7 +57,7 @@ export default function SecurityPage() {
 
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 space-y-1.5">
             <div className="flex items-center gap-2 text-zinc-900 font-bold text-xs">
-              <Server className="w-4 h-4 text-emerald-600 shrink-0" />
+              <Server className="w-4 h-4 text-zinc-900 shrink-0" />
               <span>Ephemeral Inference Processing</span>
             </div>
             <p className="text-xs text-zinc-600 leading-relaxed">
