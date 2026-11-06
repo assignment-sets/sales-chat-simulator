@@ -1,6 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/types/database";
-import { getDodoProductById } from "@/lib/dodo/products";
+import { getDodoProductById, getDodoProductByTier } from "@/lib/dodo/products";
 
 export interface WebhookEventResult {
   handled: boolean;
@@ -122,10 +122,14 @@ export async function handlePaymentSucceeded(
   const payment = payload.data;
   const paymentId = payment.payment_id;
   const subscriptionId = payment.subscription_id || null;
-  const customerId = payment.customer?.customer_id || null;
+  let customerId = payment.customer?.customer_id || null;
   const metadataOrgId = payment.metadata?.organization_id || null;
   const amount = payment.total_amount || 0;
   const currency = payment.currency || "USD";
+  const invoiceId = payment.invoice_id || null;
+  const receiptUrl = payment.invoice_url || payment.receipt_url || null;
+
+  let productId = payment.product_cart?.[0]?.product_id || null;
 
   const orgId = await resolveOrganizationId(supabase, {
     metadataOrgId,
@@ -138,12 +142,44 @@ export async function handlePaymentSucceeded(
     return { handled: false, action: "unresolved_organization" };
   }
 
+  // Fallback product_id and customer_id resolution from subscription if omitted from payload
+  if (subscriptionId && (!productId || !customerId)) {
+    const { data: sub } = await supabase
+      .from("dodo_subscriptions")
+      .select("plan_tier, customer_id")
+      .eq("id", subscriptionId)
+      .maybeSingle();
+
+    if (!productId && sub?.plan_tier) {
+      const prod = getDodoProductByTier(sub.plan_tier as any);
+      if (prod) productId = prod.productId;
+    }
+    if (!customerId && sub?.customer_id) {
+      customerId = sub.customer_id;
+    }
+  }
+
+  if (!customerId && orgId) {
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("dodo_customer_id")
+      .eq("id", orgId)
+      .maybeSingle();
+    if (org?.dodo_customer_id) {
+      customerId = org.dodo_customer_id;
+    }
+  }
+
   // 1. Record payment transaction in public.dodo_payments
   const { error: paymentError } = await supabase.from("dodo_payments").upsert(
     {
       id: paymentId,
       organization_id: orgId,
       subscription_id: subscriptionId,
+      customer_id: customerId,
+      product_id: productId,
+      invoice_id: invoiceId,
+      receipt_url: receiptUrl,
       amount,
       currency,
       status: "succeeded",
@@ -180,10 +216,14 @@ export async function handlePaymentFailed(
   const payment = payload.data;
   const paymentId = payment.payment_id;
   const subscriptionId = payment.subscription_id || null;
-  const customerId = payment.customer?.customer_id || null;
+  let customerId = payment.customer?.customer_id || null;
   const metadataOrgId = payment.metadata?.organization_id || null;
   const amount = payment.total_amount || 0;
   const currency = payment.currency || "USD";
+  const invoiceId = payment.invoice_id || null;
+  const receiptUrl = payment.invoice_url || payment.receipt_url || null;
+
+  let productId = payment.product_cart?.[0]?.product_id || null;
 
   const orgId = await resolveOrganizationId(supabase, {
     metadataOrgId,
@@ -196,12 +236,44 @@ export async function handlePaymentFailed(
     return { handled: false, action: "unresolved_organization" };
   }
 
+  // Fallback product_id and customer_id resolution from subscription if omitted from payload
+  if (subscriptionId && (!productId || !customerId)) {
+    const { data: sub } = await supabase
+      .from("dodo_subscriptions")
+      .select("plan_tier, customer_id")
+      .eq("id", subscriptionId)
+      .maybeSingle();
+
+    if (!productId && sub?.plan_tier) {
+      const prod = getDodoProductByTier(sub.plan_tier as any);
+      if (prod) productId = prod.productId;
+    }
+    if (!customerId && sub?.customer_id) {
+      customerId = sub.customer_id;
+    }
+  }
+
+  if (!customerId && orgId) {
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("dodo_customer_id")
+      .eq("id", orgId)
+      .maybeSingle();
+    if (org?.dodo_customer_id) {
+      customerId = org.dodo_customer_id;
+    }
+  }
+
   // Record failed transaction in public.dodo_payments
   await supabase.from("dodo_payments").upsert(
     {
       id: paymentId,
       organization_id: orgId,
       subscription_id: subscriptionId,
+      customer_id: customerId,
+      product_id: productId,
+      invoice_id: invoiceId,
+      receipt_url: receiptUrl,
       amount,
       currency,
       status: "failed",

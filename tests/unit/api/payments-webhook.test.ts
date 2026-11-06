@@ -118,6 +118,9 @@ describe("POST /api/payments/webhook", () => {
         total_amount: 2900,
         currency: "USD",
         customer: { customer_id: "cus_dodo_111", email: "user@test.com" },
+        product_cart: [{ product_id: "pdt_0NrCqCw137x2o5PtfWW3E", quantity: 1 }],
+        invoice_id: "inv_test_123",
+        invoice_url: "https://receipts.dodopayments.com/inv_test_123.pdf",
         metadata: { organization_id: "org-1" },
         created_at: new Date().toISOString(),
       },
@@ -131,9 +134,25 @@ describe("POST /api/payments/webhook", () => {
     expect(json.result.handled).toBe(true);
     expect(json.result.action).toBe("payment_recorded");
     expect(json.result.organizationId).toBe("org-1");
+
+    // Verify audit fields captured in dodo_payments
+    const dodoPaymentsBuilder = mockAdmin.from.mock.results.find(
+      (_, idx) => mockAdmin.from.mock.calls[idx][0] === "dodo_payments"
+    )?.value;
+    expect(dodoPaymentsBuilder?.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "pay_test_999",
+        customer_id: "cus_dodo_111",
+        product_id: "pdt_0NrCqCw137x2o5PtfWW3E",
+        invoice_id: "inv_test_123",
+        receipt_url: "https://receipts.dodopayments.com/inv_test_123.pdf",
+        status: "succeeded",
+      }),
+      { onConflict: "id" }
+    );
   });
 
-  it("handles payment.failed: records failed status in dodo_payments", async () => {
+  it("handles payment.failed: records failed status in dodo_payments with audit fields", async () => {
     const mockAdmin = createMockSupabaseClient({
       tables: {
         organizations: [{ id: "org-1", name: "Test Org", plan_tier: "starter", dodo_customer_id: null }],
@@ -150,6 +169,8 @@ describe("POST /api/payments/webhook", () => {
         total_amount: 2900,
         currency: "USD",
         customer: { customer_id: "cus_dodo_111" },
+        product_cart: [{ product_id: "pdt_0NrCqCw137x2o5PtfWW3E", quantity: 1 }],
+        invoice_id: "inv_failed_123",
         metadata: { organization_id: "org-1" },
       },
     });
@@ -159,6 +180,20 @@ describe("POST /api/payments/webhook", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.result.action).toBe("failed_payment_recorded");
+
+    const dodoPaymentsBuilder = mockAdmin.from.mock.results.find(
+      (_, idx) => mockAdmin.from.mock.calls[idx][0] === "dodo_payments"
+    )?.value;
+    expect(dodoPaymentsBuilder?.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "pay_failed_999",
+        customer_id: "cus_dodo_111",
+        product_id: "pdt_0NrCqCw137x2o5PtfWW3E",
+        invoice_id: "inv_failed_123",
+        status: "failed",
+      }),
+      { onConflict: "id" }
+    );
   });
 
   it("handles subscription.active: upgrades organization plan_tier and records subscription", async () => {
