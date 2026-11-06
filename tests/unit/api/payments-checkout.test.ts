@@ -175,7 +175,7 @@ describe("POST /api/payments/checkout", () => {
         user_id: user!.id,
         target_tier: "team",
       },
-      return_url: "http://localhost:3000/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}",
+      return_url: "http://localhost:3000/dashboard",
     });
   });
 
@@ -236,7 +236,7 @@ describe("POST /api/payments/checkout", () => {
 
     expect(mockDodoClient.checkoutSessions.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        return_url: "http://localhost:3000/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}",
+        return_url: "http://localhost:3000/dashboard",
       })
     );
   });

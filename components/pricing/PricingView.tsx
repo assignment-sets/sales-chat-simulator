@@ -133,7 +133,7 @@ export function PricingView({
         body: JSON.stringify({
           tier: targetTier,
           currency,
-          returnUrl: `${window.location.origin}/pricing?checkout=success`,
+          returnUrl: `${window.location.origin}/pricing`,
         }),
       });
 

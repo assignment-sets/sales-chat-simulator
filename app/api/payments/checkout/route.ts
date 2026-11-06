@@ -27,7 +27,7 @@ type CheckoutCurrency = (typeof VALID_CURRENCIES)[number];
 
 function resolveReturnUrl(request: NextRequest, rawReturnUrl?: unknown): string {
   const origin = request.nextUrl.origin || env.NEXT_PUBLIC_APP_URL || "https://chat2sell.in";
-  const defaultUrl = `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
+  const defaultUrl = `${origin}/dashboard`;
 
   if (typeof rawReturnUrl !== "string" || !rawReturnUrl.trim()) {
     return defaultUrl;
