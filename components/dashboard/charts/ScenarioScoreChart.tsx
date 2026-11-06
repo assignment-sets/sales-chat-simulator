@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, Layers } from "lucide-react";
+import { BarChart3, Layers } from "lucide-react";
 import { DashboardScorePoint, DashboardScenarioPoint } from "@/app/api/dashboard/route";
 
 export interface ScenarioScoreChartProps {
@@ -28,7 +28,7 @@ export function ScenarioScoreChart({
           </h3>
           <p className="text-[11px] text-zinc-400">
             {activeTab === "scores"
-              ? "Session rating distribution (1 to 5 stars)"
+              ? "Session rating distribution across 1 to 5 score tiers"
               : "Volume & closing conversion across pitched offerings"}
           </p>
         </div>
@@ -43,7 +43,7 @@ export function ScenarioScoreChart({
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            <Star className="w-3.5 h-3.5 text-amber-500" />
+            <BarChart3 className="w-3.5 h-3.5 text-zinc-700" />
             <span>Score Curve</span>
           </button>
           <button
@@ -63,9 +63,9 @@ export function ScenarioScoreChart({
 
       {/* Tab 1: Score Distribution */}
       {activeTab === "scores" && (
-        <div className="space-y-2.5 my-auto py-1">
+        <div className="space-y-3 my-auto py-1">
           {totalScored === 0 ? (
-            <div className="py-8 text-center text-xs text-zinc-400">
+            <div className="py-8 text-center text-xs text-zinc-400 font-mono">
               No completed simulations evaluated yet.
             </div>
           ) : (
@@ -77,27 +77,28 @@ export function ScenarioScoreChart({
               };
 
               const getBarColor = (s: number) => {
-                if (s >= 4) return "bg-emerald-500";
-                if (s === 3) return "bg-amber-500";
-                return "bg-rose-400";
+                if (s >= 4) return "bg-emerald-700"; // Deep forest pine
+                if (s === 3) return "bg-zinc-500";   // Slate neutral
+                return "bg-rose-800";                // Muted crimson
               };
 
               return (
                 <div key={scoreLevel} className="flex items-center gap-3 text-xs">
-                  <div className="flex items-center gap-1 w-16 shrink-0 font-medium text-zinc-700">
-                    <span>{scoreLevel}</span>
-                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                    <span className="text-[10px] text-zinc-400">Stars</span>
+                  <div className="flex items-center gap-1 w-14 shrink-0 font-mono">
+                    <span className="font-semibold text-zinc-900 tabular-nums">
+                      {scoreLevel}
+                    </span>
+                    <span className="text-[11px] text-zinc-400">/ 5</span>
                   </div>
 
-                  <div className="flex-1 bg-zinc-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="flex-1 bg-zinc-100 rounded-full h-2 overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${getBarColor(scoreLevel)}`}
                       style={{ width: `${pt.percentage}%` }}
                     />
                   </div>
 
-                  <div className="w-16 text-right font-mono text-[11px] shrink-0">
+                  <div className="w-16 text-right font-mono text-[11px] shrink-0 tabular-nums">
                     <span className="font-semibold text-zinc-900">{pt.count}</span>
                     <span className="text-zinc-400 ml-1">({pt.percentage}%)</span>
                   </div>
@@ -112,7 +113,7 @@ export function ScenarioScoreChart({
       {activeTab === "scenarios" && (
         <div className="space-y-3 my-auto py-1">
           {scenarioBreakdown.length === 0 ? (
-            <div className="py-8 text-center text-xs text-zinc-400">
+            <div className="py-8 text-center text-xs text-zinc-400 font-mono">
               No simulation scenarios recorded yet.
             </div>
           ) : (
@@ -125,10 +126,10 @@ export function ScenarioScoreChart({
                     <span className="font-medium text-zinc-900 truncate max-w-[200px] sm:max-w-xs" title={scen.productName}>
                       {scen.productName}
                     </span>
-                    <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <div className="flex items-center gap-2 font-mono text-[11px] tabular-nums">
                       <span className="text-zinc-500">{scen.count} sims</span>
                       {scen.winRate !== null && (
-                        <span className={`font-semibold ${scen.winRate >= 60 ? "text-emerald-600" : "text-amber-600"}`}>
+                        <span className={`font-semibold ${scen.winRate >= 60 ? "text-emerald-700" : "text-zinc-700"}`}>
                           {scen.winRate}% won
                         </span>
                       )}

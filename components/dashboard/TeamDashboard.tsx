@@ -160,12 +160,12 @@ export function TeamDashboard() {
 
         {/* Top Metric Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-xs font-medium">Simulations</span>
               <Bot className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
+            <div className="text-2xl font-bold text-zinc-900 font-mono tabular-nums tracking-tight">
               {kpis.totalSimulations}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
@@ -173,12 +173,12 @@ export function TeamDashboard() {
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-xs font-medium">Exchanges</span>
               <MessageSquare className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
+            <div className="text-2xl font-bold text-zinc-900 font-mono tabular-nums tracking-tight">
               {kpis.totalMessages}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
@@ -186,12 +186,12 @@ export function TeamDashboard() {
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-xs font-medium">Team Win Rate</span>
-              <Trophy className="w-4 h-4 text-emerald-500" />
+              <Trophy className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
+            <div className="text-2xl font-bold text-zinc-900 font-mono tabular-nums tracking-tight">
               {kpis.winRate !== null ? `${kpis.winRate}%` : "—"}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
@@ -199,12 +199,12 @@ export function TeamDashboard() {
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-xs font-medium">Avg Evaluation</span>
-              <Award className="w-4 h-4 text-amber-500" />
+              <Award className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
+            <div className="text-2xl font-bold text-zinc-900 font-mono tabular-nums tracking-tight">
               {kpis.avgScore !== null ? `${kpis.avgScore}` : "—"}
               {kpis.avgScore !== null && (
                 <span className="text-xs font-normal text-zinc-400"> / 5</span>
@@ -215,12 +215,12 @@ export function TeamDashboard() {
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-xs font-medium">Total AI Tokens</span>
               <Coins className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl font-bold text-zinc-900 font-mono tracking-tight">
+            <div className="text-2xl font-bold text-zinc-900 font-mono tabular-nums tracking-tight">
               {kpis.totalTokens.toLocaleString()}
             </div>
             <p className="text-[11px] text-zinc-400 mt-1">
@@ -228,12 +228,12 @@ export function TeamDashboard() {
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-2xs">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/90">
             <div className="flex items-center justify-between text-zinc-500 mb-2">
               <span className="text-xs font-medium">Active Members</span>
               <Users className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-2xl font-bold text-zinc-900 tracking-tight">
+            <div className="text-2xl font-bold text-zinc-900 font-mono tabular-nums tracking-tight">
               {kpis.activeMembersCount}{" "}
               <span className="text-xs font-normal text-zinc-400">
                 / {kpis.totalMembersCount}
@@ -355,29 +355,29 @@ export function TeamDashboard() {
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-3 text-right font-medium text-zinc-800">
+                      <td className="py-3.5 px-3 text-right font-mono tabular-nums font-medium text-zinc-800">
                         {member.simulationsCount}
                       </td>
 
-                      <td className="py-3.5 px-3 text-right">
+                      <td className="py-3.5 px-3 text-right font-mono tabular-nums">
                         {member.winRate !== null ? (
                           <span
                             className={`font-semibold ${
                               member.winRate >= 70
-                                ? "text-emerald-600"
+                                ? "text-emerald-700"
                                 : member.winRate >= 40
-                                ? "text-amber-600"
-                                : "text-rose-600"
+                                ? "text-zinc-700"
+                                : "text-rose-800"
                             }`}
                           >
                             {member.winRate}%
                           </span>
                         ) : (
-                          <span className="text-zinc-300">—</span>
+                          <span className="text-zinc-300 font-mono">—</span>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-3 text-right">
+                      <td className="py-3.5 px-3 text-right font-mono tabular-nums">
                         {member.avgScore !== null ? (
                           <span className="font-semibold text-zinc-800">
                             {member.avgScore}{" "}
@@ -386,15 +386,15 @@ export function TeamDashboard() {
                             </span>
                           </span>
                         ) : (
-                          <span className="text-zinc-300">—</span>
+                          <span className="text-zinc-300 font-mono">—</span>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-3 text-right font-medium text-zinc-800">
+                      <td className="py-3.5 px-3 text-right font-mono tabular-nums font-medium text-zinc-800">
                         {member.messagesCount}
                       </td>
 
-                      <td className="py-3.5 px-3 text-right font-mono text-zinc-700">
+                      <td className="py-3.5 px-3 text-right font-mono tabular-nums text-zinc-700">
                         {member.tokensUsed.toLocaleString()}
                       </td>
 

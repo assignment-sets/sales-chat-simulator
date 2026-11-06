@@ -35,12 +35,16 @@ export function ActivityTimelineChart({ timeline }: ActivityTimelineChartProps) 
         </div>
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded bg-zinc-900" />
-            <span className="text-zinc-500 font-medium">Practices ({totalVolume})</span>
+            <span className="w-2 h-2 rounded-sm bg-zinc-900" />
+            <span className="text-zinc-500 font-medium">
+              Practices <span className="font-mono tabular-nums text-zinc-700">({totalVolume})</span>
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded bg-emerald-500" />
-            <span className="text-zinc-500 font-medium">Won ({totalWon})</span>
+            <span className="w-2 h-2 rounded-sm bg-emerald-700" />
+            <span className="text-zinc-500 font-medium">
+              Won <span className="font-mono tabular-nums text-zinc-700">({totalWon})</span>
+            </span>
           </div>
         </div>
       </div>
@@ -49,15 +53,15 @@ export function ActivityTimelineChart({ timeline }: ActivityTimelineChartProps) 
         {/* Tooltip on Hover */}
         {hoveredIdx !== null && timeline[hoveredIdx] && (
           <div
-            className="absolute -top-7 transform -translate-x-1/2 bg-zinc-900 text-white text-[11px] px-2 py-1 rounded-lg shadow-md pointer-events-none z-10 whitespace-nowrap transition-all flex items-center gap-1.5 font-medium"
+            className="absolute -top-7 transform -translate-x-1/2 bg-zinc-900 text-white text-[11px] px-2.5 py-1 rounded-lg shadow-md pointer-events-none z-10 whitespace-nowrap transition-all flex items-center gap-1.5 font-medium border border-zinc-800"
             style={{
               left: `${((hoveredIdx + 0.5) / timeline.length) * 100}%`,
             }}
           >
-            <span>{timeline[hoveredIdx].label}:</span>
-            <span className="font-mono text-zinc-200">{timeline[hoveredIdx].count} sims</span>
+            <span className="text-zinc-300">{timeline[hoveredIdx].label}:</span>
+            <span className="font-mono tabular-nums text-white">{timeline[hoveredIdx].count} sims</span>
             {timeline[hoveredIdx].wonCount > 0 && (
-              <span className="text-emerald-400 font-mono">({timeline[hoveredIdx].wonCount} won)</span>
+              <span className="text-emerald-300 font-mono tabular-nums">({timeline[hoveredIdx].wonCount} won)</span>
             )}
           </div>
         )}
@@ -114,35 +118,35 @@ export function ActivityTimelineChart({ timeline }: ActivityTimelineChartProps) 
                   y={yTop}
                   width={`${barWidthPercent}%`}
                   height={barHeight}
-                  rx="3"
+                  rx="2"
                   className={`transition-colors duration-150 ${
                     item.count === 0
-                      ? "fill-zinc-200"
+                      ? "fill-zinc-100"
                       : isHovered
                       ? "fill-zinc-700"
                       : "fill-zinc-900"
                   }`}
                 />
 
-                {/* Won bar overlay */}
+                {/* Won bar overlay - Elegant Forest Emerald */}
                 {wonHeight > 0 && (
                   <rect
                     x={`${xPercent + barOffsetPercent}%`}
                     y={yWonTop}
                     width={`${barWidthPercent}%`}
                     height={wonHeight}
-                    rx="3"
-                    className="fill-emerald-500 pointer-events-none"
+                    rx="2"
+                    className="fill-emerald-700 pointer-events-none"
                   />
                 )}
 
-                {/* X-axis date labels (show every second or third day to prevent overlap) */}
+                {/* X-axis date labels */}
                 {(idx % 2 === 0 || idx === timeline.length - 1) && (
                   <text
                     x={`${xPercent + barOffsetPercent + barWidthPercent / 2}%`}
                     y={height - 6}
                     textAnchor="middle"
-                    className="text-[9px] fill-zinc-400 font-sans select-none"
+                    className="text-[9px] fill-zinc-400 font-mono select-none"
                   >
                     {item.label}
                   </text>

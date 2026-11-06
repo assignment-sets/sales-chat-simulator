@@ -118,7 +118,7 @@ export function RepPerformanceChart({
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            <Flame className="w-3.5 h-3.5 text-amber-500" />
+            <Flame className="w-3.5 h-3.5 text-zinc-700" />
             <span>Top Performers</span>
           </button>
           <button
@@ -130,7 +130,7 @@ export function RepPerformanceChart({
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+            <AlertCircle className="w-3.5 h-3.5 text-zinc-500" />
             <span>Needs Coaching</span>
           </button>
         </div>
@@ -187,7 +187,7 @@ export function RepPerformanceChart({
       {/* Horizontal Progress Bars List */}
       <div className="space-y-3 my-auto py-1">
         {rankedMembers.length === 0 ? (
-          <div className="py-8 text-center text-xs text-zinc-400">
+          <div className="py-8 text-center text-xs text-zinc-400 font-mono">
             No member data available for this metric yet.
           </div>
         ) : (
@@ -208,7 +208,7 @@ export function RepPerformanceChart({
                   <span
                     className={`text-xs font-mono font-bold ${
                       isFirst && view === "top"
-                        ? "text-amber-500"
+                        ? "text-zinc-900"
                         : "text-zinc-400"
                     }`}
                   >
@@ -231,13 +231,13 @@ export function RepPerformanceChart({
 
                 {/* Progress Bar Container */}
                 <div className="flex-1 min-w-0">
-                  <div className="w-full bg-zinc-100 rounded-full h-2.5 overflow-hidden">
+                  <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         view === "bottom" && (metric === "winRate" || metric === "avgScore")
-                          ? "bg-rose-400"
+                          ? "bg-rose-800"
                           : view === "top" && (metric === "winRate" || metric === "avgScore")
-                          ? "bg-emerald-500"
+                          ? "bg-emerald-700"
                           : "bg-zinc-800"
                       }`}
                       style={{ width: `${pct}%` }}
@@ -248,11 +248,11 @@ export function RepPerformanceChart({
                 {/* Numeric Metric Value */}
                 <div className="w-20 text-right shrink-0">
                   <span
-                    className={`text-xs font-mono font-semibold ${
+                    className={`text-xs font-mono font-semibold tabular-nums ${
                       view === "top" && metric === "winRate" && (member.winRate ?? 0) >= 60
-                        ? "text-emerald-600"
+                        ? "text-emerald-700"
                         : view === "bottom" && metric === "winRate" && (member.winRate ?? 0) < 50
-                        ? "text-rose-600"
+                        ? "text-rose-800"
                         : "text-zinc-800"
                     }`}
                   >
