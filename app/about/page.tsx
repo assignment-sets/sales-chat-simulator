@@ -3,14 +3,17 @@ import Link from "next/link";
 import { Sparkles, Target, ShieldCheck, Zap, ArrowRight } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { Button } from "@/components/ui/Button";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
-  title: "About SalesChat",
-  description: "Learn why we built SalesChat: the interactive AI sales simulation platform designed to master objection handling without burning real pipeline.",
-};
+export const metadata: Metadata = constructPublicMetadata({
+  title: "About Us",
+  description:
+    "Learn why we built SalesChat: the interactive AI sales simulation platform designed to master objection handling without burning real pipeline.",
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

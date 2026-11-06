@@ -4,11 +4,14 @@ import { Mail, Clock, MessageSquare, Sparkles, Users, HelpCircle, ArrowRight } f
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { CopyEmailButton } from "@/components/support/CopyEmailButton";
 import { Button } from "@/components/ui/Button";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Support & Contact",
-  description: "Get in touch with the SalesChat team for help with simulations, team workspaces, or billing inquiries.",
-};
+  description:
+    "Get in touch with the SalesChat team for help with simulations, team workspaces, or billing inquiries.",
+  path: "/support",
+});
 
 const SUPPORT_EMAIL = "support@chat2sell.in";
 

@@ -26,6 +26,20 @@ export const metadata: Metadata = {
     template: "%s | SalesChat",
   },
   description: "Sharpen your live chat sales skills against hyper-realistic AI prospect personas.",
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   openGraph: {
     title: "SalesChat - AI Sales Practice Simulator",
     description: "Sharpen your live chat sales skills against hyper-realistic AI prospect personas with instant coaching feedback.",

@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { Navbar } from "@/components/layout/Navbar";
 import { getActiveOrganization } from "@/lib/tenant";
+import { constructPrivateMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = constructPrivateMetadata(
+  "Dashboard",
+  "Sales team performance metrics, win/loss rates, and objection handling analytics."
+);
 
 export default async function DashboardLayout({
   children,

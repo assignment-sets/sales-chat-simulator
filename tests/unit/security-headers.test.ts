@@ -61,7 +61,7 @@ describe("Security Headers Configuration (next.config.ts)", () => {
     expect(headersMap.get("x-dns-prefetch-control")).toBe("on");
   });
 
-  it("configures no-store Cache-Control headers for /api/:path*", async () => {
+  it("configures no-store Cache-Control and X-Robots-Tag headers for /api/:path*", async () => {
     const headerConfigs = await nextConfig.headers!();
     const apiConfig = headerConfigs.find((c) => c.source === "/api/:path*");
     expect(apiConfig).toBeDefined();
@@ -71,6 +71,28 @@ describe("Security Headers Configuration (next.config.ts)", () => {
     );
     expect(cacheControl).toBeDefined();
     expect(cacheControl!.value).toBe("no-store, max-age=0, must-revalidate");
+
+    const robotsTag = apiConfig!.headers.find(
+      (h) => h.key.toLowerCase() === "x-robots-tag"
+    );
+    expect(robotsTag).toBeDefined();
+    expect(robotsTag!.value).toBe("noindex, nofollow");
+  });
+
+  it("configures X-Robots-Tag: noindex, nofollow headers for protected dashboard and chat surfaces", async () => {
+    const headerConfigs = await nextConfig.headers!();
+
+    const dashboardConfig = headerConfigs.find((c) => c.source === "/dashboard/:path*");
+    expect(dashboardConfig).toBeDefined();
+    expect(
+      dashboardConfig!.headers.find((h) => h.key.toLowerCase() === "x-robots-tag")?.value
+    ).toBe("noindex, nofollow");
+
+    const chatsConfig = headerConfigs.find((c) => c.source === "/chats/:path*");
+    expect(chatsConfig).toBeDefined();
+    expect(
+      chatsConfig!.headers.find((h) => h.key.toLowerCase() === "x-robots-tag")?.value
+    ).toBe("noindex, nofollow");
   });
 
   it("exports hardened ACTIVE_ORG_COOKIE_OPTIONS with secure attribute tied to environment", () => {

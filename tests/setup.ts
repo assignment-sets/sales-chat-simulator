@@ -6,6 +6,12 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = "https://mock-project.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "mock-publishable-key";
 process.env.GROQ_API_KEY = "mock-groq-key";
 
+// Intercept next/font/google
+vi.mock("next/font/google", () => ({
+  Geist: vi.fn(() => ({ variable: "--font-geist-sans" })),
+  Geist_Mono: vi.fn(() => ({ variable: "--font-geist-mono" })),
+}));
+
 // Intercept next/headers cookies
 vi.mock("next/headers", () => ({
   cookies: vi.fn(async () => mockCookieStore),

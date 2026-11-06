@@ -7,11 +7,14 @@ import { cached } from "@/lib/cache";
 import { pricingKey } from "@/lib/cache/keys";
 import { CACHE_TTLS } from "@/lib/cache/policies";
 import { PricingView } from "@/components/pricing/PricingView";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructPublicMetadata({
   title: "Plans & Pricing",
-  description: "Predictable simulation quotas and team seat plans for individuals and growing sales teams.",
-};
+  description:
+    "Predictable simulation quotas and team seat plans for individuals and growing sales teams.",
+  path: "/pricing",
+});
 
 export default async function PricingPage() {
   const supabase = await createServerSupabaseClient();

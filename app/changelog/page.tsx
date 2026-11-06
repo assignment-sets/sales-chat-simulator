@@ -3,14 +3,17 @@ import Link from "next/link";
 import { Calendar, CheckCircle2, ArrowRight, Compass, Rocket } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { Button } from "@/components/ui/Button";
+import { constructPublicMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
-export const metadata: Metadata = {
-  title: "Changelog",
-  description: "Stay up to date with new features, improvements, and roadmap updates for SalesChat.",
-};
+export const metadata: Metadata = constructPublicMetadata({
+  title: "Product Changelog",
+  description:
+    "Stay up to date with new features, improvements, and roadmap updates for SalesChat.",
+  path: "/changelog",
+});
 
 export default function ChangelogPage() {
   return (

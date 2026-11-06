@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { getActiveOrganization } from "@/lib/tenant";
+import { constructPrivateMetadata } from "@/lib/seo/metadata";
+
+export const metadata: Metadata = constructPrivateMetadata(
+  "Simulations",
+  "Interactive live chat sales objection drills and real-time AI prospect simulations."
+);
 
 export default async function ChatsLayout({
   children,

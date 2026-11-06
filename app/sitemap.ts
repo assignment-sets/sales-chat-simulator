@@ -7,8 +7,8 @@ import {
   CORE_SITEMAP_FALLBACK_ROUTES,
 } from "@/lib/seo/sitemap-config";
 
-export const dynamic = "force-static";
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface DiscoveredRoute {
   route: string;
