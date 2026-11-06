@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
 import { notify } from "@/lib/toast";
 import { Organization, OrgRole } from "@/lib/tenant";
 import { normalizePlanTier } from "@/lib/plans";
@@ -249,9 +248,9 @@ export function OrgSettingsModal({
               <h3 className="text-xs font-semibold text-zinc-900 uppercase tracking-wider">
                 Workspace Profile
               </h3>
-              <Badge variant="accent" className="text-[10px] uppercase font-semibold">
-                {organization.plan_tier} PLAN
-              </Badge>
+              <span className="text-xs text-zinc-500 font-medium capitalize">
+                {organization.plan_tier} plan
+              </span>
             </div>
 
             <div>
@@ -295,12 +294,9 @@ export function OrgSettingsModal({
                   Subscription & Billing
                 </h3>
               </div>
-              <Badge
-                variant={planTier === "starter" ? "muted" : "accent"}
-                className="text-[10px] uppercase font-semibold"
-              >
-                {planTier} PLAN
-              </Badge>
+              <span className="text-xs text-zinc-500 font-medium capitalize">
+                {planTier} plan
+              </span>
             </div>
 
             <p className="text-xs text-zinc-500 leading-relaxed">

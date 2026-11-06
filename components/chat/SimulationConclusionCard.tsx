@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { XCircle, Sparkles, Trophy, Lock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { DetailedFeedbackModal } from "@/components/chat/DetailedFeedbackModal";
 import { hasFeature, PlanTier } from "@/lib/plans";
 import { notify } from "@/lib/toast";
@@ -64,17 +63,9 @@ export function SimulationConclusionCard({
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-bold">
-                    {isWon ? "Deal Closed!" : "Lead Lost"}
-                  </h3>
-                  <Badge
-                    variant={isWon ? "success" : "muted"}
-                    className="text-[10px] px-2 py-0.5 uppercase tracking-wider"
-                  >
-                    {isWon ? "Success" : "Concluded"}
-                  </Badge>
-                </div>
+                <h3 className="text-sm sm:text-base font-bold">
+                  {isWon ? "Deal Closed!" : "Lead Lost"}
+                </h3>
                 <p className="text-xs text-zinc-500 mt-0.5">
                   {productName ? `${productName} · ` : ""}
                   {isWon

@@ -5,7 +5,6 @@ import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { getActiveOrganization } from "@/lib/tenant";
 import { hasFeature } from "@/lib/plans";
 import { TeamDashboard } from "@/components/dashboard/TeamDashboard";
-import { Badge } from "@/components/ui/Badge";
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient();
@@ -41,14 +40,9 @@ export default async function DashboardPage() {
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-center gap-2">
-              <h2 className="text-base font-bold text-zinc-900">
-                Team Oversight Dashboard
-              </h2>
-              <Badge variant="accent" className="text-[10px] px-2 py-0.5 uppercase tracking-wider">
-                Pro
-              </Badge>
-            </div>
+            <h2 className="text-base font-bold text-zinc-900">
+              Team Oversight Dashboard
+            </h2>
             <p className="text-xs text-zinc-500 leading-relaxed">
               Rep performance benchmarks, win-rate analytics, and transcript inspection are available on the Pro and Scale plans.
             </p>

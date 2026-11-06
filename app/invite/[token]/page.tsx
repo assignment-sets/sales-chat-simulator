@@ -4,7 +4,6 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import {
   Building2,
@@ -243,9 +242,9 @@ export default function InvitePage({ params }: PageProps) {
                       <Shield className="w-3.5 h-3.5" />
                       Assigned Role
                     </span>
-                    <Badge variant={invitation.role === "admin" ? "success" : "default"}>
-                      {invitation.role.toUpperCase()}
-                    </Badge>
+                    <span className="text-xs font-semibold text-zinc-900 capitalize">
+                      {invitation.role}
+                    </span>
                   </div>
                 </div>
 

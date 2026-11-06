@@ -14,7 +14,6 @@ import {
   Award,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
@@ -132,31 +131,15 @@ export function TeamDashboard() {
     }
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "owner":
-        return "accent";
-      case "admin":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
   return (
     <div className="flex-1 overflow-y-auto min-h-0 bg-zinc-50/50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight">
-                Team Oversight Dashboard
-              </h1>
-              <Badge variant="accent" className="text-xs">
-                {organization.name}
-              </Badge>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight mb-1">
+              Team Oversight Dashboard
+            </h1>
             <p className="text-xs text-zinc-500">
               Aggregated team metrics, individual sales practice volume, and token usage oversight.
             </p>
@@ -367,12 +350,9 @@ export function TeamDashboard() {
                       </td>
 
                       <td className="py-3.5 px-3">
-                        <Badge
-                          variant={getRoleBadgeVariant(member.role)}
-                          className="text-[10px] px-2 py-0.5"
-                        >
+                        <span className="text-xs text-zinc-600 capitalize">
                           {member.role}
-                        </Badge>
+                        </span>
                       </td>
 
                       <td className="py-3.5 px-3 text-right font-medium text-zinc-800">

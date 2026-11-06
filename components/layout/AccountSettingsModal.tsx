@@ -5,7 +5,6 @@ import { X, Settings, Download, Trash2, AlertTriangle, ShieldCheck } from "lucid
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { notify } from "@/lib/toast";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
@@ -160,14 +159,9 @@ export function AccountSettingsModal({
           <div className="flex items-center gap-3.5 p-3.5 bg-zinc-50 border border-zinc-200/80 rounded-2xl">
             <Avatar name={displayName} size="md" />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-zinc-900 truncate">
-                  {displayName}
-                </span>
-                <Badge variant="default" className="text-[10px] px-1.5 py-0">
-                  User
-                </Badge>
-              </div>
+              <span className="text-sm font-semibold text-zinc-900 truncate block">
+                {displayName}
+              </span>
               <p className="text-xs text-zinc-500 truncate mt-0.5">
                 {userEmail || "No email linked"}
               </p>

@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, ChevronUp, FileText, X, Pencil, Archive, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { ExportChatButton } from "@/components/chat/ExportChatButton";
 import { RenameChatModal } from "@/components/chat/RenameChatModal";
 import { PlanTier } from "@/lib/plans";
@@ -111,10 +110,10 @@ export function ChatHeader({
           </div>
 
           {isArchived && (
-            <Badge variant="muted" className="text-[11px] gap-1 px-2 py-0 h-5">
-              <Archive className="w-3 h-3 text-zinc-400" />
+            <span className="text-xs text-zinc-500 flex items-center gap-1 font-medium">
+              <Archive className="w-3.5 h-3.5 text-zinc-400" />
               Archived
-            </Badge>
+            </span>
           )}
 
           <Button

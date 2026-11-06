@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Calendar, CheckCircle2, ArrowRight, Compass, Rocket } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-static";
@@ -47,9 +46,6 @@ export default function ChangelogPage() {
             <h2 className="text-xl font-black text-zinc-900 tracking-tight">
               v0.1.0 — Initial Beta Launch
             </h2>
-            <Badge variant="accent" className="text-[11px] font-semibold">
-              Current Release
-            </Badge>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-zinc-500 font-mono">
             <Calendar className="w-3.5 h-3.5" />

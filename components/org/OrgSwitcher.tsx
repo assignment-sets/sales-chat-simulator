@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Building2, ChevronDown, Check, Plus, Users, LayoutDashboard, CreditCard, Settings } from "lucide-react";
 import Link from "next/link";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
-import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
 import { CreateOrgDialog } from "@/components/org/CreateOrgDialog";
@@ -100,17 +99,6 @@ export function OrgSwitcher({
     }
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "owner":
-        return "accent";
-      case "admin":
-        return "success";
-      default:
-        return "muted";
-    }
-  };
-
   return (
     <>
       <div className="relative inline-block text-left" ref={dropdownRef}>
@@ -127,12 +115,9 @@ export function OrgSwitcher({
           aria-expanded={isOpen}
         >
           <Building2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-          <span className="max-w-[130px] truncate font-semibold text-zinc-900">
+          <span className="max-w-[140px] truncate font-semibold text-zinc-900">
             {currentOrg.name}
           </span>
-          <Badge variant={getRoleBadgeVariant(currentRole)} className="text-[10px] px-1.5 py-0">
-            {currentRole}
-          </Badge>
           <ChevronDown
             className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-150 shrink-0 ${
               isOpen ? "rotate-180" : ""

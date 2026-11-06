@@ -1,8 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Bot, CheckCircle2, Sparkles, TrendingUp, Users, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, TrendingUp, Users, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 
 export function LandingHero() {
   return (
@@ -41,14 +40,6 @@ export function LandingHero() {
 
       {/* Hero Section */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-12 sm:py-20 flex flex-col items-center">
-        {/* Badge */}
-        <div className="mb-6">
-          <Badge variant="accent" className="px-3.5 py-1 text-xs gap-1.5 font-medium tracking-wide shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-zinc-800" />
-            Hyper-Realistic AI Sales Simulation
-          </Badge>
-        </div>
-
         {/* Headline */}
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-zinc-950 tracking-tight text-center max-w-4xl leading-[1.12]">
           Master live sales chats before facing real buyers.
@@ -77,16 +68,13 @@ export function LandingHero() {
         {/* Live Chat Mockup Card */}
         <div className="mt-14 w-full max-w-3xl bg-white rounded-3xl border border-zinc-200/90 shadow-xl p-5 sm:p-7 ring-1 ring-zinc-950/5">
           <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-emerald-50" />
-              <div>
-                <div className="text-xs font-semibold text-zinc-900">Marcus Vance • VP of Engineering</div>
-                <div className="text-[11px] text-zinc-400">Enterprise Tech Buyer • Budget Skeptic Persona</div>
-              </div>
+            <div>
+              <div className="text-xs font-semibold text-zinc-900">Marcus Vance • VP of Engineering</div>
+              <div className="text-[11px] text-zinc-400">Enterprise Tech Buyer • Budget Skeptic Persona</div>
             </div>
-            <Badge variant="success" className="text-[11px] px-2.5 py-0.5">
-              Outcome: Deal Won (5/5)
-            </Badge>
+            <div className="text-xs font-semibold text-zinc-900">
+              Deal won <span className="text-zinc-400 font-normal">· 5/5</span>
+            </div>
           </div>
 
           <div className="space-y-4 py-5">
@@ -121,11 +109,11 @@ export function LandingHero() {
             </div>
           </div>
 
-          {/* AI Coaching Insight Pill */}
-          <div className="bg-emerald-50 border border-emerald-200/70 rounded-2xl p-3.5 flex items-center gap-3">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <div className="text-[11px] text-emerald-950 font-medium">
-              <span className="font-bold">AI Coach Analysis:</span> Strong objection turnaround. Direct technical answer paired with a friction-reducing call to action.
+          {/* Coaching Insight Note */}
+          <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-3.5 flex items-center gap-3">
+            <CheckCircle2 className="w-4 h-4 text-zinc-700 shrink-0" />
+            <div className="text-[11px] text-zinc-800 font-medium">
+              <span className="font-bold">Coach Analysis:</span> Strong objection turnaround. Direct technical answer paired with a friction-reducing call to action.
             </div>
           </div>
         </div>

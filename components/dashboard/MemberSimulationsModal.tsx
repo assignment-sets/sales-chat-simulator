@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Coins, Calendar, ChevronRight, Trophy, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { notify } from "@/lib/toast";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
@@ -146,23 +145,23 @@ export function MemberSimulationsModal({
                       {sim.product_name}
                     </span>
                     {sim.status === "WON" || sim.evaluation_outcome === "deal_won" ? (
-                      <Badge variant="success" className="text-[10px] py-0 px-2 flex items-center gap-1">
-                        <Trophy className="w-2.5 h-2.5" />
+                      <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                        <Trophy className="w-3 h-3" />
                         Won
-                      </Badge>
+                      </span>
                     ) : sim.status === "LOST" || sim.evaluation_outcome === "deal_lost" ? (
-                      <Badge variant="muted" className="text-[10px] py-0 px-2 text-rose-600 bg-rose-50 border-rose-200 flex items-center gap-1">
-                        <XCircle className="w-2.5 h-2.5" />
+                      <span className="text-xs font-medium text-rose-600 flex items-center gap-1">
+                        <XCircle className="w-3 h-3" />
                         Lost
-                      </Badge>
+                      </span>
                     ) : (
-                      <Badge variant="default" className="text-[10px] py-0 px-2">
+                      <span className="text-xs text-zinc-500 font-medium">
                         Active
-                      </Badge>
+                      </span>
                     )}
                     {typeof sim.score === "number" && sim.score > 0 && (
-                      <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md">
-                        Score: {sim.score}/5
+                      <span className="text-xs font-mono font-medium text-zinc-600">
+                        {sim.score}/5
                       </span>
                     )}
                     <span className="text-[10px] text-zinc-400 flex items-center gap-1 shrink-0 ml-auto sm:ml-0">

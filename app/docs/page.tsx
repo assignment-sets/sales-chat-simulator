@@ -10,7 +10,6 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-static";
@@ -161,45 +160,45 @@ export default function DocsPage() {
 
         <div className="space-y-2.5 not-prose my-3">
           <div className="flex items-start gap-3 p-3.5 bg-red-50/60 border border-red-100 rounded-xl">
-            <Badge variant="muted" className="bg-red-50 text-red-700 border-red-200 shrink-0 text-xs px-2 py-0.5 font-bold">
+            <span className="font-mono text-xs font-bold text-red-700 shrink-0 w-8">
               1 / 5
-            </Badge>
+            </span>
             <div className="text-xs">
               <strong className="text-zinc-900">Offensive / Fatal Misstep:</strong> Completely dodges the prospect&apos;s concern, presents false facts, or becomes defensive.
             </div>
           </div>
 
           <div className="flex items-start gap-3 p-3.5 bg-amber-50/60 border border-amber-100 rounded-xl">
-            <Badge variant="muted" className="bg-amber-50 text-amber-800 border-amber-200 shrink-0 text-xs px-2 py-0.5 font-bold">
+            <span className="font-mono text-xs font-bold text-amber-800 shrink-0 w-8">
               2 / 5
-            </Badge>
+            </span>
             <div className="text-xs">
               <strong className="text-zinc-900">Weak / Passive:</strong> Acknowledges the question but lacks conviction, value justification, or persuasive framing.
             </div>
           </div>
 
           <div className="flex items-start gap-3 p-3.5 bg-zinc-100/70 border border-zinc-200 rounded-xl">
-            <Badge variant="default" className="shrink-0 text-xs px-2 py-0.5 font-bold">
+            <span className="font-mono text-xs font-bold text-zinc-700 shrink-0 w-8">
               3 / 5
-            </Badge>
+            </span>
             <div className="text-xs">
               <strong className="text-zinc-900">Neutral / Informational:</strong> Answers accurately like a documentation bot, but fails to steer the conversation or probe for discovery.
             </div>
           </div>
 
           <div className="flex items-start gap-3 p-3.5 bg-blue-50/60 border border-blue-100 rounded-xl">
-            <Badge variant="accent" className="shrink-0 text-xs px-2 py-0.5 font-bold">
+            <span className="font-mono text-xs font-bold text-blue-700 shrink-0 w-8">
               4 / 5
-            </Badge>
+            </span>
             <div className="text-xs">
               <strong className="text-zinc-900">Strong Reframing:</strong> Directly resolves the concern, links solution to ROI, and asks an engaging qualifying question.
             </div>
           </div>
 
           <div className="flex items-start gap-3 p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-xl">
-            <Badge variant="success" className="shrink-0 text-xs px-2 py-0.5 font-bold">
+            <span className="font-mono text-xs font-bold text-emerald-700 shrink-0 w-8">
               5 / 5
-            </Badge>
+            </span>
             <div className="text-xs">
               <strong className="text-zinc-900">Deal Advance / Win:</strong> Flawlessly overcomes resistance, creates urgency, and secures commitment to the next milestone (demo, security review, or technical pilot).
             </div>

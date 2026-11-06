@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Lock, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { notify } from "@/lib/toast";
 import {
   PLAN_CONFIGS,
@@ -219,10 +218,10 @@ export function PricingView({
 
             {isAuthenticated && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-400">Active Tier:</span>
-                <Badge variant="accent" className="text-xs px-2.5 py-0.5 uppercase tracking-wider">
+                <span className="text-xs text-zinc-500">Active plan:</span>
+                <span className="text-xs font-semibold text-zinc-900">
                   {activePlan.name}
-                </Badge>
+                </span>
               </div>
             )}
           </div>
@@ -335,13 +334,13 @@ export function PricingView({
                       {plan.name}
                     </h2>
                     {isCurrent ? (
-                      <Badge variant="accent" className="text-[10px] px-2 py-0.5 uppercase tracking-wider font-semibold">
-                        Current Plan
-                      </Badge>
+                      <span className="text-xs font-medium text-zinc-700 bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded-md">
+                        Current plan
+                      </span>
                     ) : isPopular ? (
-                      <Badge variant="muted" className="text-[10px] px-2 py-0.5 uppercase tracking-wider">
+                      <span className="text-xs font-medium text-zinc-500">
                         Popular
-                      </Badge>
+                      </span>
                     ) : null}
                   </div>
 

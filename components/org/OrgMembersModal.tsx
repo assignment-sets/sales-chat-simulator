@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
 import { Loader } from "@/components/ui/Loader";
 import { Avatar } from "@/components/ui/Avatar";
 import { X, Users, UserPlus, Trash2, ShieldCheck, Copy, Check, RotateCw, Crown } from "lucide-react";
@@ -322,17 +321,6 @@ export function OrgMembersModal({
     }
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "owner":
-        return "accent";
-      case "admin":
-        return "success";
-      default:
-        return "default";
-    }
-  };
-
   return (
     <div
       onClick={handleBackdropClick}
@@ -482,9 +470,9 @@ export function OrgMembersModal({
                           <option value="admin">ADMIN</option>
                         </select>
                       ) : (
-                        <Badge variant={getRoleBadgeVariant(member.role)}>
-                          {member.role.toUpperCase()}
-                        </Badge>
+                        <span className="text-xs text-zinc-600 capitalize font-medium">
+                          {member.role}
+                        </span>
                       )}
 
                       {/* Transfer ownership button (owner-only, target not self and not owner) */}
@@ -533,9 +521,9 @@ export function OrgMembersModal({
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="muted" className="text-[10px]">
+                        <span className="text-xs text-amber-700 font-medium">
                           Pending ({invite.role})
-                        </Badge>
+                        </span>
                         {invite.token && (
                           <button
                             type="button"

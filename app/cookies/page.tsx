@@ -96,10 +96,8 @@ export default function CookiePage() {
                   </td>
                   <td className="py-3 px-4">{cookie.provider}</td>
                   <td className="py-3 px-4">{cookie.purpose}</td>
-                  <td className="py-3 px-4">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 text-zinc-800 border border-zinc-200">
-                      {cookie.type}
-                    </span>
+                  <td className="py-3 px-4 text-xs text-zinc-700">
+                    {cookie.type}
                   </td>
                   <td className="py-3 px-4 font-mono text-[11px] text-zinc-500">
                     {cookie.duration}

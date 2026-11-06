@@ -70,7 +70,7 @@ export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps)
         </button>
 
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-zinc-100 text-zinc-700 flex items-center justify-center">
             <Sparkles className="w-4 h-4" />
           </div>
           <h2 id="new-chat-dialog-title" className="text-lg font-bold text-zinc-900">New Simulation</h2>
