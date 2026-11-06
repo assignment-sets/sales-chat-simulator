@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -12,12 +12,27 @@ export interface NewChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: { productName: string; productDescription: string }) => Promise<void>;
+  initialProductName?: string;
+  initialProductDescription?: string;
 }
 
-export function NewChatDialog({ isOpen, onClose, onSubmit }: NewChatDialogProps) {
-  const [productName, setProductName] = useState("");
-  const [productDescription, setProductDescription] = useState("");
+export function NewChatDialog({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialProductName = "",
+  initialProductDescription = "",
+}: NewChatDialogProps) {
+  const [productName, setProductName] = useState(initialProductName);
+  const [productDescription, setProductDescription] = useState(initialProductDescription);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setProductName(initialProductName);
+      setProductDescription(initialProductDescription);
+    }
+  }, [isOpen, initialProductName, initialProductDescription]);
 
   const { containerRef, handleBackdropClick } = useFocusTrap<HTMLDivElement>({
     isOpen,

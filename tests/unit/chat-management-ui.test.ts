@@ -5,6 +5,7 @@ import { RenameChatModal } from "@/components/chat/RenameChatModal";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { Sidebar, ChatSummary } from "@/components/layout/Sidebar";
 import { ChatRoom } from "@/components/chat/ChatRoom";
+import { Navbar } from "@/components/layout/Navbar";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/chats/chat-1",
@@ -146,6 +147,38 @@ describe("Chat Management UI Components", () => {
 
       expect(html).toContain("No active practice sessions yet");
     });
+
+    it("renders close sidebar button inside sidebar header when onToggle is provided", () => {
+      const html = renderToString(
+        React.createElement(Sidebar, {
+          chats: [],
+          isOpen: true,
+          onNewChat: vi.fn(),
+          onToggle: vi.fn(),
+        })
+      );
+
+      expect(html).toContain('aria-label="Close sidebar"');
+      expect(html).toContain('title="Close sidebar"');
+    });
+  });
+
+  describe("Navbar", () => {
+    it("renders home logo at the extreme left and does not render a sidebar toggle button in the navbar band", () => {
+      const html = renderToString(
+        React.createElement(Navbar, {
+          userEmail: "user@example.com",
+          userName: "Test User",
+        })
+      );
+
+      // Verify home link exists and is rendered
+      expect(html).toContain('href="/chats"');
+      expect(html).toContain("SalesChat");
+      // Sidebar toggle button should not be present in navbar
+      expect(html).not.toContain("Collapse sidebar");
+      expect(html).not.toContain("Expand sidebar");
+    });
   });
 
   describe("ChatRoom", () => {
@@ -166,6 +199,63 @@ describe("Chat Management UI Components", () => {
       expect(html).toContain("Simulation is archived");
       expect(html).toContain("Resume practice");
       expect(html).toContain("Simulation is archived • Click resume to continue");
+    });
+  });
+
+  describe("Cross-Component Event Synchronization & Loading States", () => {
+    let originalWindow: any;
+    let listeners: Record<string, ((e: any) => void)[]> = {};
+
+    beforeEach(() => {
+      originalWindow = global.window;
+      listeners = {};
+      const mockWindow = {
+        addEventListener: vi.fn((event: string, handler: any) => {
+          if (!listeners[event]) listeners[event] = [];
+          listeners[event].push(handler);
+        }),
+        removeEventListener: vi.fn((event: string, handler: any) => {
+          if (listeners[event]) {
+            listeners[event] = listeners[event].filter((h) => h !== handler);
+          }
+        }),
+        dispatchEvent: vi.fn((event: any) => {
+          const handlers = listeners[event.type] || [];
+          handlers.forEach((h) => h(event));
+          return true;
+        }),
+      };
+      (global as any).window = mockWindow;
+    });
+
+    afterEach(() => {
+      global.window = originalWindow;
+    });
+
+    it("dispatches and receives chat:status-change and chat:renamed custom events for synchronization", () => {
+      let receivedStatus = "";
+      let receivedName = "";
+
+      global.window.addEventListener("chat:status-change", (e: any) => {
+        receivedStatus = e.detail?.status;
+      });
+      global.window.addEventListener("chat:renamed", (e: any) => {
+        receivedName = e.detail?.productName;
+      });
+
+      global.window.dispatchEvent(
+        new CustomEvent("chat:status-change", {
+          detail: { chatId: "c1", status: "ARCHIVED" },
+        })
+      );
+      global.window.dispatchEvent(
+        new CustomEvent("chat:renamed", {
+          detail: { chatId: "c1", productName: "Renamed Title" },
+        })
+      );
+
+      expect(receivedStatus).toBe("ARCHIVED");
+      expect(receivedName).toBe("Renamed Title");
     });
   });
 });

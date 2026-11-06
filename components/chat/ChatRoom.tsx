@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatMessageList, MessageItem } from "@/components/chat/ChatMessageList";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { Loader } from "@/components/ui/Loader";
 import { PlanTier } from "@/lib/plans";
 import { notify } from "@/lib/toast";
 
@@ -43,6 +44,12 @@ export function ChatRoom({
       (chat.status === "WON" ? "deal_won" : chat.status === "LOST" ? "deal_lost" : "in_progress")
   );
   const [score, setScore] = useState<number | null>(chat.score ?? null);
+  const [isResuming, setIsResuming] = useState(false);
+  const [seededDraft, setSeededDraft] = useState<string | undefined>(undefined);
+
+  const handleSelectStarter = useCallback((starter: string) => {
+    setSeededDraft(starter);
+  }, []);
 
   const isArchived = status === "ARCHIVED";
   const isConcluded =
@@ -331,6 +338,7 @@ export function ChatRoom({
   // Resume archived simulation
   const handleResume = useCallback(async () => {
     try {
+      setIsResuming(true);
       const res = await fetch(`/api/chats/${chat.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -343,9 +351,18 @@ export function ChatRoom({
       const json = await res.json();
       const restoredStatus = json.chat?.status || "ACTIVE";
       setStatus(restoredStatus);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("chat:status-change", {
+            detail: { chatId: chat.id, status: restoredStatus },
+          })
+        );
+      }
       notify.success("Simulation resumed");
     } catch (err) {
       notify.error(err instanceof Error ? err.message : "Failed to resume simulation");
+    } finally {
+      setIsResuming(false);
     }
   }, [chat.id]);
 
@@ -377,6 +394,7 @@ export function ChatRoom({
     // 4. Reset draft state
     draftTextRef.current = "";
     setIsComposing(false);
+    setSeededDraft(undefined);
 
     // 5. Atomically persist to DB in background
     fetch(`/api/chats/${chat.id}/messages`, {
@@ -411,9 +429,17 @@ export function ChatRoom({
         <button
           type="button"
           onClick={handleResume}
-          className="text-zinc-900 font-semibold underline underline-offset-2 hover:text-black cursor-pointer transition-colors"
+          disabled={isResuming}
+          className="text-zinc-900 font-semibold underline underline-offset-2 hover:text-black cursor-pointer transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
         >
-          Resume practice
+          {isResuming ? (
+            <>
+              <span>Resuming...</span>
+              <Loader size="sm" dotClassName="bg-zinc-900" />
+            </>
+          ) : (
+            "Resume practice"
+          )}
         </button>
       </div>
     );
@@ -486,6 +512,7 @@ export function ChatRoom({
         conclusionScore={score}
         initialFeedback={chat.ai_feedback}
         planTier={planTier}
+        onSelectStarter={handleSelectStarter}
       />
 
       {/* 3. Fixed Input Area (Permanently pinned at bottom of chat pane) */}
@@ -496,6 +523,7 @@ export function ChatRoom({
             onDraftChange={handleDraftChange}
             turnStatusHint={!isConcluded || isArchived ? turnStatusHint : null}
             disabled={isConcluded || isArchived}
+            externalValue={seededDraft}
             placeholder={
               isArchived
                 ? "Simulation is archived • Click resume to continue"

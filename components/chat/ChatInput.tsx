@@ -9,6 +9,7 @@ export interface ChatInputProps {
   turnStatusHint?: React.ReactNode;
   disabled?: boolean;
   placeholder?: string;
+  externalValue?: string;
 }
 
 export function ChatInput({
@@ -17,9 +18,25 @@ export function ChatInput({
   turnStatusHint,
   disabled = false,
   placeholder = "Type a message and press Enter...",
+  externalValue,
 }: ChatInputProps) {
   const [content, setContent] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (typeof externalValue === "string") {
+      setContent(externalValue);
+      onDraftChange?.(externalValue);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${Math.min(
+          textareaRef.current.scrollHeight,
+          140
+        )}px`;
+      }
+    }
+  }, [externalValue, onDraftChange]);
 
   useEffect(() => {
     if (!disabled && textareaRef.current) {

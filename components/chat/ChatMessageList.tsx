@@ -28,6 +28,7 @@ export interface ChatMessageListProps {
   conclusionScore?: number | null;
   initialFeedback?: string | null;
   planTier?: PlanTier;
+  onSelectStarter?: (prompt: string) => void;
 }
 
 export function ChatMessageList({
@@ -43,6 +44,7 @@ export function ChatMessageList({
   conclusionScore = null,
   initialFeedback = null,
   planTier = "starter",
+  onSelectStarter,
 }: ChatMessageListProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -147,7 +149,7 @@ export function ChatMessageList({
         className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 min-h-0 bg-white flex flex-col items-center justify-center"
       >
         <div className="max-w-3xl w-full mx-auto">
-          <EmptyChatState productName={productName} />
+          <EmptyChatState productName={productName} onSelectStarter={onSelectStarter} />
         </div>
       </div>
     );

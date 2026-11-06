@@ -74,7 +74,7 @@ export function ChatBubble({ role, content, createdAt, isStreaming }: ChatBubble
         }`}
       >
         <div className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 mb-1 px-1 select-none">
-          <span>{isUser ? "You (Sales Rep)" : "Potential Customer"}</span>
+          <span>{isUser ? "You" : "Prospect"}</span>
           {formattedTime && (
             <>
               <span className="text-zinc-300">·</span>

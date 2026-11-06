@@ -8,7 +8,8 @@ import {
   Copy,
   Check,
   ChevronDown,
-  ChevronUp,
+  MessageSquareQuote,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
@@ -24,6 +25,47 @@ export interface DetailedFeedbackModalProps {
   productName?: string;
 }
 
+// Safely parse action item strings like "**Title**: Description" into title and body
+function formatActionItem(item: string) {
+  const match = item.match(/^(?:\*\*(.*?)\*\*|\*(.*?)\*|([^:]+)):\s*(.*)$/s);
+  if (match) {
+    const rawTitle = (match[1] || match[2] || match[3] || "").trim();
+    const rawBody = (match[4] || "").trim();
+    if (rawTitle && rawBody) {
+      return { title: rawTitle.replace(/^\*+|\*+$/g, ""), body: rawBody };
+    }
+  }
+  return { title: "", body: item };
+}
+
+// Lightweight safe markdown renderer: renders bold, italics, code without raw HTML injection
+function SafeInlineMarkdown({
+  content,
+  className = "",
+}: {
+  content: string;
+  className?: string;
+}) {
+  return (
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => <span className={className}>{children}</span>,
+        strong: ({ children }) => (
+          <strong className="font-semibold text-zinc-900">{children}</strong>
+        ),
+        em: ({ children }) => <em className="italic text-zinc-800">{children}</em>,
+        code: ({ children }) => (
+          <code className="px-1 py-0.5 rounded bg-zinc-100 font-mono text-xs text-zinc-800">
+            {children}
+          </code>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
 export function DetailedFeedbackModal({
   isOpen,
   onClose,
@@ -35,9 +77,11 @@ export function DetailedFeedbackModal({
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Accordion state: all collapsed by default
-  const [expandedTurns, setExpandedTurns] = useState<Set<number>>(new Set());
-  const [isTakeawaysExpanded, setIsTakeawaysExpanded] = useState(false);
+  // Tab state: "moments" (turn-by-turn) vs "takeaways" (high-level action items)
+  const [activeTab, setActiveTab] = useState<"moments" | "takeaways">("moments");
+
+  // Strict single-accordion state: only ONE moment can ever be open at a time
+  const [activeTurnIndex, setActiveTurnIndex] = useState<number | null>(null);
   const [copiedTurnIndex, setCopiedTurnIndex] = useState<number | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -124,27 +168,9 @@ export function DetailedFeedbackModal({
     return parseFeedbackMarkdown(feedbackText);
   }, [feedbackText]);
 
+  // Strict single-toggle: opening a turn automatically closes any other open turn
   const toggleTurn = (index: number) => {
-    setExpandedTurns((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
-
-  const expandAll = () => {
-    const all = new Set(parsed.turns.map((t) => t.turnIndex));
-    setExpandedTurns(all);
-    setIsTakeawaysExpanded(true);
-  };
-
-  const collapseAll = () => {
-    setExpandedTurns(new Set());
-    setIsTakeawaysExpanded(false);
+    setActiveTurnIndex((prev) => (prev === index ? null : index));
   };
 
   const handleCopyScript = (scriptText: string, turnIndex: number) => {
@@ -167,13 +193,16 @@ export function DetailedFeedbackModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="feedback-dialog-title"
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-zinc-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-3xl bg-white rounded-3xl shadow-xl border border-zinc-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0 bg-white">
+        <div className="px-6 py-4 sm:px-7 sm:py-5 border-b border-zinc-100 flex items-center justify-between shrink-0 bg-white">
           <div className="min-w-0">
-            <h3 id="feedback-dialog-title" className="font-semibold text-sm sm:text-base text-zinc-900 tracking-tight">
-              Coaching Feedback
+            <h3
+              id="feedback-dialog-title"
+              className="font-semibold text-base sm:text-lg text-zinc-900 tracking-tight"
+            >
+              Coaching Breakdown
             </h3>
             {productName && (
               <p className="text-xs text-zinc-400 truncate mt-0.5 font-normal">
@@ -222,187 +251,229 @@ export function DetailedFeedbackModal({
             </div>
           ) : parsed.isParsed ? (
             <div className="space-y-6">
-              {/* 1. Executive Summary */}
+              {/* Executive Summary Card */}
               {parsed.summary && (
-                <div className="rounded-xl p-4 bg-zinc-50 border border-zinc-100">
-                  <div className="text-[10px] font-semibold tracking-wider uppercase text-zinc-400 mb-1.5">
-                    Overview
+                <div className="rounded-2xl p-4 sm:p-5 bg-zinc-50 border border-zinc-200/80">
+                  <div className="text-[10px] font-mono font-semibold tracking-wider uppercase text-zinc-400 mb-1.5">
+                    Executive Summary
                   </div>
-                  <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
-                    {parsed.summary}
-                  </p>
+                  <div className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
+                    <SafeInlineMarkdown content={parsed.summary} />
+                  </div>
                 </div>
               )}
 
-              {/* 2. Turn-by-Turn Moments to Review (Collapsed by default) */}
-              {parsed.turns.length > 0 && (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between pb-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                        Moments to Review
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-400">
-                        ({parsed.turns.length})
-                      </span>
-                    </div>
+              {/* Segmented View Switcher: Moments vs Takeaways */}
+              <div className="flex items-center gap-2 border-b border-zinc-100 pb-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("moments")}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                    activeTab === "moments"
+                      ? "bg-zinc-900 text-white shadow-xs font-semibold"
+                      : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
+                  }`}
+                >
+                  <MessageSquareQuote className="w-3.5 h-3.5" />
+                  <span>Moments to Review</span>
+                  <span
+                    className={`font-mono text-[10px] ${
+                      activeTab === "moments" ? "text-zinc-300" : "text-zinc-400"
+                    }`}
+                  >
+                    ({parsed.turns.length})
+                  </span>
+                </button>
 
-                    <div className="flex items-center gap-2 text-xs">
-                      <button
-                        type="button"
-                        onClick={expandAll}
-                        className="text-zinc-400 hover:text-zinc-700 text-[11px] transition-colors cursor-pointer"
-                      >
-                        Expand all
-                      </button>
-                      <span className="text-zinc-200">·</span>
-                      <button
-                        type="button"
-                        onClick={collapseAll}
-                        className="text-zinc-400 hover:text-zinc-700 text-[11px] transition-colors cursor-pointer"
-                      >
-                        Collapse all
-                      </button>
-                    </div>
-                  </div>
+                {parsed.actionItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("takeaways")}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                      activeTab === "takeaways"
+                        ? "bg-zinc-900 text-white shadow-xs font-semibold"
+                        : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Key Takeaways</span>
+                    <span
+                      className={`font-mono text-[10px] ${
+                        activeTab === "takeaways" ? "text-zinc-300" : "text-zinc-400"
+                      }`}
+                    >
+                      ({parsed.actionItems.length})
+                    </span>
+                  </button>
+                )}
+              </div>
 
-                  <div className="space-y-2">
-                    {parsed.turns.map((turn: ParsedTurn) => {
-                      const isExpanded = expandedTurns.has(turn.turnIndex);
+              {/* Tab 1: Turn-by-Turn Moments (Strict Single-Accordion Focus) */}
+              {activeTab === "moments" && (
+                <div className="space-y-3">
+                  {parsed.turns.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-zinc-400 font-mono">
+                      No specific moments flagged in this session.
+                    </div>
+                  ) : (
+                    parsed.turns.map((turn: ParsedTurn) => {
+                      const isExpanded = activeTurnIndex === turn.turnIndex;
 
                       return (
                         <div
                           key={turn.turnIndex}
-                          className="rounded-xl border border-zinc-200/70 bg-white transition-all overflow-hidden"
+                          className={`rounded-2xl border transition-all overflow-hidden ${
+                            isExpanded
+                              ? "border-zinc-300 bg-white shadow-xs ring-1 ring-zinc-950/5"
+                              : "border-zinc-200/80 bg-white hover:border-zinc-300"
+                          }`}
                         >
-                          {/* Turn Header Row */}
+                          {/* Turn Trigger */}
                           <button
                             type="button"
                             onClick={() => toggleTurn(turn.turnIndex)}
-                            className="w-full text-left p-3.5 sm:px-4 cursor-pointer select-none flex items-center justify-between gap-3 hover:bg-zinc-50/60 transition-colors"
+                            className="w-full text-left p-3.5 sm:p-4 cursor-pointer select-none flex items-center justify-between gap-3 hover:bg-zinc-50/60 transition-colors"
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <span className="text-[10px] font-mono font-medium text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded shrink-0">
-                                #{turn.turnIndex}
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-[10px] font-mono font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md shrink-0 select-none">
+                                Turn {String(turn.turnIndex).padStart(2, "0")}
                               </span>
-                              <p className="text-xs sm:text-sm text-zinc-700 truncate font-normal">
+                              <p className="text-xs sm:text-sm text-zinc-800 truncate font-medium">
                                 &ldquo;{turn.quote}&rdquo;
                               </p>
                             </div>
 
                             <div className="shrink-0 text-zinc-400 pl-2">
-                              {isExpanded ? (
-                                <ChevronUp className="w-4 h-4" />
-                              ) : (
-                                <ChevronDown className="w-4 h-4" />
-                              )}
+                              <ChevronDown
+                                className={`w-4 h-4 transition-transform duration-300 ease-out ${
+                                  isExpanded ? "rotate-180 text-zinc-700" : "text-zinc-400"
+                                }`}
+                              />
                             </div>
                           </button>
 
-                          {/* Expanded Coaching Details */}
-                          {isExpanded && (
-                            <div className="px-4 pb-4 pt-1 border-t border-zinc-100 space-y-3 bg-zinc-50/30">
-                              <div className="pt-2">
-                                <p className="text-xs sm:text-sm text-zinc-800 font-medium italic">
-                                  &ldquo;{turn.quote}&rdquo;
-                                </p>
+                          {/* Animated Single-Focus Content with Staggered Visual Lag */}
+                          <div
+                            className="grid transition-[grid-template-rows] ease-out"
+                            style={{
+                              gridTemplateRows: isExpanded ? "1fr" : "0fr",
+                              transitionDuration: "350ms",
+                              transitionDelay: isExpanded ? "100ms" : "0ms",
+                            }}
+                          >
+                            <div className="overflow-hidden min-h-0">
+                              <div
+                                className={`px-5 pb-5 pt-3 border-t border-zinc-100 space-y-4 bg-zinc-50/40 transition-opacity duration-300 ease-out ${
+                                  isExpanded ? "opacity-100 delay-100" : "opacity-0"
+                                }`}
+                              >
+                                {/* Dialogue Quote Excerpt */}
+                                <div>
+                                  <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                                    What You Said
+                                  </div>
+                                  <div className="p-3 bg-white rounded-xl border border-zinc-200 text-xs sm:text-sm text-zinc-800 leading-relaxed font-normal italic">
+                                    &ldquo;{turn.quote}&rdquo;
+                                  </div>
+                                </div>
+
+                                {/* Issue Identified */}
+                                {turn.issue && (
+                                  <div>
+                                    <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">
+                                      Issue Identified
+                                    </div>
+                                    <div className="text-xs sm:text-sm text-zinc-700 leading-relaxed">
+                                      <SafeInlineMarkdown content={turn.issue} />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Recommended Alternative Script */}
+                                {turn.script && (
+                                  <div>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                      <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-zinc-400">
+                                        Recommended Phrasing
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleCopyScript(turn.script, turn.turnIndex);
+                                        }}
+                                        className="flex items-center gap-1 text-[11px] font-medium text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
+                                      >
+                                        {copiedTurnIndex === turn.turnIndex ? (
+                                          <>
+                                            <Check className="w-3 h-3 text-emerald-700" />
+                                            <span className="text-emerald-700">Copied</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy className="w-3 h-3 text-zinc-400" />
+                                            <span>Copy Phrasing</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                    <div className="p-3.5 bg-white rounded-xl border border-zinc-200 shadow-2xs text-xs sm:text-sm text-zinc-900 leading-relaxed font-normal">
+                                      <SafeInlineMarkdown
+                                        content={`“${turn.script}”`}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-
-                              {turn.issue && (
-                                <div className="space-y-1">
-                                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                                    Issue
-                                  </span>
-                                  <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed">
-                                    {turn.issue}
-                                  </p>
-                                </div>
-                              )}
-
-                              {turn.script && (
-                                <div className="space-y-1.5 pt-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                                      Suggested Phrasing
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleCopyScript(turn.script, turn.turnIndex);
-                                      }}
-                                      className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
-                                    >
-                                      {copiedTurnIndex === turn.turnIndex ? (
-                                        <>
-                                          <Check className="w-3 h-3 text-emerald-600" />
-                                          <span className="text-emerald-600 font-medium">Copied</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Copy className="w-3 h-3" />
-                                          <span>Copy</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
-                                  <div className="p-3 bg-white rounded-lg border border-zinc-200/60 text-xs sm:text-sm text-zinc-800 leading-relaxed font-normal">
-                                    &ldquo;{turn.script}&rdquo;
-                                  </div>
-                                </div>
-                              )}
                             </div>
-                          )}
+                          </div>
                         </div>
                       );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 3. Key Takeaways Section (Collapsed by default) */}
-              {parsed.actionItems.length > 0 && (
-                <div className="rounded-xl border border-zinc-200/70 bg-white overflow-hidden transition-all">
-                  <button
-                    type="button"
-                    onClick={() => setIsTakeawaysExpanded((prev) => !prev)}
-                    className="w-full text-left p-3.5 sm:px-4 cursor-pointer select-none flex items-center justify-between gap-3 hover:bg-zinc-50/60 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
-                        Key Takeaways
-                      </span>
-                      <span className="text-[10px] font-mono text-zinc-400">
-                        ({parsed.actionItems.length})
-                      </span>
-                    </div>
-
-                    <div className="shrink-0 text-zinc-400">
-                      {isTakeawaysExpanded ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                    </div>
-                  </button>
-
-                  {isTakeawaysExpanded && (
-                    <div className="px-4 pb-4 pt-2 border-t border-zinc-100 space-y-2.5 bg-zinc-50/30">
-                      {parsed.actionItems.map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm leading-relaxed">
-                          <span className="text-zinc-400 font-mono text-xs shrink-0 mt-0.5">
-                            {idx + 1}.
-                          </span>
-                          <p className="text-zinc-600">{item}</p>
-                        </div>
-                      ))}
-                    </div>
+                    })
                   )}
                 </div>
               )}
 
+              {/* Tab 2: Key Takeaways (Structured Editorial Cards) */}
+              {activeTab === "takeaways" && (
+                <div className="space-y-3.5">
+                  {parsed.actionItems.map((item, idx) => {
+                    const { title, body } = formatActionItem(item);
+
+                    return (
+                      <div
+                        key={idx}
+                        className="p-4 sm:p-5 rounded-2xl border border-zinc-200/90 bg-white shadow-2xs"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="w-5 h-5 rounded-md bg-zinc-100 text-zinc-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5 select-none">
+                            {idx + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            {title ? (
+                              <>
+                                <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 mb-1">
+                                  {title}
+                                </h4>
+                                <div className="text-xs sm:text-sm text-zinc-600 leading-relaxed">
+                                  <SafeInlineMarkdown content={body} />
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-xs sm:text-sm text-zinc-700 leading-relaxed">
+                                <SafeInlineMarkdown content={body} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {isStreaming && (
-                <div className="flex items-center gap-2 text-xs text-zinc-400 pt-1">
+                <div className="flex items-center gap-2 text-xs text-zinc-400 pt-1 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />
                   Finalizing coaching analysis...
                 </div>
@@ -439,7 +510,7 @@ export function DetailedFeedbackModal({
               </ReactMarkdown>
 
               {isStreaming && (
-                <div className="flex items-center gap-2 text-xs text-zinc-400 pt-1">
+                <div className="flex items-center gap-2 text-xs text-zinc-400 pt-1 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />
                   Generating analysis...
                 </div>
@@ -450,9 +521,7 @@ export function DetailedFeedbackModal({
 
         {/* Footer */}
         <div className="px-6 py-3.5 border-t border-zinc-100 bg-white flex items-center justify-between text-xs text-zinc-400 shrink-0 select-none">
-          <span className="text-[11px]">
-            Based on conversation transcript
-          </span>
+          <span className="text-[11px]">Based on conversation transcript</span>
           <Button
             type="button"
             variant="ghost"

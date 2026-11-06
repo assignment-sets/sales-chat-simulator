@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { XCircle, Sparkles, Trophy, Lock } from "lucide-react";
+import { XCircle, Trophy, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { DetailedFeedbackModal } from "@/components/chat/DetailedFeedbackModal";
 import { hasFeature, PlanTier } from "@/lib/plans";
@@ -32,7 +32,7 @@ export function SimulationConclusionCard({
   const handleFeedbackButtonClick = () => {
     if (!canViewFeedback) {
       notify.info(
-        "Detailed AI Coaching Breakdown is a Pro feature. View Plans & Pricing in the workspace menu."
+        "Detailed Coaching Breakdown is a Pro feature. View Plans & Pricing in the workspace menu."
       );
       return;
     }
@@ -41,53 +41,39 @@ export function SimulationConclusionCard({
 
   return (
     <>
-      <div className="w-full my-6 animate-in fade-in zoom-in-95 duration-200">
-        <div
-          className={`max-w-2xl mx-auto rounded-3xl p-5 sm:p-6 border shadow-sm ${
-            isWon
-              ? "bg-emerald-50/50 border-emerald-200 text-emerald-950"
-              : "bg-zinc-50 border-zinc-200 text-zinc-900"
-          }`}
-        >
-          {/* Header Badge & Title */}
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 ${
-                  isWon
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "bg-zinc-800 text-white shadow-xs"
-                }`}
-              >
-                {isWon ? <Trophy className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-              </div>
+      <div className="w-full my-6 animate-in fade-in duration-200">
+        <div className="max-w-xl mx-auto rounded-2xl p-5 border border-zinc-200 bg-white">
+          {/* Header & Outcome */}
+          <div className="flex items-start gap-3">
+            <div
+              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                isWon
+                  ? "bg-emerald-700 text-white"
+                  : "bg-zinc-800 text-white"
+              }`}
+            >
+              {isWon ? <Trophy className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+            </div>
 
-              <div>
-                <h3 className="text-sm sm:text-base font-bold">
-                  {isWon ? "Deal Closed!" : "Lead Lost"}
-                </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  {productName ? `${productName} · ` : ""}
-                  {isWon
-                    ? "The prospect agreed to move forward with the purchase or pilot."
-                    : "The prospect declined to proceed further with this offering."}
-                </p>
-              </div>
+            <div>
+              <h3 className="text-sm font-bold text-zinc-900 tracking-tight">
+                {isWon ? "Deal Closed" : "Lead Lost"}
+              </h3>
+              <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">
+                {isWon
+                  ? "Prospect agreed to move forward with the purchase or pilot."
+                  : "Prospect declined to proceed further with this offering."}
+              </p>
             </div>
           </div>
 
-          {/* Score & Rubric Bar */}
-          <div className="mt-4 p-3.5 rounded-2xl bg-white border border-zinc-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
-                Performance Score
-              </div>
-              <div className="flex items-baseline gap-2 mt-0.5">
-                <span className="text-2xl font-black text-zinc-900 font-mono">
-                  {displayScore}
-                  <span className="text-sm font-normal text-zinc-400"> / 5</span>
-                </span>
-              </div>
+          {/* Performance Score Row */}
+          <div className="mt-4 p-3 rounded-xl bg-zinc-50/75 border border-zinc-200/80 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-zinc-500">Evaluation Score</span>
+              <span className="font-mono text-xs font-bold text-zinc-900 tabular-nums">
+                {displayScore} <span className="text-zinc-400 font-normal">/ 5</span>
+              </span>
             </div>
 
             {/* 5-Bar Score Indicator */}
@@ -97,50 +83,39 @@ export function SimulationConclusionCard({
                 return (
                   <div
                     key={level}
-                    className={`w-5 h-2 rounded-full transition-all ${
+                    className={`w-5 h-1.5 rounded-full transition-all ${
                       isFilled
                         ? isWon
-                          ? "bg-emerald-600"
+                          ? "bg-emerald-700"
                           : "bg-zinc-800"
                         : "bg-zinc-200"
                     }`}
-                    title={`Score level ${level}`}
                   />
                 );
               })}
             </div>
           </div>
 
-          {/* Footer Actions */}
-          <div className="mt-4 pt-3 border-t border-zinc-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <span className="text-[11px] text-zinc-400 select-none">
-              Simulation concluded • Chat input locked
-            </span>
-
-            {chatId && (
+          {/* Action Footer */}
+          {chatId && (
+            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-end">
               <Button
                 type="button"
-                variant="outline"
+                variant="primary"
                 size="sm"
                 onClick={handleFeedbackButtonClick}
-                className="text-xs gap-1.5 text-zinc-700 hover:text-zinc-900 bg-white shadow-2xs font-medium cursor-pointer"
-                leftIcon={
-                  canViewFeedback ? (
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  ) : (
-                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
-                  )
-                }
+                className="text-xs h-8 px-3 rounded-xl font-medium cursor-pointer"
+                rightIcon={<ArrowRight className="w-3.5 h-3.5 text-zinc-400" />}
               >
-                <span>Get Detailed AI Feedback</span>
+                <span>Review Coaching Notes</span>
                 {!canViewFeedback && (
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 ml-0.5">
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-400 ml-1">
                     Pro
                   </span>
                 )}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
