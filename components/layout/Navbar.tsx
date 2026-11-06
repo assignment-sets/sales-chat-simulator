@@ -4,7 +4,7 @@ import React, { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader } from "@/components/ui/Loader";
-import { PanelLeft, MessageSquare, LayoutDashboard } from "lucide-react";
+import { MessageSquare, LayoutDashboard } from "lucide-react";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
 import { UserProfileMenu } from "@/components/layout/UserProfileMenu";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
@@ -71,22 +71,6 @@ export function Navbar({
   return (
     <header className="h-14 border-b border-zinc-200 bg-white sticky top-0 z-40 flex items-center justify-between px-3 sm:px-6">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        {onToggleSidebar && (
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-            title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center shrink-0 [&_svg]:shrink-0 ${
-              isSidebarOpen
-                ? "text-zinc-900 bg-zinc-100 hover:bg-zinc-200/70"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
-            }`}
-          >
-            <PanelLeft className="w-5 h-5" />
-          </button>
-        )}
-
         <Link
           href="/chats"
           onClick={(e) => {

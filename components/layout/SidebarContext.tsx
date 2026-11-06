@@ -63,7 +63,12 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 export function useSidebar(): SidebarContextValue {
   const context = useContext(SidebarContext);
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider");
+    return {
+      isOpen: true,
+      toggleSidebar: () => {},
+      setSidebarOpen: () => {},
+      closeMobile: () => {},
+    };
   }
   return context;
 }

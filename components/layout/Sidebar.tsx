@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { Loader } from "@/components/ui/Loader";
 import { RenameChatModal } from "@/components/chat/RenameChatModal";
 import {
   Plus,
@@ -14,6 +15,7 @@ import {
   Pencil,
   Archive,
   RotateCcw,
+  PanelLeftClose,
 } from "lucide-react";
 import { notify } from "@/lib/toast";
 
@@ -28,6 +30,7 @@ export interface ChatSummary {
 export interface SidebarProps {
   chats: ChatSummary[];
   isOpen: boolean;
+  onToggle?: () => void;
   onCloseMobile?: () => void;
   onNewChat: () => void;
   onDeleteChat?: (chatId: string) => Promise<void>;
@@ -36,6 +39,7 @@ export interface SidebarProps {
 export function Sidebar({
   chats,
   isOpen,
+  onToggle,
   onCloseMobile,
   onNewChat,
   onDeleteChat,
@@ -43,22 +47,75 @@ export function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
 
+  const [localChats, setLocalChats] = useState<ChatSummary[]>(chats);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
   const [renamingChat, setRenamingChat] = useState<ChatSummary | null>(null);
   const [actionInProgress, setActionInProgress] = useState<Record<string, boolean>>({});
 
+  // Synchronize when server props update
+  useEffect(() => {
+    setLocalChats(chats);
+  }, [chats]);
+
+  // Synchronize cross-component events (e.g. ChatHeader or ChatRoom actions)
+  useEffect(() => {
+    const handleStatusChange = (e: Event) => {
+      const detail = (e as CustomEvent<{ chatId: string; status: string }>).detail;
+      if (!detail?.chatId) return;
+      setLocalChats((prev) =>
+        prev.map((c) => (c.id === detail.chatId ? { ...c, status: detail.status } : c))
+      );
+    };
+
+    const handleRenamed = (e: Event) => {
+      const detail = (e as CustomEvent<{
+        chatId: string;
+        productName: string;
+        productDescription?: string;
+      }>).detail;
+      if (!detail?.chatId) return;
+      setLocalChats((prev) =>
+        prev.map((c) =>
+          c.id === detail.chatId
+            ? {
+                ...c,
+                product_name: detail.productName,
+                product_description: detail.productDescription ?? c.product_description,
+              }
+            : c
+        )
+      );
+    };
+
+    const handleDeleted = (e: Event) => {
+      const detail = (e as CustomEvent<{ chatId: string }>).detail;
+      if (!detail?.chatId) return;
+      setLocalChats((prev) => prev.filter((c) => c.id !== detail.chatId));
+    };
+
+    window.addEventListener("chat:status-change", handleStatusChange);
+    window.addEventListener("chat:renamed", handleRenamed);
+    window.addEventListener("chat:deleted", handleDeleted);
+
+    return () => {
+      window.removeEventListener("chat:status-change", handleStatusChange);
+      window.removeEventListener("chat:renamed", handleRenamed);
+      window.removeEventListener("chat:deleted", handleDeleted);
+    };
+  }, []);
+
   const activeCount = useMemo(
-    () => chats.filter((c) => c.status !== "ARCHIVED").length,
-    [chats]
+    () => localChats.filter((c) => c.status !== "ARCHIVED").length,
+    [localChats]
   );
   const archivedCount = useMemo(
-    () => chats.filter((c) => c.status === "ARCHIVED").length,
-    [chats]
+    () => localChats.filter((c) => c.status === "ARCHIVED").length,
+    [localChats]
   );
 
   const filteredChats = useMemo(() => {
-    return chats.filter((chat) => {
+    return localChats.filter((chat) => {
       // 1. Tab filter
       const isArchived = chat.status === "ARCHIVED";
       if (activeTab === "active" && isArchived) return false;
@@ -72,7 +129,7 @@ export function Sidebar({
       const descMatch = (chat.product_description || "").toLowerCase().includes(query);
       return nameMatch || descMatch;
     });
-  }, [chats, activeTab, searchQuery]);
+  }, [localChats, activeTab, searchQuery]);
 
   const handleArchiveToggle = async (e: React.MouseEvent, chat: ChatSummary) => {
     e.preventDefault();
@@ -82,6 +139,12 @@ export function Sidebar({
 
     const isArchived = chat.status === "ARCHIVED";
     const action = isArchived ? "resume" : "archive";
+    const nextStatus = isArchived ? "ACTIVE" : "ARCHIVED";
+
+    // Optimistically update local state so the conversation instantly moves across tabs
+    setLocalChats((prev) =>
+      prev.map((c) => (c.id === chat.id ? { ...c, status: nextStatus } : c))
+    );
 
     try {
       setActionInProgress((prev) => ({ ...prev, [chat.id]: true }));
@@ -96,9 +159,29 @@ export function Sidebar({
         throw new Error(err.error || `Failed to ${action} simulation`);
       }
 
+      const json = await res.json();
+      const confirmedStatus = json.chat?.status || nextStatus;
+
+      // Confirm verified status
+      setLocalChats((prev) =>
+        prev.map((c) => (c.id === chat.id ? { ...c, status: confirmedStatus } : c))
+      );
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("chat:status-change", {
+            detail: { chatId: chat.id, status: confirmedStatus },
+          })
+        );
+      }
+
       notify.success(isArchived ? "Simulation resumed" : "Simulation archived");
       router.refresh();
     } catch (err) {
+      // Revert optimistic update on failure
+      setLocalChats((prev) =>
+        prev.map((c) => (c.id === chat.id ? { ...c, status: chat.status } : c))
+      );
       notify.error(err instanceof Error ? err.message : `Failed to ${action} simulation`);
     } finally {
       setActionInProgress((prev) => ({ ...prev, [chat.id]: false }));
@@ -111,20 +194,33 @@ export function Sidebar({
 
     if (!confirm("Are you sure you want to delete this simulation?")) return;
 
+    // Optimistically remove from local list
+    const previous = localChats;
+    setLocalChats((prev) => prev.filter((c) => c.id !== chatId));
+
     if (onDeleteChat) {
       await onDeleteChat(chatId);
     } else {
       try {
         const res = await fetch(`/api/chats/${chatId}`, { method: "DELETE" });
         if (res.ok) {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("chat:deleted", { detail: { chatId } })
+            );
+          }
           notify.success("Simulation deleted");
           if (pathname === `/chats/${chatId}`) {
             router.push("/chats");
           } else {
             router.refresh();
           }
+        } else {
+          setLocalChats(previous);
+          notify.error("Failed to delete simulation");
         }
       } catch (err) {
+        setLocalChats(previous);
         console.error("Failed to delete chat", err);
         notify.error("Failed to delete simulation");
       }
@@ -146,40 +242,59 @@ export function Sidebar({
   return (
     <>
       {/* Mobile Backdrop */}
-      {isOpen && (
-        <div
-          onClick={onCloseMobile}
-          className="fixed inset-0 bg-black/20 z-30 lg:hidden backdrop-blur-2xs transition-opacity"
-        />
-      )}
+      <div
+        onClick={onCloseMobile}
+        className={`fixed inset-0 bg-black/20 z-30 lg:hidden backdrop-blur-2xs transition-opacity duration-300 ${
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed lg:static top-14 lg:top-0 bottom-0 left-0 z-30 lg:z-0 w-72 bg-zinc-50/70 border-r border-zinc-200 flex flex-col h-[calc(100dvh-3.5rem)] lg:h-full shrink-0 overflow-hidden transition-transform duration-200 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full lg:hidden"
+        className={`fixed lg:static top-14 lg:top-0 bottom-0 left-0 z-30 lg:z-0 bg-zinc-50/70 border-zinc-200 flex flex-col h-[calc(100dvh-3.5rem)] lg:h-full shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen
+            ? "w-72 translate-x-0 border-r opacity-100 pointer-events-auto"
+            : "w-72 -translate-x-full lg:translate-x-0 lg:w-0 lg:border-transparent lg:opacity-0 pointer-events-none"
         }`}
       >
-        {/* Top Header / Actions */}
-        <div className="p-3 pb-1 flex items-center justify-between gap-2 shrink-0">
+        <div
+          className={`w-72 min-w-[18rem] flex flex-col h-full shrink-0 transition-transform duration-300 ease-in-out ${
+            isOpen ? "translate-x-0" : "lg:-translate-x-full"
+          }`}
+        >
+          {/* Top Header / Actions */}
+          <div className="p-3 pb-1 flex items-center justify-between gap-2 shrink-0">
           <Button
             onClick={onNewChat}
             variant="primary"
             size="sm"
-            className="w-full font-medium shadow-xs"
+            className="flex-1 font-medium shadow-xs"
             leftIcon={<Plus className="w-4 h-4" />}
           >
             New Practice
           </Button>
 
-          {onCloseMobile && (
+          {onToggle ? (
             <button
-              onClick={onCloseMobile}
-              className="p-1.5 text-zinc-400 hover:text-zinc-700 lg:hidden rounded-lg hover:bg-zinc-100 cursor-pointer"
+              type="button"
+              onClick={onToggle}
+              className="p-1.5 text-zinc-400 hover:text-zinc-700 rounded-lg hover:bg-zinc-200/70 transition-colors cursor-pointer shrink-0"
               aria-label="Close sidebar"
+              title="Close sidebar"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </button>
+          ) : onCloseMobile ? (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              className="p-1.5 text-zinc-400 hover:text-zinc-700 lg:hidden rounded-lg hover:bg-zinc-100 cursor-pointer shrink-0"
+              aria-label="Close sidebar"
+              title="Close sidebar"
             >
               <X className="w-5 h-5" />
             </button>
-          )}
+          ) : null}
         </div>
 
         {/* Search Input */}
@@ -240,11 +355,12 @@ export function Sidebar({
                 ? `No simulations matching "${searchQuery.trim()}".`
                 : activeTab === "archived"
                 ? "No archived simulations."
-                : "No active practice sessions yet. Click \"New Practice\" to begin!"}
+                : 'No active practice sessions yet. Click "New Practice" to begin!'}
             </div>
           ) : (
             filteredChats.map((chat) => {
               const isActive = pathname === `/chats/${chat.id}`;
+              const isInProgress = Boolean(actionInProgress[chat.id]);
 
               return (
                 <div
@@ -258,7 +374,7 @@ export function Sidebar({
                       isActive
                         ? "bg-zinc-200/80 text-zinc-900 font-semibold"
                         : "text-zinc-600 hover:bg-zinc-100/90 hover:text-zinc-900"
-                    }`}
+                    } ${isInProgress ? "opacity-60" : ""}`}
                   >
                     <MessageSquare
                       className={`w-3.5 h-3.5 shrink-0 ${
@@ -274,7 +390,13 @@ export function Sidebar({
                   </Link>
 
                   {/* Quick Row Action Buttons */}
-                  <div className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 absolute right-1.5 flex items-center gap-0.5 transition-opacity">
+                  <div
+                    className={`absolute right-1.5 flex items-center gap-0.5 transition-opacity ${
+                      isInProgress
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+                    }`}
+                  >
                     <button
                       type="button"
                       onClick={(e) => {
@@ -282,9 +404,10 @@ export function Sidebar({
                         e.stopPropagation();
                         setRenamingChat(chat);
                       }}
+                      disabled={isInProgress}
                       aria-label="Rename simulation"
                       title="Rename simulation"
-                      className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/70 rounded-md transition-all cursor-pointer"
+                      className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/70 rounded-md transition-all cursor-pointer disabled:opacity-40"
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
@@ -292,14 +415,16 @@ export function Sidebar({
                     <button
                       type="button"
                       onClick={(e) => handleArchiveToggle(e, chat)}
-                      disabled={actionInProgress[chat.id]}
+                      disabled={isInProgress}
                       aria-label={
                         chat.status === "ARCHIVED" ? "Resume simulation" : "Archive simulation"
                       }
                       title={chat.status === "ARCHIVED" ? "Resume" : "Archive"}
-                      className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/70 rounded-md transition-all cursor-pointer"
+                      className="p-1 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/70 rounded-md transition-all cursor-pointer min-w-5 h-5 flex items-center justify-center disabled:cursor-wait"
                     >
-                      {chat.status === "ARCHIVED" ? (
+                      {isInProgress ? (
+                        <Loader size="sm" dotClassName="bg-zinc-600" />
+                      ) : chat.status === "ARCHIVED" ? (
                         <RotateCcw className="w-3 h-3" />
                       ) : (
                         <Archive className="w-3 h-3" />
@@ -309,9 +434,10 @@ export function Sidebar({
                     <button
                       type="button"
                       onClick={(e) => handleDelete(e, chat.id)}
+                      disabled={isInProgress}
                       aria-label="Delete chat"
                       title="Delete simulation"
-                      className="p-1 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all cursor-pointer"
+                      className="p-1 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all cursor-pointer disabled:opacity-40"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -320,6 +446,7 @@ export function Sidebar({
               );
             })
           )}
+        </div>
         </div>
       </aside>
 
@@ -330,7 +457,30 @@ export function Sidebar({
           chatId={renamingChat.id}
           initialProductName={renamingChat.product_name}
           initialProductDescription={renamingChat.product_description || ""}
-          onSuccess={() => {
+          onSuccess={(updated) => {
+            setLocalChats((prev) =>
+              prev.map((c) =>
+                c.id === renamingChat.id
+                  ? {
+                      ...c,
+                      product_name: updated.productName,
+                      product_description:
+                        updated.productDescription ?? c.product_description,
+                    }
+                  : c
+              )
+            );
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("chat:renamed", {
+                  detail: {
+                    chatId: renamingChat.id,
+                    productName: updated.productName,
+                    productDescription: updated.productDescription,
+                  },
+                })
+              );
+            }
             router.refresh();
           }}
         />
