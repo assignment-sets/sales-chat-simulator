@@ -70,10 +70,13 @@ export default function TermsPage() {
       {/* 4. Subscriptions, Seats & Quotas */}
       <section className="space-y-3">
         <h2 className="text-base sm:text-lg font-bold text-zinc-900">
-          4. Subscriptions, Workspaces & Quota Resets
+          4. Subscriptions, Billing & Quota Resets
         </h2>
         <p>
-          SalesChat provides subscription tiers (Starter, Pro, and Scale). Each plan grants a predetermined monthly practice simulation quota and team seat capacity:
+          SalesChat provides subscription tiers: <strong>Starter (Free)</strong>, <strong>Solo</strong>, <strong>Team</strong>, and <strong>Scale</strong>. Digital subscription billing, tax calculation, and payment processing are administered globally by our Merchant of Record, <strong>Dodo Payments</strong>, supporting international USD payments and domestic Indian INR payments.
+        </p>
+        <p>
+          Each plan grants a predetermined monthly practice simulation quota and team seat allocation:
         </p>
         <ul className="list-disc pl-5 space-y-1.5">
           <li>
@@ -83,7 +86,7 @@ export default function TermsPage() {
             <strong>Seat Allocations:</strong> Workspace seats include active members and pending member invitations. Creating additional workspaces to circumvent free-tier limitations is strictly prohibited.
           </li>
           <li>
-            <strong>Plan Upgrades:</strong> Upgrades take effect immediately upon execution or billing confirmation.
+            <strong>Plan Upgrades & Downgrades:</strong> Plan upgrades take effect immediately with prorated billing adjustments. Scheduled downgrades take effect at the conclusion of the active paid billing cycle.
           </li>
         </ul>
       </section>

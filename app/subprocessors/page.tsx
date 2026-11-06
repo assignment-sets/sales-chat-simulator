@@ -61,6 +61,14 @@ const SUBPROCESSORS: SubprocessorEntry[] = [
     location: "United States / Global Edge Network",
     safeguard: "DPA with Standard Contractual Clauses (SCCs)",
   },
+  {
+    name: "Dodo Payments Inc.",
+    role: "Merchant of Record (MoR), Subscription Billing & Global Sales Tax Compliance",
+    dataProcessed:
+      "Customer contact details, billing address, payment transaction metadata, and tax invoice records.",
+    location: "United States",
+    safeguard: "Data Processing Addendum (DPA) with Standard Contractual Clauses (SCCs), PCI-DSS Level 1 Compliant",
+  },
 ];
 
 export default function SubprocessorsPage() {

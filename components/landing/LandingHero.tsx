@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Bot, CheckCircle2, TrendingUp, Users, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, TrendingUp, Users, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export function LandingHero() {

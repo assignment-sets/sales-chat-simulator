@@ -86,6 +86,16 @@ export default function RefundPage() {
 
           <div className="p-4 bg-white border border-zinc-200/80 rounded-xl space-y-1">
             <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-blue-600" />
+              Plan Upgrades & Downgrades
+            </h3>
+            <p className="text-xs text-zinc-600 leading-relaxed">
+              When upgrading plans, your simulation quota expands immediately and Dodo Payments applies a prorated credit toward the new tier. When downgrading, the change is scheduled for the end of your prepaid billing period (Next Billing Date) — you retain your existing higher-tier limits until renewal, and no mid-cycle cash refunds are issued for early downgrades.
+            </p>
+          </div>
+
+          <div className="p-4 bg-white border border-zinc-200/80 rounded-xl space-y-1">
+            <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               Automatic Transition to Free Tier
             </h3>

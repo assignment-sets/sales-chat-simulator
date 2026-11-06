@@ -37,6 +37,12 @@ const SUBPROCESSORS: SubprocessorEntry[] = [
     dataProcessed: "Distributed rate limit counters, tenant concurrency locks, and ephemeral API caches.",
     location: "United States",
   },
+  {
+    name: "Dodo Payments Inc.",
+    role: "Merchant of Record, Subscription Billing & Global Tax Compliance",
+    dataProcessed: "Billing contact details, payment transaction status, and tax invoice records.",
+    location: "United States",
+  },
 ];
 
 export default function PrivacyPage() {
@@ -79,6 +85,9 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Technical & Diagnostics Data:</strong> Request IP addresses (for rate-limiting and abuse prevention), user agent headers, and error logs.
+          </li>
+          <li>
+            <strong>Billing & Transaction Records:</strong> When you purchase a paid subscription, payment processing and invoicing are handled securely by our Merchant of Record, Dodo Payments. SalesChat does not collect or store full credit card numbers; we process only subscription identifiers, transaction status, billing contact details, and tax invoice metadata.
           </li>
         </ul>
       </section>
