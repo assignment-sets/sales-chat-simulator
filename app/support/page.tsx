@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Mail, Clock, MessageSquare, Sparkles, Users, HelpCircle, ArrowRight } from "lucide-react";
+import { Mail, Clock, MessageSquare, CreditCard, Users, HelpCircle, ArrowRight } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { CopyEmailButton } from "@/components/support/CopyEmailButton";
 import { Button } from "@/components/ui/Button";
@@ -91,7 +91,7 @@ export default function SupportPage() {
           {/* Upgrades & Enterprise */}
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-5 space-y-2">
             <div className="w-8 h-8 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-700">
-              <Sparkles className="w-4 h-4" />
+              <CreditCard className="w-4 h-4" />
             </div>
             <h3 className="text-sm font-bold text-zinc-900">Plans & Upgrades</h3>
             <p className="text-xs text-zinc-500 leading-relaxed">

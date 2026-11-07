@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { Navbar } from "@/components/layout/Navbar";
+import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { getActiveOrganization } from "@/lib/tenant";
 
 export default async function PricingLayout({
@@ -14,8 +16,12 @@ export default async function PricingLayout({
 
   if (!user) {
     return (
-      <div className="min-h-full flex flex-col bg-white text-zinc-900 font-sans overflow-y-auto">
-        {children}
+      <div className="min-h-full flex flex-col bg-zinc-50/60 text-zinc-900 font-sans overflow-y-auto">
+        <PublicHeader />
+        <main className="flex-1">
+          {children}
+        </main>
+        <PublicFooter />
       </div>
     );
   }
@@ -34,8 +40,12 @@ export default async function PricingLayout({
 
   if (!activeContext) {
     return (
-      <div className="min-h-full flex flex-col bg-white text-zinc-900 font-sans overflow-y-auto">
-        {children}
+      <div className="min-h-full flex flex-col bg-zinc-50/60 text-zinc-900 font-sans overflow-y-auto">
+        <PublicHeader />
+        <main className="flex-1">
+          {children}
+        </main>
+        <PublicFooter />
       </div>
     );
   }

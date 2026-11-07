@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparkles, Target, ShieldCheck, Zap, ArrowRight } from "lucide-react";
+import { Target, ShieldCheck, Zap, ArrowRight, Compass } from "lucide-react";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { Button } from "@/components/ui/Button";
 import { constructPublicMetadata } from "@/lib/seo/metadata";
@@ -25,7 +25,7 @@ export default function AboutPage() {
       {/* Mission Banner */}
       <section className="bg-zinc-900 text-white rounded-3xl p-6 sm:p-8 not-prose shadow-sm space-y-4">
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
-          <Sparkles className="w-4 h-4 text-amber-400" />
+          <Compass className="w-4 h-4 text-zinc-400" />
           <span>Our Mission</span>
         </div>
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
