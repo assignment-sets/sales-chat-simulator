@@ -20,45 +20,49 @@ interface DiscoveredRoute {
  * along with their actual filesystem modification timestamps.
  */
 function discoverAppRoutes(
-  currentDir: string = path.join(process.cwd(), "app"),
+  currentDir: string = path.join(/*turbopackIgnore: true*/ process.cwd(), "app"),
   currentRoute: string = ""
 ): DiscoveredRoute[] {
   let discovered: DiscoveredRoute[] = [];
 
-  if (!fs.existsSync(currentDir)) {
-    return discovered;
-  }
+  try {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ currentDir)) {
+      return discovered;
+    }
 
-  const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    const entries = fs.readdirSync(/*turbopackIgnore: true*/ currentDir, { withFileTypes: true });
 
-  for (const entry of entries) {
-    const fullPath = path.join(currentDir, entry.name);
+    for (const entry of entries) {
+      const fullPath = path.join(/*turbopackIgnore: true*/ currentDir, entry.name);
 
-    if (entry.isDirectory()) {
-      // Route groups like (marketing) do not affect the public URL path
-      if (entry.name.startsWith("(") && entry.name.endsWith(")")) {
-        discovered = discovered.concat(discoverAppRoutes(fullPath, currentRoute));
-      } else {
-        const nextSegment = currentRoute ? `${currentRoute}/${entry.name}` : `/${entry.name}`;
-        discovered = discovered.concat(discoverAppRoutes(fullPath, nextSegment));
-      }
-    } else if (
-      entry.isFile() &&
-      (entry.name === "page.tsx" || entry.name === "page.jsx" || entry.name === "page.js")
-    ) {
-      try {
-        const stat = fs.statSync(fullPath);
-        discovered.push({
-          route: currentRoute || "/",
-          lastModified: stat.mtime,
-        });
-      } catch {
-        discovered.push({
-          route: currentRoute || "/",
-          lastModified: new Date(),
-        });
+      if (entry.isDirectory()) {
+        // Route groups like (marketing) do not affect the public URL path
+        if (entry.name.startsWith("(") && entry.name.endsWith(")")) {
+          discovered = discovered.concat(discoverAppRoutes(fullPath, currentRoute));
+        } else {
+          const nextSegment = currentRoute ? `${currentRoute}/${entry.name}` : `/${entry.name}`;
+          discovered = discovered.concat(discoverAppRoutes(fullPath, nextSegment));
+        }
+      } else if (
+        entry.isFile() &&
+        (entry.name === "page.tsx" || entry.name === "page.jsx" || entry.name === "page.js")
+      ) {
+        try {
+          const stat = fs.statSync(/*turbopackIgnore: true*/ fullPath);
+          discovered.push({
+            route: currentRoute || "/",
+            lastModified: stat.mtime,
+          });
+        } catch {
+          discovered.push({
+            route: currentRoute || "/",
+            lastModified: new Date(),
+          });
+        }
       }
     }
+  } catch {
+    return discovered;
   }
 
   return discovered;

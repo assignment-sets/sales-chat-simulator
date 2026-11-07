@@ -27,7 +27,7 @@ export interface DetailedFeedbackModalProps {
 
 // Safely parse action item strings like "**Title**: Description" into title and body
 function formatActionItem(item: string) {
-  const match = item.match(/^(?:\*\*(.*?)\*\*|\*(.*?)\*|([^:]+)):\s*(.*)$/s);
+  const match = item.match(/^(?:\*\*([\s\S]*?)\*\*|\*([\s\S]*?)\*|([^:]+)):\s*([\s\S]*)$/);
   if (match) {
     const rawTitle = (match[1] || match[2] || match[3] || "").trim();
     const rawBody = (match[4] || "").trim();
