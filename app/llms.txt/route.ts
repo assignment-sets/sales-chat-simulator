@@ -6,16 +6,16 @@ export const revalidate = 0;
 export async function GET() {
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chat2sell.in";
 
-  const content = `# SalesChat
+  const content = `# Chat2Sell
 
-> SalesChat is an interactive AI sales simulation and coaching platform where sales representatives, account executives, and revenue teams practice live objection handling and sales negotiation against dynamic AI buyer personas.
+> Chat2Sell is an interactive AI sales simulation and coaching platform where sales representatives, account executives, and revenue teams practice live objection handling and sales negotiation against dynamic AI buyer personas.
 
-SalesChat helps revenue professionals master live chat sales, objection handling drills, and high-stakes negotiation before facing real buyers. Turn-by-turn simulations are evaluated by the Jev coaching engine across Discovery, Objection Handling, Value Articulation, and Negotiation. This curated index provides autonomous AI agents with direct, token-efficient references to our public information, documentation, and trust architecture.
+Chat2Sell helps revenue professionals master live chat sales, objection handling drills, and high-stakes negotiation before facing real buyers. Turn-by-turn simulations are evaluated by the Jev coaching engine across Discovery, Objection Handling, Value Articulation, and Negotiation. This curated index provides autonomous AI agents with direct, token-efficient references to our public information, documentation, and trust architecture.
 
 ## Core Features & Overview
 
 - [AI Sales Practice Simulator](${siteUrl}): Interactive prospect personas, live chat simulation arena, and instant coaching feedback.
-- [About SalesChat](${siteUrl}/about): Mission, founder background, and why revenue teams use simulation to master closing without burning live pipeline.
+- [About Chat2Sell](${siteUrl}/about): Mission, founder background, and why revenue teams use simulation to master closing without burning live pipeline.
 - [Product Changelog](${siteUrl}/changelog): Release history, feature updates, and the evolving product roadmap.
 - [Support & Contact](${siteUrl}/support): Customer assistance, simulation help, workspace inquiries, and team contact options.
 

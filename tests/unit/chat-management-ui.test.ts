@@ -174,7 +174,7 @@ describe("Chat Management UI Components", () => {
 
       // Verify home link exists and is rendered
       expect(html).toContain('href="/chats"');
-      expect(html).toContain("SalesChat");
+      expect(html).toContain("Chat2Sell");
       // Sidebar toggle button should not be present in navbar
       expect(html).not.toContain("Collapse sidebar");
       expect(html).not.toContain("Expand sidebar");

@@ -1,4 +1,4 @@
-# saleschat
+# Chat2Sell
 
 Interactive sales chat simulator powered by Next.js, Supabase, and Groq LLMs. Reps practice sales conversations with an AI lead who evaluates objection handling, responds with conversational pacing, and delivers realistic multi-message interactions.
 

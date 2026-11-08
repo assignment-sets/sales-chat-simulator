@@ -14,7 +14,7 @@ export function PublicHeader() {
           <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center text-white shadow-xs">
             <Bot className="w-4 h-4 text-zinc-100" />
           </div>
-          <span>SalesChat</span>
+          <span>Chat2Sell</span>
         </Link>
 
         <nav className="flex items-center gap-3 sm:gap-6">

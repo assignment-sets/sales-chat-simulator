@@ -155,7 +155,7 @@ describe("GET /api/account/export (GDPR Art. 20 Data Portability)", () => {
 
     // Verify attachment header and format
     const contentDisposition = res.headers.get("content-disposition");
-    expect(contentDisposition).toContain('attachment; filename="saleschat-data-export-user-gdpr-1-');
+    expect(contentDisposition).toContain('attachment; filename="chat2sell-data-export-user-gdpr-1-');
     expect(contentDisposition).toContain('.json"');
 
     const json = await res.json();

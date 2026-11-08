@@ -10,7 +10,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "AI Safety & Acceptable Use Policy",
   description:
-    "Acceptable use guidelines, prohibited prompt abuse, and AI safety guardrails for SalesChat's simulation platform.",
+    "Acceptable use guidelines, prohibited prompt abuse, and AI safety guardrails for Chat2Sell's simulation platform.",
   path: "/acceptable-use",
 });
 
@@ -30,7 +30,7 @@ export default function AcceptableUsePage() {
               Zero Tolerance for Prompt Injection, Jailbreaking & Guardrail Evasion
             </h2>
             <p className="text-xs leading-relaxed text-zinc-600">
-              SalesChat simulations are strictly dedicated to commercial sales training, objection practice, and skill assessment. Any attempt to manipulate model system prompts, bypass ethical guardrails, induce adversarial behavior, or extract underlying platform heuristics is strictly prohibited and subject to immediate account termination.
+              Chat2Sell simulations are strictly dedicated to commercial sales training, objection practice, and skill assessment. Any attempt to manipulate model system prompts, bypass ethical guardrails, induce adversarial behavior, or extract underlying platform heuristics is strictly prohibited and subject to immediate account termination.
             </p>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function AcceptableUsePage() {
           1. Purpose & Authorized Use
         </h2>
         <p>
-          SalesChat provides dynamic AI-driven buyer personas to enable sales development representatives (SDRs), account executives (AEs), and revenue teams to practice live objection handling and sales negotiation in a safe, constructive environment.
+          Chat2Sell provides dynamic AI-driven buyer personas to enable sales development representatives (SDRs), account executives (AEs), and revenue teams to practice live objection handling and sales negotiation in a safe, constructive environment.
         </p>
         <p>Authorized activities include:</p>
         <ul className="list-disc pl-5 space-y-1.5">
@@ -115,7 +115,7 @@ export default function AcceptableUsePage() {
           3. Synthetic Personas & Model Limitations
         </h2>
         <p>
-          When using SalesChat, you acknowledge and agree to the following operational characteristics of generative AI:
+          When using Chat2Sell, you acknowledge and agree to the following operational characteristics of generative AI:
         </p>
         <ul className="list-disc pl-5 space-y-1.5">
           <li>
@@ -139,7 +139,7 @@ export default function AcceptableUsePage() {
           4. Technical Guardrails & Enforcement
         </h2>
         <p>
-          To maintain service stability, security, and compliance across all customer workspaces, SalesChat enforces programmatic safeguards:
+          To maintain service stability, security, and compliance across all customer workspaces, Chat2Sell enforces programmatic safeguards:
         </p>
         <div className="space-y-2 text-xs text-zinc-600">
           <div className="flex items-start gap-2 bg-zinc-50 border border-zinc-200/80 rounded-xl p-3">
@@ -169,7 +169,7 @@ export default function AcceptableUsePage() {
           5. Violations & Remediation
         </h2>
         <p>
-          If a user or workspace violates this Acceptable Use Policy, SalesChat reserves the right to take remedial action commensurate with the severity of the violation, including:
+          If a user or workspace violates this Acceptable Use Policy, Chat2Sell reserves the right to take remedial action commensurate with the severity of the violation, including:
         </p>
         <ul className="list-disc pl-5 space-y-1.5">
           <li>Issuing formal warnings to workspace administrators.</li>

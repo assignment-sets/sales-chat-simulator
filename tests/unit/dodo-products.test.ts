@@ -22,13 +22,13 @@ describe("Dodo Products Configuration", () => {
 
   it("retrieves product by tier ID", () => {
     const solo = getDodoProductByTier("solo");
-    expect(solo.name).toBe("SalesChat Solo");
+    expect(solo.name).toBe("Chat2Sell Solo");
 
     const team = getDodoProductByTier("team");
-    expect(team.name).toBe("SalesChat Team");
+    expect(team.name).toBe("Chat2Sell Team");
 
     const scale = getDodoProductByTier("scale");
-    expect(scale.name).toBe("SalesChat Scale");
+    expect(scale.name).toBe("Chat2Sell Scale");
   });
 
   it("retrieves product by Dodo product ID", () => {

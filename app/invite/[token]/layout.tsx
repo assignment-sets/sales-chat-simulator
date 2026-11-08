@@ -3,7 +3,7 @@ import { constructPrivateMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = constructPrivateMetadata(
   "Workspace Invitation",
-  "Join your team workspace on SalesChat to participate in sales drills and view team performance analytics."
+  "Join your team workspace on Chat2Sell to participate in sales drills and view team performance analytics."
 );
 
 export default function InviteLayout({

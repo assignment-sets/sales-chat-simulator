@@ -10,7 +10,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "Privacy Policy",
   description:
-    "Privacy Policy and Subprocessor disclosures for SalesChat's AI sales training and simulation platform.",
+    "Privacy Policy and Subprocessor disclosures for Chat2Sell's AI sales training and simulation platform.",
   path: "/privacy",
 });
 
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacy Policy"
-      subtitle="How SalesChat protects, processes, and respects your simulation data and account privacy."
+      subtitle="How Chat2Sell protects, processes, and respects your simulation data and account privacy."
       lastUpdated="October 2026"
     >
       {/* Commitment Highlight Card */}
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
               Our Core Commitment: We Do Not Train Public Models on Your Conversations
             </h2>
             <p className="text-xs leading-relaxed text-zinc-600">
-              Your sales chat transcripts, customer objection handling drills, and internal sales playbooks remain your confidential workspace property. SalesChat does not use customer simulation content to train public AI foundation models without explicit organizational authorization.
+              Your sales chat transcripts, customer objection handling drills, and internal sales playbooks remain your confidential workspace property. Chat2Sell does not use customer simulation content to train public AI foundation models without explicit organizational authorization.
             </p>
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
             <strong>Technical & Diagnostics Data:</strong> Request IP addresses (for rate-limiting and abuse prevention), user agent headers, and error logs.
           </li>
           <li>
-            <strong>Billing & Transaction Records:</strong> When you purchase a paid subscription, payment processing and invoicing are handled securely by our Merchant of Record, Dodo Payments. SalesChat does not collect or store full credit card numbers; we process only subscription identifiers, transaction status, billing contact details, and tax invoice metadata.
+            <strong>Billing & Transaction Records:</strong> When you purchase a paid subscription, payment processing and invoicing are handled securely by our Merchant of Record, Dodo Payments. Chat2Sell does not collect or store full credit card numbers; we process only subscription identifiers, transaction status, billing contact details, and tax invoice metadata.
           </li>
         </ul>
       </section>
@@ -101,7 +101,7 @@ export default function PrivacyPage() {
           2. Third-Party Subprocessor Disclosure
         </h2>
         <p>
-          SalesChat partners with verified infrastructure and artificial intelligence service providers to deliver the platform. Each subprocessor is vetted for strict data protection compliance:
+          Chat2Sell partners with verified infrastructure and artificial intelligence service providers to deliver the platform. Each subprocessor is vetted for strict data protection compliance:
         </p>
 
         <div className="overflow-x-auto border border-zinc-200/90 rounded-2xl not-prose bg-white shadow-2xs">
@@ -158,7 +158,7 @@ export default function PrivacyPage() {
           4. Security & Multi-Tenant Isolation
         </h2>
         <p>
-          SalesChat enforces strict defense-in-depth isolation using PostgreSQL Row Level Security (RLS) policies and private tenant helper functions. Customer simulation records are strictly segregated by organization boundary, preventing cross-tenant data access.
+          Chat2Sell enforces strict defense-in-depth isolation using PostgreSQL Row Level Security (RLS) policies and private tenant helper functions. Customer simulation records are strictly segregated by organization boundary, preventing cross-tenant data access.
         </p>
       </section>
 
@@ -178,7 +178,7 @@ export default function PrivacyPage() {
           6. Cookies & Essential Session Storage
         </h2>
         <p>
-          SalesChat uses only strictly necessary cookies for user authentication, security, and workspace multi-tenancy. We do not use third-party advertising cookies, marketing pixels, or cross-site tracking technologies. For full details on our cookie inventory and storage practices, please visit our dedicated{" "}
+          Chat2Sell uses only strictly necessary cookies for user authentication, security, and workspace multi-tenancy. We do not use third-party advertising cookies, marketing pixels, or cross-site tracking technologies. For full details on our cookie inventory and storage practices, please visit our dedicated{" "}
           <Link href="/cookies" className="text-zinc-900 underline font-medium">
             Cookie Policy
           </Link>.

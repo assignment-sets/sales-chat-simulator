@@ -22,7 +22,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "Refund & Cancellation Policy",
   description:
-    "Review SalesChat's cancellation terms, 14-day refund eligibility criteria, and Dodo Payments Merchant of Record (MoR) disclosures.",
+    "Review Chat2Sell's cancellation terms, 14-day refund eligibility criteria, and Dodo Payments Merchant of Record (MoR) disclosures.",
   path: "/refund",
 });
 
@@ -44,7 +44,7 @@ export default function RefundPage() {
               Merchant of Record Notice (Dodo Payments)
             </h2>
             <p className="text-xs leading-relaxed text-zinc-600">
-              SalesChat partners with <strong>Dodo Payments</strong> as our Merchant of Record (MoR) for digital product sales, subscription billing, and tax compliance. Dodo Payments is the legal entity that processes your transactions, calculates applicable global sales tax (VAT/GST), and issues official invoices. On your credit card or bank account statements, charges will typically be identified as <strong>DODO* SALESCHAT</strong> or <strong>DODOPAYMENTS</strong>.
+              Chat2Sell partners with <strong>Dodo Payments</strong> as our Merchant of Record (MoR) for digital product sales, subscription billing, and tax compliance. Dodo Payments is the legal entity that processes your transactions, calculates applicable global sales tax (VAT/GST), and issues official invoices. On your credit card or bank account statements, charges will typically be identified as <strong>DODO* CHAT2SELL</strong> or <strong>DODOPAYMENTS</strong>.
             </p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function RefundPage() {
           </h2>
         </div>
         <p>
-          We want you to be completely confident in SalesChat. If you experience technical defects, platform failures, or billing discrepancies, you may request a refund within <strong>14 calendar days</strong> of the transaction date.
+          We want you to be completely confident in Chat2Sell. If you experience technical defects, platform failures, or billing discrepancies, you may request a refund within <strong>14 calendar days</strong> of the transaction date.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose my-4">
@@ -165,7 +165,7 @@ export default function RefundPage() {
         </p>
         <ol className="list-decimal pl-5 space-y-1.5 text-zinc-700 text-xs sm:text-sm">
           <li>
-            <strong>Account Email & Organization:</strong> The email associated with your SalesChat account.
+            <strong>Account Email & Organization:</strong> The email associated with your Chat2Sell account.
           </li>
           <li>
             <strong>Transaction Identifier:</strong> The invoice number or payment ID from your Dodo Payments receipt.

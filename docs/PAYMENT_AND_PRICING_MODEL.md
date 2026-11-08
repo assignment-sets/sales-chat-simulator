@@ -1,4 +1,4 @@
-# SalesChat — Payment, Pricing & Unit Economics Model
+# Chat2Sell — Payment, Pricing & Unit Economics Model
 
 > **Status**: Approved Financial & Commercial Architecture Reference  
 > **Last Updated**: November 2026  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Core Business Policies
 
-This document serves as the official financial architecture, pricing rationale, and unit economics model for **SalesChat** (`chat2sell.in`). It is written for founders, engineers, and AI agents to explain the exact commercial choices, cost structures, and operational policies governing platform monetization.
+This document serves as the official financial architecture, pricing rationale, and unit economics model for **Chat2Sell** (`chat2sell.in`). It is written for founders, engineers, and AI agents to explain the exact commercial choices, cost structures, and operational policies governing platform monetization.
 
 ### Key Business Policies:
 
@@ -175,7 +175,7 @@ Fixed Monthly Infrastructure Baseline:
 ```
 
 ### Break-Even Thresholds (Under the 25k-Token Conservative Model):
-To completely cover the entire $49/month fixed hosting bill, SalesChat requires only:
+To completely cover the entire $49/month fixed hosting bill, Chat2Sell requires only:
 - **1 Scale Customer** ($54.40 net) $\rightarrow$ **Infrastructure 100% covered + $5.40 profit**, OR
 - **3 Team Customers** ($20.41 net $\times$ 3 = $61.23 net) $\rightarrow$ **Infrastructure 100% covered + $12.23 profit**, OR
 - **19 Solo Customers** ($2.65 net $\times$ 19 = $50.35 net) $\rightarrow$ **Infrastructure 100% covered**.
@@ -198,7 +198,7 @@ To completely cover the entire $49/month fixed hosting bill, SalesChat requires 
 * **Freeze after 3 Days**: If payment remains uncollected after Day 3, workspace status changes to `PAST_DUE`. New simulation creation is temporarily blocked until the user updates their payment method in the customer portal. Historical transcripts remain accessible.
 
 ### D. Customer Self-Service Billing Portal
-* **Hosted Dodo Portal**: Rather than building custom card management and invoice tables, SalesChat routes users from **Settings $\rightarrow$ Billing $\rightarrow$ Manage Billing** to Dodo's secure hosted portal.
+* **Hosted Dodo Portal**: Rather than building custom card management and invoice tables, Chat2Sell routes users from **Settings $\rightarrow$ Billing $\rightarrow$ Manage Billing** to Dodo's secure hosted portal.
 * **Customer Capabilities**:
   - View and download official PDF tax invoices/receipts with VAT/GST breakdown.
   - Update saved credit/debit card details.

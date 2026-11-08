@@ -125,7 +125,7 @@ export default function LoginPage() {
             <MessageSquare className="w-4 h-4" />
           </div>
           <span className="font-semibold text-zinc-900 text-base tracking-tight">
-            SalesChat
+            Chat2Sell
           </span>
         </div>
 

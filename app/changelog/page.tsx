@@ -11,7 +11,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "Product Changelog",
   description:
-    "Stay up to date with new features, improvements, and roadmap updates for SalesChat.",
+    "Stay up to date with new features, improvements, and roadmap updates for Chat2Sell.",
   path: "/changelog",
 });
 
@@ -19,7 +19,7 @@ export default function ChangelogPage() {
   return (
     <LegalPageShell
       title="Product Changelog"
-      subtitle="New releases, feature updates, and the evolving roadmap for SalesChat."
+      subtitle="New releases, feature updates, and the evolving roadmap for Chat2Sell."
       lastUpdated="November 2026"
     >
       {/* Intro Note */}
@@ -57,7 +57,7 @@ export default function ChangelogPage() {
         </div>
 
         <p className="text-sm text-zinc-700">
-          Welcome to the initial beta release of SalesChat! This release introduces our core AI-powered simulation engine, turn-by-turn objection scoring, and multi-tenant team workspaces.
+          Welcome to the initial beta release of Chat2Sell! This release introduces our core AI-powered simulation engine, turn-by-turn objection scoring, and multi-tenant team workspaces.
         </p>
 
         <div className="space-y-4 not-prose">

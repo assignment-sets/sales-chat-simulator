@@ -10,7 +10,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "Subprocessors Directory",
   description:
-    "Listing of third-party subprocessors and infrastructure partners authorized to process data on behalf of SalesChat.",
+    "Listing of third-party subprocessors and infrastructure partners authorized to process data on behalf of Chat2Sell.",
   path: "/subprocessors",
 });
 
@@ -77,7 +77,7 @@ export default function SubprocessorsPage() {
   return (
     <LegalPageShell
       title="Third-Party Subprocessors Directory"
-      subtitle="Authorized infrastructure partners and service providers that process customer data on behalf of SalesChat."
+      subtitle="Authorized infrastructure partners and service providers that process customer data on behalf of Chat2Sell."
       lastUpdated="October 2026"
     >
       {/* Commitment Highlight Card */}
@@ -89,7 +89,7 @@ export default function SubprocessorsPage() {
               Vetted for Enterprise Privacy & Zero Public Model Training
             </h2>
             <p className="text-xs leading-relaxed text-zinc-600">
-              In accordance with Article 28 of the General Data Protection Regulation (GDPR) and global data privacy standards, all third-party subprocessors engaged by SalesChat are contractually bound by rigorous Data Processing Addendums (DPAs). We mandate that AI inference vendors adhere to strict zero-training and transient processing agreements.
+              In accordance with Article 28 of the General Data Protection Regulation (GDPR) and global data privacy standards, all third-party subprocessors engaged by Chat2Sell are contractually bound by rigorous Data Processing Addendums (DPAs). We mandate that AI inference vendors adhere to strict zero-training and transient processing agreements.
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function SubprocessorsPage() {
           1. Authorized Infrastructure & AI Subprocessors
         </h2>
         <p>
-          The following entities provide hosting, computing, database persistence, and AI inference services necessary to deliver the SalesChat platform:
+          The following entities provide hosting, computing, database persistence, and AI inference services necessary to deliver the Chat2Sell platform:
         </p>
 
         <div className="overflow-x-auto border border-zinc-200/90 rounded-2xl not-prose bg-white shadow-2xs">
@@ -142,7 +142,7 @@ export default function SubprocessorsPage() {
           2. Vendor Due Diligence & Security Standards
         </h2>
         <p>
-          Before onboarding any third-party subprocessor, SalesChat conducts rigorous technical and legal evaluations, verifying:
+          Before onboarding any third-party subprocessor, Chat2Sell conducts rigorous technical and legal evaluations, verifying:
         </p>
         <ul className="list-disc pl-5 space-y-1.5">
           <li>
@@ -163,7 +163,7 @@ export default function SubprocessorsPage() {
           3. Subprocessor Updates & Notification Procedures
         </h2>
         <p>
-          As SalesChat develops new capabilities, we may engage additional subprocessors or migrate existing services. We maintain a transparent change management process:
+          As Chat2Sell develops new capabilities, we may engage additional subprocessors or migrate existing services. We maintain a transparent change management process:
         </p>
         <div className="bg-zinc-50 border border-zinc-200/80 rounded-2xl p-4 text-xs text-zinc-600 space-y-2 not-prose">
           <div className="flex items-start gap-2.5">

@@ -11,14 +11,14 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "About Us",
   description:
-    "Learn why we built SalesChat: the interactive AI sales simulation platform designed to master objection handling without burning real pipeline.",
+    "Learn why we built Chat2Sell: the interactive AI sales simulation platform designed to master objection handling without burning real pipeline.",
   path: "/about",
 });
 
 export default function AboutPage() {
   return (
     <LegalPageShell
-      title="About SalesChat"
+      title="About Chat2Sell"
       subtitle="Master live sales chats and high-stakes objection handling before facing real buyers."
       lastUpdated="November 2026"
     >
@@ -32,7 +32,7 @@ export default function AboutPage() {
           Nobody should have to burn valuable pipeline leads just to get better at selling.
         </h2>
         <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-2xl">
-          SalesChat was engineered to bridge the gap between static sales scripts and live high-pressure customer conversations. We give revenue teams, founders, and account executives an on-demand, hyper-realistic practice arena to hone objection handling, discovery questions, and closing strategies.
+          Chat2Sell was engineered to bridge the gap between static sales scripts and live high-pressure customer conversations. We give revenue teams, founders, and account executives an on-demand, hyper-realistic practice arena to hone objection handling, discovery questions, and closing strategies.
         </p>
       </section>
 
@@ -65,7 +65,7 @@ export default function AboutPage() {
       <section className="space-y-4">
         <h2 className="text-base sm:text-lg font-bold text-zinc-900 flex items-center gap-2">
           <Zap className="w-5 h-5 text-zinc-700" />
-          How SalesChat Works
+          How Chat2Sell Works
         </h2>
         <p>
           We combine cutting-edge Groq LLM inference with behavioral simulation mechanics to create conversations that genuinely feel like chatting with a discerning B2B buyer:
@@ -75,7 +75,7 @@ export default function AboutPage() {
             <strong>Adversarial Prospect Personas:</strong> The AI lead simulates realistic objections—pushing back on budget constraints, enterprise security requirements, contract terms, or competing vendor loyalty.
           </li>
           <li>
-            <strong>Human Conversational Pacing:</strong> Real buyers don&apos;t spit out 400-word essays in 0.2 seconds. SalesChat emulates realistic typing cadence delays, debounced multi-message bursts, and typing indicators.
+            <strong>Human Conversational Pacing:</strong> Real buyers don&apos;t spit out 400-word essays in 0.2 seconds. Chat2Sell emulates realistic typing cadence delays, debounced multi-message bursts, and typing indicators.
           </li>
           <li>
             <strong>Objective Jev Scoring:</strong> After every exchange, our decision engine rates your response on a 1–5 scale with actionable coaching critiques on tone, value framing, and next-step commitments.

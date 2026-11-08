@@ -16,7 +16,7 @@ export function PublicFooter() {
               <div className="w-6 h-6 rounded-lg bg-zinc-900 flex items-center justify-center text-white">
                 <Bot className="w-3.5 h-3.5 text-zinc-100" />
               </div>
-              <span>SalesChat</span>
+              <span>Chat2Sell</span>
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed">
               Realistic sales chat simulations and objection coaching for revenue teams.
@@ -106,7 +106,7 @@ export function PublicFooter() {
         </div>
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-400">
-          <span>© {new Date().getFullYear()} SalesChat. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Chat2Sell. All rights reserved.</span>
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
             <span>TLS 1.3 · AES-256 · Multi-Tenant Isolation</span>

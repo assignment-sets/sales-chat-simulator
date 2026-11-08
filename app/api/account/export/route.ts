@@ -153,7 +153,7 @@ export async function GET() {
     };
 
     const dateStr = new Date().toISOString().split("T")[0];
-    const filename = `saleschat-data-export-${user.id}-${dateStr}.json`;
+    const filename = `chat2sell-data-export-${user.id}-${dateStr}.json`;
 
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       status: 200,

@@ -11,7 +11,7 @@ export const DODO_PRODUCTS: Record<'solo' | 'team' | 'scale', DodoPlanProduct> =
   solo: {
     tierId: 'solo',
     productId: 'pdt_0NrCqCpQLfiaQSDlhGxoC',
-    name: 'SalesChat Solo',
+    name: 'Chat2Sell Solo',
     description: 'For solo SDRs, indie sales reps, and freelancers (50 simulations/month, 1 seat)',
     usdPriceCents: 500,
     inrPricePaise: 39900,
@@ -19,7 +19,7 @@ export const DODO_PRODUCTS: Record<'solo' | 'team' | 'scale', DodoPlanProduct> =
   team: {
     tierId: 'team',
     productId: 'pdt_0NrCqCw137x2o5PtfWW3E',
-    name: 'SalesChat Team',
+    name: 'Chat2Sell Team',
     description: 'For small sales pods and SDR teams (200 simulations/month, up to 10 seats, team dashboard & benchmarks)',
     usdPriceCents: 2900,
     inrPricePaise: 199900,
@@ -27,7 +27,7 @@ export const DODO_PRODUCTS: Record<'solo' | 'team' | 'scale', DodoPlanProduct> =
   scale: {
     tierId: 'scale',
     productId: 'pdt_0NrCqD1GfGTlFxBTIfmdg',
-    name: 'SalesChat Scale',
+    name: 'Chat2Sell Scale',
     description: 'For scaling sales organizations and revenue teams (600 simulations/month, up to 50 seats)',
     usdPriceCents: 7900,
     inrPricePaise: 549900,

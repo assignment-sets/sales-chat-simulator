@@ -1,6 +1,6 @@
 # Caching
 
-SalesChat uses **Upstash Redis** as a cache-aside (read-through) store for a
+Chat2Sell uses **Upstash Redis** as a cache-aside (read-through) store for a
 few expensive, org-scoped read paths. It shares one lazy client with rate
 limiting (`lib/redis.ts`), so rate limits and cache entries live in the same
 database and no additional setup is required.

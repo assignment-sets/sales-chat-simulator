@@ -22,8 +22,8 @@ const appBaseUrl =
 export const metadata: Metadata = {
   metadataBase: new URL(appBaseUrl),
   title: {
-    default: "SalesChat - AI Sales Practice Simulator",
-    template: "%s | SalesChat",
+    default: "Chat2Sell - AI Sales Practice Simulator",
+    template: "%s | Chat2Sell",
   },
   description: "Sharpen your live chat sales skills against hyper-realistic AI prospect personas.",
   alternates: {
@@ -41,16 +41,16 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "SalesChat - AI Sales Practice Simulator",
+    title: "Chat2Sell - AI Sales Practice Simulator",
     description: "Sharpen your live chat sales skills against hyper-realistic AI prospect personas with instant coaching feedback.",
     url: appBaseUrl,
-    siteName: "SalesChat",
+    siteName: "Chat2Sell",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SalesChat - AI Sales Practice Simulator",
+    title: "Chat2Sell - AI Sales Practice Simulator",
     description: "Practice objection handling, negotiation, and closing against realistic prospect personas.",
   },
 };

@@ -219,9 +219,9 @@ describe("Public Surface & SEO Infrastructure", () => {
 
       const text = await response.text();
       // H1 Header
-      expect(text).toMatch(/^# SalesChat/m);
+      expect(text).toMatch(/^# Chat2Sell/m);
       // Blockquote summary
-      expect(text).toContain("> SalesChat is an interactive AI sales simulation");
+      expect(text).toContain("> Chat2Sell is an interactive AI sales simulation");
       // H2 Sections
       expect(text).toContain("## Core Features & Overview");
       expect(text).toContain("## User Playbook & Documentation");
@@ -242,9 +242,9 @@ describe("Public Surface & SEO Infrastructure", () => {
       expect(response.headers.get("Content-Type")).toContain("text/markdown");
 
       const text = await response.text();
-      expect(text).toContain("# SalesChat - Full Documentation & Platform Knowledge Base");
+      expect(text).toContain("# Chat2Sell - Full Documentation & Platform Knowledge Base");
       expect(text).toContain("## 1. Platform Overview & Capabilities");
-      expect(text).toContain("## 2. About SalesChat & Mission");
+      expect(text).toContain("## 2. About Chat2Sell & Mission");
       expect(text).toContain("## 3. User Playbook & Documentation");
       expect(text).toContain("## 4. Pricing Plans & Workspace Tiers");
       expect(text).toContain("## 10. Security & Zero-Training Disclosure");
@@ -293,7 +293,7 @@ describe("Public Surface & SEO Infrastructure", () => {
     it.each(publicPages.filter((p) => p.name !== "Root Layout"))("configures OpenGraph and Twitter cards for $name", ({ meta, expectedPath }) => {
       const og = meta.openGraph as any;
       expect(og).toBeDefined();
-      expect(og.siteName).toBe("SalesChat");
+      expect(og.siteName).toBe("Chat2Sell");
       expect(og.url).toBe(expectedPath);
       expect(og.type).toBe("website");
 

@@ -10,7 +10,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "Cookie Policy",
   description:
-    "Cookie Policy for SalesChat detailing essential cookies, authentication session storage, and our zero-tracking commitment.",
+    "Cookie Policy for Chat2Sell detailing essential cookies, authentication session storage, and our zero-tracking commitment.",
   path: "/cookies",
 });
 
@@ -32,7 +32,7 @@ const ESSENTIAL_COOKIES: CookieItem[] = [
   },
   {
     name: "sc_active_org_id",
-    provider: "SalesChat (First-Party)",
+    provider: "Chat2Sell (First-Party)",
     purpose: "Stores the identifier of the active organization workspace so you remain in your chosen team context.",
     type: "Strictly Necessary / Functional",
     duration: "30 Days (HttpOnly, SameSite=Lax, Secure)",
@@ -43,7 +43,7 @@ export default function CookiePage() {
   return (
     <LegalPageShell
       title="Cookie Policy"
-      subtitle="How SalesChat utilizes essential cookies for authentication and workspace security."
+      subtitle="How Chat2Sell utilizes essential cookies for authentication and workspace security."
       lastUpdated="October 2026"
     >
       {/* Commitment Highlight Card */}
@@ -55,7 +55,7 @@ export default function CookiePage() {
               Our Zero-Tracking Commitment
             </h2>
             <p className="text-xs leading-relaxed text-zinc-600">
-              SalesChat does not use advertising cookies, marketing pixels, social media widgets, or cross-site behavioral trackers. We deploy only strictly necessary cookies required to authenticate your account and ensure secure workspace operation.
+              Chat2Sell does not use advertising cookies, marketing pixels, social media widgets, or cross-site behavioral trackers. We deploy only strictly necessary cookies required to authenticate your account and ensure secure workspace operation.
             </p>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function CookiePage() {
           2. Essential Cookies We Use
         </h2>
         <p>
-          Because our cookies are strictly necessary to deliver the simulation platform, they do not require prior consent under Article 5(3) of the EU ePrivacy Directive and GDPR. The table below lists all cookies deployed on SalesChat:
+          Because our cookies are strictly necessary to deliver the simulation platform, they do not require prior consent under Article 5(3) of the EU ePrivacy Directive and GDPR. The table below lists all cookies deployed on Chat2Sell:
         </p>
 
         <div className="overflow-x-auto border border-zinc-200/90 rounded-2xl not-prose bg-white shadow-2xs">
@@ -118,7 +118,7 @@ export default function CookiePage() {
           3. Third-Party Analytics & Advertising Cookies
         </h2>
         <p>
-          SalesChat does <strong>not</strong> install or permit third-party advertising cookies, ad exchanges, or behavioral profiling trackers on our platform. We do not monetize your data, sell personal information, or share browsing patterns with data brokers.
+          Chat2Sell does <strong>not</strong> install or permit third-party advertising cookies, ad exchanges, or behavioral profiling trackers on our platform. We do not monetize your data, sell personal information, or share browsing patterns with data brokers.
         </p>
         <p>
           Simulation performance metrics, win/loss stats, and feedback scores displayed in your team dashboard are computed directly from your workspace records via database queries; they do not involve browser-level tracking beacons.
@@ -144,7 +144,7 @@ export default function CookiePage() {
           Most web browsers allow you to modify cookie preferences through browser settings. You can choose to block or delete cookies in your browser settings (Chrome, Safari, Firefox, Edge, etc.).
         </p>
         <p className="text-zinc-500 italic">
-          <strong>Important:</strong> Because all cookies deployed by SalesChat are strictly necessary for authentication and session management, blocking or disabling them will prevent you from signing in and using the simulation application.
+          <strong>Important:</strong> Because all cookies deployed by Chat2Sell are strictly necessary for authentication and session management, blocking or disabling them will prevent you from signing in and using the simulation application.
         </p>
       </section>
 

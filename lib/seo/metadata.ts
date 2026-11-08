@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const APP_BASE_URL =
   process.env.NEXT_PUBLIC_APP_URL || "https://chat2sell.in";
 
-export const SITE_NAME = "SalesChat";
+export const SITE_NAME = "Chat2Sell";
 
 export interface PublicMetadataOptions {
   title: string;

@@ -9,7 +9,7 @@ import { constructPublicMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = constructPublicMetadata({
   title: "Support & Contact",
   description:
-    "Get in touch with the SalesChat team for help with simulations, team workspaces, or billing inquiries.",
+    "Get in touch with the Chat2Sell team for help with simulations, team workspaces, or billing inquiries.",
   path: "/support",
 });
 

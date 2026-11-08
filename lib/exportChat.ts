@@ -80,7 +80,7 @@ export function exportChatAsMarkdown(data: ExportChatPayload) {
   const dateStr = new Date().toISOString().split("T")[0];
 
   anchor.href = url;
-  anchor.download = `saleschat-${slug || "simulation"}-${dateStr}.md`;
+  anchor.download = `chat2sell-${slug || "simulation"}-${dateStr}.md`;
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);

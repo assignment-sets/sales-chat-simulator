@@ -1,6 +1,6 @@
 # Rate Limiting
 
-SalesChat uses **Upstash Redis** (`@upstash/ratelimit`) for application-level
+Chat2Sell uses **Upstash Redis** (`@upstash/ratelimit`) for application-level
 rate limiting and an optional **Vercel WAF** rate-limit rule as a coarse outer
 shield.
 

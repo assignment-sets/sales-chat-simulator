@@ -28,7 +28,7 @@ async function setupProductCollection() {
   const existingItems = (existing as any).items || (existing as any).data || [];
 
   const found = existingItems.find(
-    (c: any) => c.name === "SalesChat Subscriptions" || c.name === "SalesChat Plans"
+    (c: any) => c.name === "Chat2Sell Subscriptions" || c.name === "Chat2Sell Plans"
   );
 
   if (found) {
@@ -36,10 +36,10 @@ async function setupProductCollection() {
     return found;
   }
 
-  console.log("[ProductCollection] Creating 'SalesChat Subscriptions' product collection...");
+  console.log("[ProductCollection] Creating 'Chat2Sell Subscriptions' product collection...");
   const collection = await client.productCollections.create({
-    name: "SalesChat Subscriptions",
-    description: "SalesChat practice simulation plans: Solo, Team, Scale",
+    name: "Chat2Sell Subscriptions",
+    description: "Chat2Sell practice simulation plans: Solo, Team, Scale",
     groups: [
       {
         group_name: "Plans",

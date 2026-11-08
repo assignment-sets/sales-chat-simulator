@@ -410,11 +410,11 @@ describe("POST /api/organizations/[id]/members", () => {
     vi.spyOn(entitlementsModule, "checkQuota").mockResolvedValue({ ok: true });
     const invalidateSpy = vi.spyOn(cacheModule, "invalidateOrgMembers").mockResolvedValue();
 
-    const mockResult = { status: "invited", email: "newuser@saleschat.io" };
+    const mockResult = { status: "invited", email: "newuser@chat2sell.io" };
     mockClient.rpc = vi.fn(async (fnName: string, params: any) => {
       if (fnName === "invite_or_add_org_member") {
         expect(params.target_org_id).toBe("org-1");
-        expect(params.target_email).toBe("newuser@saleschat.io");
+        expect(params.target_email).toBe("newuser@chat2sell.io");
         expect(params.target_role).toBe("admin");
         return { data: mockResult, error: null };
       }
@@ -424,7 +424,7 @@ describe("POST /api/organizations/[id]/members", () => {
     const req = new Request("http://localhost:3000/api/organizations/org-1/members", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "NewUser@SalesChat.io", role: "admin" }),
+      body: JSON.stringify({ email: "NewUser@Chat2Sell.io", role: "admin" }),
     });
 
     const res = await POST(req, { params: Promise.resolve({ id: "org-1" }) });

@@ -19,7 +19,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "Documentation & User Playbook",
   description:
-    "Learn how to craft high-impact sales simulations, master objection handling drills, and interpret Jev coaching scores in SalesChat.",
+    "Learn how to craft high-impact sales simulations, master objection handling drills, and interpret Jev coaching scores in Chat2Sell.",
   path: "/docs",
 });
 
@@ -37,10 +37,10 @@ export default function DocsPage() {
           <span>Platform Overview</span>
         </div>
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-          Welcome to the SalesChat Playbook
+          Welcome to the Chat2Sell Playbook
         </h2>
         <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-2xl">
-          SalesChat is designed for reps, founders, and sales leaders who want to build muscle memory before stepping into live buyer meetings. This guide walks you through setting up drills, structuring product pitches, and interpreting live coaching feedback.
+          Chat2Sell is designed for reps, founders, and sales leaders who want to build muscle memory before stepping into live buyer meetings. This guide walks you through setting up drills, structuring product pitches, and interpreting live coaching feedback.
         </p>
       </section>
 
@@ -60,7 +60,7 @@ export default function DocsPage() {
             <strong>Navigate to Chats:</strong> In your dashboard or sidebar, click <strong>&ldquo;New Practice Chat&rdquo;</strong>.
           </li>
           <li>
-            <strong>Set Your Product Name:</strong> Enter your product or service name (e.g. <em>&ldquo;SalesChat Enterprise&rdquo;</em> or <em>&ldquo;CloudFlow Observability&rdquo;</em>).
+            <strong>Set Your Product Name:</strong> Enter your product or service name (e.g. <em>&ldquo;Chat2Sell Enterprise&rdquo;</em> or <em>&ldquo;CloudFlow Observability&rdquo;</em>).
           </li>
           <li>
             <strong>Provide the Value Proposition:</strong> Detail your core value hook, pricing model, key differentiators, and target customer persona (up to 2,000 characters).
@@ -218,7 +218,7 @@ export default function DocsPage() {
           </h2>
         </div>
         <p>
-          SalesChat provides tenant-scoped collaboration:
+          Chat2Sell provides tenant-scoped collaboration:
         </p>
         <ul className="list-disc pl-5 space-y-2 text-zinc-700">
           <li>

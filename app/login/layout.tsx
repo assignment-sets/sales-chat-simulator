@@ -4,7 +4,7 @@ import { constructPublicMetadata } from "@/lib/seo/metadata";
 export const metadata: Metadata = constructPublicMetadata({
   title: "Log In",
   description:
-    "Log in to your SalesChat workspace to practice live sales conversations and review AI coaching feedback.",
+    "Log in to your Chat2Sell workspace to practice live sales conversations and review AI coaching feedback.",
   path: "/login",
 });
 

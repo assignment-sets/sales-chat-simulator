@@ -1,4 +1,4 @@
-# SalesChat — Pricing Tiers, Limits & Feature Matrix
+# Chat2Sell — Pricing Tiers, Limits & Feature Matrix
 
 ## 1. Core Philosophy: Why We Do NOT Meter by Raw AI Tokens
 

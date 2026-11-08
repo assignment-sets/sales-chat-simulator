@@ -3,7 +3,7 @@ import { constructPrivateMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = constructPrivateMetadata(
   "Reset Password",
-  "Set a new secure password for your SalesChat workspace account."
+  "Set a new secure password for your Chat2Sell workspace account."
 );
 
 export default function ResetPasswordLayout({

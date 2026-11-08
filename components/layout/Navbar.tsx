@@ -84,7 +84,7 @@ export function Navbar({
             <MessageSquare className="w-4 h-4" />
           </div>
           <span className="font-semibold text-zinc-900 text-sm tracking-tight hidden xs:inline">
-            SalesChat
+            Chat2Sell
           </span>
         </Link>
 

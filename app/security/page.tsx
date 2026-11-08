@@ -10,7 +10,7 @@ export const revalidate = false;
 export const metadata: Metadata = constructPublicMetadata({
   title: "Security & AI Data Training Disclosure",
   description:
-    "Security architecture, multi-tenant isolation, data encryption, and zero foundation model training disclosures for SalesChat.",
+    "Security architecture, multi-tenant isolation, data encryption, and zero foundation model training disclosures for Chat2Sell.",
   path: "/security",
 });
 
@@ -30,7 +30,7 @@ export default function SecurityPage() {
               Zero Foundation Model Training Commitment
             </h2>
             <p className="text-xs leading-relaxed text-zinc-600">
-              Your company&apos;s sales pitch scripts, practice conversation transcripts, rep objection handling logs, and internal coaching feedback remain strictly confidential to your workspace. Neither SalesChat nor our cloud inference partners (including Groq Inc.) use your proprietary simulation inputs or outputs to train, fine-tune, or improve public foundation models.
+              Your company&apos;s sales pitch scripts, practice conversation transcripts, rep objection handling logs, and internal coaching feedback remain strictly confidential to your workspace. Neither Chat2Sell nor our cloud inference partners (including Groq Inc.) use your proprietary simulation inputs or outputs to train, fine-tune, or improve public foundation models.
             </p>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function SecurityPage() {
           1. AI Data Governance & Zero-Retention Inference
         </h2>
         <p>
-          We architected SalesChat with an enterprise-first AI boundary. When reps engage in interactive practice sessions:
+          We architected Chat2Sell with an enterprise-first AI boundary. When reps engage in interactive practice sessions:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 not-prose">
           <div className="bg-white border border-zinc-200/80 rounded-2xl p-4 space-y-1.5">
@@ -73,11 +73,11 @@ export default function SecurityPage() {
           2. Encryption in Transit & at Rest
         </h2>
         <p>
-          SalesChat implements industry-standard cryptographic protocols to protect data across all states:
+          Chat2Sell implements industry-standard cryptographic protocols to protect data across all states:
         </p>
         <ul className="list-disc pl-5 space-y-1.5">
           <li>
-            <strong>Encryption in Transit:</strong> All data transmitted between your browser, SalesChat servers, and third-party subprocessors is secured using modern TLS 1.3 and HTTPS encryption with strict HTTP Strict Transport Security (HSTS) headers.
+            <strong>Encryption in Transit:</strong> All data transmitted between your browser, Chat2Sell servers, and third-party subprocessors is secured using modern TLS 1.3 and HTTPS encryption with strict HTTP Strict Transport Security (HSTS) headers.
           </li>
           <li>
             <strong>Encryption at Rest:</strong> All database records, user credentials, conversation histories, and analytics are stored on encrypted volumes utilizing AES-256 encryption managed by Supabase on Amazon Web Services (AWS) data centers.

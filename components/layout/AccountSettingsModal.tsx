@@ -55,7 +55,7 @@ export function AccountSettingsModal({
       }
 
       // Extract filename from Content-Disposition header if available
-      let filename = `saleschat-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      let filename = `chat2sell-data-export-${new Date().toISOString().split("T")[0]}.json`;
       const disposition = res.headers.get("content-disposition");
       if (disposition && disposition.includes("filename=")) {
         const match = disposition.match(/filename="?([^"]+)"?/);
