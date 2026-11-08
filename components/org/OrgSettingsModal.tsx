@@ -11,7 +11,7 @@ import {
   LogOut,
   Save,
   CreditCard,
-  Sparkles,
+  ArrowUpRight,
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -335,7 +335,7 @@ export function OrgSettingsModal({
                       onClose();
                       router.push("/pricing");
                     }}
-                    leftIcon={<Sparkles className="w-3.5 h-3.5" />}
+                    leftIcon={<ArrowUpRight className="w-3.5 h-3.5" />}
                   >
                     Upgrade Workspace Plan
                   </Button>

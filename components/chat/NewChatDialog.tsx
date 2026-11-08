@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { X, Sparkles } from "lucide-react";
+import { X, MessageSquarePlus } from "lucide-react";
 import { notify } from "@/lib/toast";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
@@ -86,7 +86,7 @@ export function NewChatDialog({
 
         <div className="flex items-center gap-2 mb-1">
           <div className="w-8 h-8 rounded-xl bg-zinc-100 text-zinc-700 flex items-center justify-center">
-            <Sparkles className="w-4 h-4" />
+            <MessageSquarePlus className="w-4 h-4" />
           </div>
           <h2 id="new-chat-dialog-title" className="text-lg font-bold text-zinc-900">New Simulation</h2>
         </div>
