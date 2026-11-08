@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 export function PublicHeader() {
   return (
@@ -11,9 +11,7 @@ export function PublicHeader() {
           href="/"
           className="flex items-center gap-2.5 font-bold text-zinc-900 text-sm tracking-tight"
         >
-          <div className="w-8 h-8 rounded-xl bg-zinc-900 flex items-center justify-center text-white shadow-xs">
-            <Bot className="w-4 h-4 text-zinc-100" />
-          </div>
+          <BrandLogo variant="icon" size={34} className="shrink-0" priority ariaHidden />
           <span>Chat2Sell</span>
         </Link>
 

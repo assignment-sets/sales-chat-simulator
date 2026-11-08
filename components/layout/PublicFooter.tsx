@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
-import { Bot, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 export function PublicFooter() {
   return (
@@ -13,9 +14,7 @@ export function PublicFooter() {
               href="/"
               className="flex items-center gap-2 font-bold text-zinc-900 text-sm tracking-tight"
             >
-              <div className="w-6 h-6 rounded-lg bg-zinc-900 flex items-center justify-center text-white">
-                <Bot className="w-3.5 h-3.5 text-zinc-100" />
-              </div>
+              <BrandLogo variant="icon" size={28} className="shrink-0" ariaHidden />
               <span>Chat2Sell</span>
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed">

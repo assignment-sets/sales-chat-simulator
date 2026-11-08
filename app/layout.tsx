@@ -29,6 +29,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   robots: {
     index: true,
     follow: true,
@@ -47,11 +56,20 @@ export const metadata: Metadata = {
     siteName: "Chat2Sell",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/brand/chat2sell-og.png",
+        width: 1200,
+        height: 630,
+        alt: "Chat2Sell - AI Sales Practice Simulator",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Chat2Sell - AI Sales Practice Simulator",
     description: "Practice objection handling, negotiation, and closing against realistic prospect personas.",
+    images: ["/brand/chat2sell-og.png"],
   },
 };
 

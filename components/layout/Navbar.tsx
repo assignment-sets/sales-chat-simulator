@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader } from "@/components/ui/Loader";
 import { MessageSquare, LayoutDashboard } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { OrgSwitcher } from "@/components/org/OrgSwitcher";
 import { UserProfileMenu } from "@/components/layout/UserProfileMenu";
 import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
@@ -80,9 +81,7 @@ export function Navbar({
           }}
           className="flex items-center gap-2 select-none shrink-0 [&_svg]:shrink-0"
         >
-          <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-            <MessageSquare className="w-4 h-4" />
-          </div>
+          <BrandLogo variant="icon" size={32} className="shrink-0" priority ariaHidden />
           <span className="font-semibold text-zinc-900 text-sm tracking-tight hidden xs:inline">
             Chat2Sell
           </span>

@@ -6,8 +6,9 @@ import { useTransition, Suspense } from "react";
 import { signup } from "@/app/auth/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { MessageSquare, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 function RegisterForm() {
   const searchParams = useSearchParams();
@@ -101,9 +102,7 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-sm bg-white border border-zinc-200 rounded-3xl p-8 shadow-xs">
         <div className="flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm">
-            <MessageSquare className="w-4 h-4" />
-          </div>
+          <BrandLogo variant="icon" size={32} priority ariaHidden />
           <span className="font-semibold text-zinc-900 text-base tracking-tight">
             Chat2Sell
           </span>
