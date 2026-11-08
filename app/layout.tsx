@@ -66,7 +66,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <AuthToastWatcher />
         </Suspense>
-        <Toaster position="top-center" richColors closeButton duration={3500} />
+        <Toaster
+          position="top-right"
+          expand={true}
+          visibleToasts={5}
+          richColors
+          closeButton
+          duration={3500}
+          offset={{ top: "20px", right: "20px" }}
+        />
       </body>
     </html>
   );

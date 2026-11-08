@@ -43,3 +43,33 @@ body {
   animation: threeDotPulse 1.2s infinite ease-in-out;
   animation-delay: 0.4s;
 }
+
+/* Top-Right Horizontal Slide-In & Slide-Out Toasts */
+[data-sonner-toaster][data-x-position='right'] [data-sonner-toast] {
+  --x: translateX(110%);
+  transform: var(--y) var(--x);
+  transition:
+    transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 300ms ease,
+    height 350ms ease,
+    box-shadow 200ms ease;
+}
+
+[data-sonner-toaster][data-x-position='right'] [data-sonner-toast][data-mounted='true'] {
+  --x: translateX(0);
+  opacity: 1;
+}
+
+[data-sonner-toaster][data-x-position='right'] [data-sonner-toast][data-removed='true'] {
+  --x: translateX(110%);
+  opacity: 0;
+  transition:
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 220ms ease;
+}
+
+[data-sonner-toaster][data-x-position='right'] [data-sonner-toast][data-swiping='true'] {
+  transform: var(--y) translateY(var(--swipe-amount-y, 0px)) translateX(var(--swipe-amount-x, 0px));
+  transition: none;
+}
+
