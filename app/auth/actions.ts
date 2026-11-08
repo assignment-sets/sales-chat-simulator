@@ -6,6 +6,10 @@ import { headers, cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { ACTIVE_ORG_COOKIE_NAME, INVITATION_INTENT_COOKIE_NAME } from "@/lib/tenant";
+import {
+  validatePassword,
+  PASSWORD_REQUIREMENT_HINT,
+} from "@/lib/validation/password";
 
 function sanitizeRedirect(url: string | null | undefined): string {
   if (!url) return "/chats";
@@ -157,6 +161,17 @@ export async function signup(formData: FormData) {
     );
   }
 
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    redirect(
+      buildAuthRedirectUrl("/register", {
+        error: passwordValidation.errors[0] || PASSWORD_REQUIREMENT_HINT,
+        next: rawNext,
+        email,
+      })
+    );
+  }
+
   const clientIp = await getClientIp();
   const ipLimit = await enforceRateLimit("auth.signup.ip", `ip:${clientIp}`);
   if (!ipLimit.ok) {
@@ -198,8 +213,12 @@ export async function signup(formData: FormData) {
     let msg = error.message;
     if (msg.toLowerCase().includes("already registered")) {
       msg = "Account already exists for this email";
-    } else if (msg.toLowerCase().includes("at least 6 characters")) {
-      msg = "Password must be at least 6 characters";
+    } else if (
+      msg.toLowerCase().includes("at least") ||
+      msg.toLowerCase().includes("weak") ||
+      msg.toLowerCase().includes("password")
+    ) {
+      msg = PASSWORD_REQUIREMENT_HINT;
     }
     redirect(
       buildAuthRedirectUrl("/register", {
@@ -278,8 +297,12 @@ export async function updatePassword(formData: FormData) {
     redirect("/reset-password?error=" + encodeURIComponent("Please fill in all password fields"));
   }
 
-  if (password.length < 6) {
-    redirect("/reset-password?error=" + encodeURIComponent("Password must be at least 6 characters"));
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    redirect(
+      "/reset-password?error=" +
+        encodeURIComponent(passwordValidation.errors[0] || PASSWORD_REQUIREMENT_HINT)
+    );
   }
 
   if (password !== confirmPassword) {
@@ -313,7 +336,15 @@ export async function updatePassword(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/reset-password?error=${encodeURIComponent(error.message)}`);
+    let msg = error.message;
+    if (
+      msg.toLowerCase().includes("at least") ||
+      msg.toLowerCase().includes("weak") ||
+      msg.toLowerCase().includes("password")
+    ) {
+      msg = PASSWORD_REQUIREMENT_HINT;
+    }
+    redirect(`/reset-password?error=${encodeURIComponent(msg)}`);
   }
 
   revalidatePath("/", "layout");

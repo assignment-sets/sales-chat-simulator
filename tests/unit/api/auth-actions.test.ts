@@ -217,6 +217,18 @@ describe("app/auth/actions.ts", () => {
       );
     });
 
+    it("redirects with error if password does not meet complexity requirements", async () => {
+      setupMockAuth();
+      const formData = new FormData();
+      formData.set("email", "new@saleschat.io");
+      formData.set("password", "weakpass");
+
+      await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/register?error=");
+      expect(mockRedirect).toHaveBeenCalledWith(
+        expect.stringContaining(encodeURIComponent("Password must contain at least one uppercase letter."))
+      );
+    });
+
     it("redirects with rate limit error when signup limit is exceeded", async () => {
       setupMockAuth();
       vi.spyOn(rateLimitModule, "enforceRateLimit").mockImplementation(async (name) => {
@@ -228,7 +240,7 @@ describe("app/auth/actions.ts", () => {
 
       const formData = new FormData();
       formData.set("email", "new@saleschat.io");
-      formData.set("password", "securepassword");
+      formData.set("password", "SecurePass123!");
 
       await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/register?error=");
       expect(mockRedirect).toHaveBeenCalledWith(
@@ -245,7 +257,7 @@ describe("app/auth/actions.ts", () => {
 
       const formData = new FormData();
       formData.set("email", "exists@saleschat.io");
-      formData.set("password", "securepassword");
+      formData.set("password", "SecurePass123!");
 
       await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/register?error=");
       expect(mockRedirect).toHaveBeenCalledWith(
@@ -265,7 +277,7 @@ describe("app/auth/actions.ts", () => {
 
       const formData = new FormData();
       formData.set("email", "fresh@saleschat.io");
-      formData.set("password", "securepassword");
+      formData.set("password", "SecurePass123!");
       formData.set("fullName", "Fresh Rep");
 
       await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/chats");
@@ -290,7 +302,7 @@ describe("app/auth/actions.ts", () => {
 
       const formData = new FormData();
       formData.set("email", "unconfirmed@saleschat.io");
-      formData.set("password", "securepassword");
+      formData.set("password", "SecurePass123!");
 
       await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/login?message=");
       expect(mockClient.rpc).not.toHaveBeenCalledWith("claim_pending_org_invitations");
@@ -311,7 +323,7 @@ describe("app/auth/actions.ts", () => {
 
       const formData = new FormData();
       formData.set("email", "fresh@saleschat.io");
-      formData.set("password", "securepassword");
+      formData.set("password", "SecurePass123!");
       formData.set("next", "/invite/token-signup-456");
 
       await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/invite/token-signup-456");
@@ -331,7 +343,7 @@ describe("app/auth/actions.ts", () => {
 
       const formData = new FormData();
       formData.set("email", "unconfirmed@saleschat.io");
-      formData.set("password", "securepassword");
+      formData.set("password", "SecurePass123!");
       formData.set("next", "/invite/token-confirm-789");
 
       await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/login?message=");
@@ -415,8 +427,8 @@ describe("app/auth/actions.ts", () => {
       });
 
       const formData = new FormData();
-      formData.set("password", "newsecret123");
-      formData.set("confirmPassword", "newsecret123");
+      formData.set("password", "NewSecret123!");
+      formData.set("confirmPassword", "NewSecret123!");
 
       await expect(updatePassword(formData)).rejects.toThrow("NEXT_REDIRECT:/reset-password?error=");
       expect(mockRedirect).toHaveBeenCalledWith(
@@ -427,8 +439,8 @@ describe("app/auth/actions.ts", () => {
     it("redirects with error if passwords do not match or are missing", async () => {
       setupMockAuth();
       const formData = new FormData();
-      formData.set("password", "newsecret123");
-      formData.set("confirmPassword", "mismatch123");
+      formData.set("password", "NewSecret123!");
+      formData.set("confirmPassword", "MismatchSecret123!");
 
       await expect(updatePassword(formData)).rejects.toThrow("NEXT_REDIRECT:/reset-password?error=");
       expect(mockRedirect).toHaveBeenCalledWith(
@@ -436,7 +448,7 @@ describe("app/auth/actions.ts", () => {
       );
     });
 
-    it("redirects with error if password is under 6 characters", async () => {
+    it("redirects with error if password does not meet complexity requirements", async () => {
       setupMockAuth();
       const formData = new FormData();
       formData.set("password", "123");
@@ -444,15 +456,15 @@ describe("app/auth/actions.ts", () => {
 
       await expect(updatePassword(formData)).rejects.toThrow("NEXT_REDIRECT:/reset-password?error=");
       expect(mockRedirect).toHaveBeenCalledWith(
-        expect.stringContaining(encodeURIComponent("Password must be at least 6 characters"))
+        expect.stringContaining(encodeURIComponent("Password must be at least 8 characters"))
       );
     });
 
     it("redirects with error if user session has expired", async () => {
       setupMockAuth(null);
       const formData = new FormData();
-      formData.set("password", "newsecret123");
-      formData.set("confirmPassword", "newsecret123");
+      formData.set("password", "NewSecret123!");
+      formData.set("confirmPassword", "NewSecret123!");
 
       await expect(updatePassword(formData)).rejects.toThrow("NEXT_REDIRECT:/login?error=");
       expect(mockRedirect).toHaveBeenCalledWith(
@@ -468,12 +480,12 @@ describe("app/auth/actions.ts", () => {
       });
 
       const formData = new FormData();
-      formData.set("password", "newsecret123");
-      formData.set("confirmPassword", "newsecret123");
+      formData.set("password", "NewSecret123!");
+      formData.set("confirmPassword", "NewSecret123!");
 
       await expect(updatePassword(formData)).rejects.toThrow("NEXT_REDIRECT:/chats?message=");
       expect(mockClient.auth.updateUser).toHaveBeenCalledWith({
-        password: "newsecret123",
+        password: "NewSecret123!",
       });
       expect(mockRedirect).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent("Password updated successfully!"))

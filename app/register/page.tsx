@@ -2,19 +2,26 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useTransition, Suspense } from "react";
+import { useTransition, Suspense, useState } from "react";
 import { signup } from "@/app/auth/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ArrowRight } from "lucide-react";
 import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import {
+  validatePassword,
+  PASSWORD_REQUIREMENT_HINT,
+} from "@/lib/validation/password";
 
 function RegisterForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "";
   const initialEmail = searchParams.get("email") || "";
   const [isPending, startTransition] = useTransition();
+  const [password, setPassword] = useState("");
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const loginQuery = new URLSearchParams({
     ...(next ? { next } : {}),
@@ -24,6 +31,13 @@ function RegisterForm() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const { isValid, errors } = validatePassword(password);
+    if (!isValid) {
+      setClientError(errors[0] || PASSWORD_REQUIREMENT_HINT);
+      return;
+    }
+    setClientError(null);
+
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       await signup(formData);
@@ -57,17 +71,26 @@ function RegisterForm() {
           disabled={isPending}
         />
 
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          label="Password"
-          placeholder="At least 6 characters"
-          required
-          minLength={6}
-          autoComplete="new-password"
-          disabled={isPending}
-        />
+        <div className="flex flex-col gap-2">
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            label="Password"
+            placeholder="At least 8 characters"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            disabled={isPending}
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (clientError) setClientError(null);
+            }}
+            error={clientError || undefined}
+          />
+          <PasswordRequirements password={password} />
+        </div>
 
         <Button
           type="submit"
@@ -108,12 +131,12 @@ export default function RegisterPage() {
           </span>
         </div>
 
-        <h1 className="text-xl font-bold text-zinc-900 mb-1">Create an account</h1>
+        <h1 className="text-xl font-bold text-zinc-900 mb-1">Create your account</h1>
         <p className="text-xs text-zinc-500 mb-6">
-          Start practicing sales chat processes against AI prospects.
+          Start practicing high-stakes sales conversations with AI buyers.
         </p>
 
-        <Suspense fallback={<div className="h-56" />}>
+        <Suspense fallback={<div className="h-64 animate-pulse bg-zinc-100 rounded-2xl" />}>
           <RegisterForm />
         </Suspense>
       </div>

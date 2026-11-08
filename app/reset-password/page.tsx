@@ -1,21 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { updatePassword } from "@/app/auth/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
-
 import { Suspense } from "react";
 import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import {
+  validatePassword,
+  PASSWORD_REQUIREMENT_HINT,
+} from "@/lib/validation/password";
 
 export default function ResetPasswordPage() {
   const [isPending, startTransition] = useTransition();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [clientError, setClientError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const { isValid, errors } = validatePassword(password);
+    if (!isValid) {
+      setClientError(errors[0] || PASSWORD_REQUIREMENT_HINT);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setClientError("Passwords do not match");
+      return;
+    }
+
+    setClientError(null);
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       await updatePassword(formData);
@@ -38,21 +57,30 @@ export default function ResetPasswordPage() {
 
         <h1 className="text-xl font-bold text-zinc-900 mb-1">Set new password</h1>
         <p className="text-xs text-zinc-500 mb-6">
-          Please enter your new password below (at least 6 characters).
+          Please enter your new password below (at least 8 characters with letters and numbers).
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            label="New Password"
-            placeholder="At least 6 characters"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            disabled={isPending}
-          />
+          <div className="flex flex-col gap-2">
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              label="New Password"
+              placeholder="At least 8 characters"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              disabled={isPending}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (clientError) setClientError(null);
+              }}
+              error={clientError || undefined}
+            />
+            <PasswordRequirements password={password} />
+          </div>
 
           <Input
             id="confirmPassword"
@@ -61,9 +89,14 @@ export default function ResetPasswordPage() {
             label="Confirm New Password"
             placeholder="Repeat your new password"
             required
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
             disabled={isPending}
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              if (clientError) setClientError(null);
+            }}
           />
 
           <Button
