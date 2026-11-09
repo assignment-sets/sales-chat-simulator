@@ -162,47 +162,47 @@ export default function DocsPage() {
         </p>
 
         <div className="space-y-2.5 not-prose my-3">
-          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
-            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
-              1 / 5
+          <div className="flex items-start sm:items-center gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="inline-flex items-center justify-center font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap tabular-nums min-w-[3.5rem]">
+              1 <span className="text-zinc-400 font-normal ml-0.5">/ 5</span>
             </span>
-            <div className="text-xs">
+            <div className="text-xs text-zinc-700 leading-relaxed">
               <strong className="text-zinc-900">Offensive / Fatal Misstep:</strong> Completely dodges the prospect&apos;s concern, presents false facts, or becomes defensive.
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
-            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
-              2 / 5
+          <div className="flex items-start sm:items-center gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="inline-flex items-center justify-center font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap tabular-nums min-w-[3.5rem]">
+              2 <span className="text-zinc-400 font-normal ml-0.5">/ 5</span>
             </span>
-            <div className="text-xs">
+            <div className="text-xs text-zinc-700 leading-relaxed">
               <strong className="text-zinc-900">Weak / Passive:</strong> Acknowledges the question but lacks conviction, value justification, or persuasive framing.
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
-            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
-              3 / 5
+          <div className="flex items-start sm:items-center gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="inline-flex items-center justify-center font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap tabular-nums min-w-[3.5rem]">
+              3 <span className="text-zinc-400 font-normal ml-0.5">/ 5</span>
             </span>
-            <div className="text-xs">
+            <div className="text-xs text-zinc-700 leading-relaxed">
               <strong className="text-zinc-900">Neutral / Informational:</strong> Answers accurately like a documentation bot, but fails to steer the conversation or probe for discovery.
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
-            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
-              4 / 5
+          <div className="flex items-start sm:items-center gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="inline-flex items-center justify-center font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap tabular-nums min-w-[3.5rem]">
+              4 <span className="text-zinc-400 font-normal ml-0.5">/ 5</span>
             </span>
-            <div className="text-xs">
+            <div className="text-xs text-zinc-700 leading-relaxed">
               <strong className="text-zinc-900">Strong Reframing:</strong> Directly resolves the concern, links solution to ROI, and asks an engaging qualifying question.
             </div>
           </div>
 
-          <div className="flex items-start gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
-            <span className="font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2 py-0.5 rounded-md shrink-0 w-11 text-center">
-              5 / 5
+          <div className="flex items-start sm:items-center gap-3 p-3.5 bg-white border border-zinc-200/80 rounded-xl">
+            <span className="inline-flex items-center justify-center font-mono text-xs font-semibold text-zinc-900 bg-zinc-100 border border-zinc-200/80 px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap tabular-nums min-w-[3.5rem]">
+              5 <span className="text-zinc-400 font-normal ml-0.5">/ 5</span>
             </span>
-            <div className="text-xs">
+            <div className="text-xs text-zinc-700 leading-relaxed">
               <strong className="text-zinc-900">Deal Advance / Win:</strong> Flawlessly overcomes resistance, creates urgency, and secures commitment to the next milestone (demo, security review, or technical pilot).
             </div>
           </div>
