@@ -145,6 +145,33 @@ export async function login(formData: FormData) {
   redirect(nextTarget);
 }
 
+export async function signInWithGoogle(rawNext?: string) {
+  const origin = await getRequestOrigin();
+  const nextTarget = sanitizeRedirect(rawNext);
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(nextTarget)}`,
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
+  });
+
+  if (error || !data.url) {
+    redirect(
+      buildAuthRedirectUrl("/login", {
+        error: error?.message || "Failed to initiate Google sign-in",
+        next: rawNext,
+      })
+    );
+  }
+
+  redirect(data.url);
+}
+
 export async function signup(formData: FormData) {
   const email = (formData.get("email") as string)?.trim() || "";
   const password = formData.get("password") as string;

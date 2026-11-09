@@ -164,16 +164,23 @@ site_url = "https://saleschat.vercel.app"
 additional_redirect_urls = [
   "http://localhost:3000/**",
   "http://localhost:3000/auth/confirm",
+  "http://localhost:3000/auth/callback",
   "http://localhost:3000/reset-password",
   "http://127.0.0.1:3000/**",
   "http://127.0.0.1:3000/auth/confirm",
+  "http://127.0.0.1:3000/auth/callback",
   "http://127.0.0.1:3000/reset-password",
   "https://saleschat.vercel.app/**",
   "https://saleschat.vercel.app/auth/confirm",
+  "https://saleschat.vercel.app/auth/callback",
   "https://saleschat.vercel.app/reset-password",
   "https://*.vercel.app/**",
   "https://*.vercel.app/auth/confirm",
-  "https://*.vercel.app/reset-password"
+  "https://*.vercel.app/auth/callback",
+  "https://*.vercel.app/reset-password",
+  "https://subturriculated-unpublicly-shari.ngrok-free.dev/**",
+  "https://subturriculated-unpublicly-shari.ngrok-free.dev/auth/confirm",
+  "https://subturriculated-unpublicly-shari.ngrok-free.dev/auth/callback"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -348,6 +355,14 @@ url = ""
 # If enabled, the nonce check will be skipped. Required for local sign in with Google auth.
 skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
+email_optional = false
+
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+skip_nonce_check = false
 email_optional = false
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.

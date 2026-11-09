@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/Input";
 import { ArrowRight } from "lucide-react";
 import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
 import { BrandLogo } from "@/components/brand/BrandLogo";
+import { AuthPageShell } from "@/components/auth/AuthPageShell";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -38,6 +40,17 @@ function LoginForm() {
 
   return (
     <>
+      <GoogleAuthButton mode="signin" next={next} disabled={isPending} />
+
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-zinc-200" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-white px-2 text-zinc-400">or continue with email</span>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {next && <input type="hidden" name="next" value={next} />}
         <Input
@@ -115,28 +128,30 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
+    <AuthPageShell>
       <Suspense fallback={null}>
         <AuthToastWatcher />
       </Suspense>
 
-      <div className="w-full max-w-sm bg-white border border-zinc-200 rounded-3xl p-8 shadow-xs">
-        <div className="flex items-center gap-2 mb-6">
-          <BrandLogo variant="icon" size={32} priority ariaHidden />
-          <span className="font-semibold text-zinc-900 text-base tracking-tight">
-            Chat2Sell
-          </span>
-        </div>
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 mb-6 group select-none"
+        title="Chat2Sell Home"
+      >
+        <BrandLogo variant="icon" size={36} priority ariaHidden className="group-hover:opacity-90 transition-opacity" />
+        <span className="font-semibold text-zinc-900 text-base tracking-tight group-hover:text-zinc-700 transition-colors">
+          Chat2Sell
+        </span>
+      </Link>
 
-        <h1 className="text-xl font-bold text-zinc-900 mb-1">Welcome back</h1>
-        <p className="text-xs text-zinc-500 mb-6">
-          Sign in to your account to continue your sales simulation practice.
-        </p>
+      <h1 className="text-xl font-bold text-zinc-900 mb-1">Welcome back</h1>
+      <p className="text-xs text-zinc-500 mb-6">
+        Sign in to your account to continue your sales simulation practice.
+      </p>
 
-        <Suspense fallback={<div className="h-48" />}>
-          <LoginForm />
-        </Suspense>
-      </div>
-    </div>
+      <Suspense fallback={<div className="h-48" />}>
+        <LoginForm />
+      </Suspense>
+    </AuthPageShell>
   );
 }

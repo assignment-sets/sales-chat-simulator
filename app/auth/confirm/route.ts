@@ -11,6 +11,13 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next") || "";
 
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+  const redirectOrigin =
+    process.env.NODE_ENV === "development" || !forwardedHost
+      ? origin
+      : `${forwardedProto}://${forwardedHost}`;
+
   let targetPath = rawNext;
   const cookieStore = await cookies();
   if (!targetPath || targetPath === "/chats") {
@@ -49,15 +56,15 @@ export async function GET(request: NextRequest) {
 
       // For password recovery, route to the password reset page
       if (type === "recovery") {
-        return NextResponse.redirect(`${origin}/reset-password`);
+        return NextResponse.redirect(`${redirectOrigin}/reset-password`);
       }
 
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${redirectOrigin}${next}`);
     }
 
     console.error("[AuthConfirm] verifyOtp failed:", error.message);
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent("Verification link is invalid or has expired")}`
+      `${redirectOrigin}/login?error=${encodeURIComponent("Verification link is invalid or has expired")}`
     );
   }
 
@@ -74,19 +81,19 @@ export async function GET(request: NextRequest) {
       }
 
       if (rawNext === "/reset-password") {
-        return NextResponse.redirect(`${origin}/reset-password`);
+        return NextResponse.redirect(`${redirectOrigin}/reset-password`);
       }
 
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${redirectOrigin}${next}`);
     }
 
     console.error("[AuthConfirm] exchangeCodeForSession failed:", error.message);
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent("Authentication link is invalid or has expired")}`
+      `${redirectOrigin}/login?error=${encodeURIComponent("Authentication link is invalid or has expired")}`
     );
   }
 
   return NextResponse.redirect(
-    `${origin}/login?error=${encodeURIComponent("Missing verification parameters")}`
+    `${redirectOrigin}/login?error=${encodeURIComponent("Missing verification parameters")}`
   );
 }
