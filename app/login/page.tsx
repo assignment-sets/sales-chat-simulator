@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useTransition, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useTransition, Suspense, useEffect } from "react";
 import { login } from "@/app/auth/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -11,12 +11,24 @@ import { AuthToastWatcher } from "@/components/auth/AuthToastWatcher";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { createClient } from "@/utils/supabase/client";
 
 function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "";
   const initialEmail = searchParams.get("email") || "";
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/chats";
+        router.replace(target);
+      }
+    });
+  }, [next, router]);
 
   const registerQuery = new URLSearchParams({
     ...(next ? { next } : {}),

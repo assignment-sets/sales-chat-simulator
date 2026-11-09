@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useTransition, Suspense, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useTransition, Suspense, useState, useEffect } from "react";
 import { signup } from "@/app/auth/actions";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -12,18 +12,30 @@ import { BrandLogo } from "@/components/brand/BrandLogo";
 import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
+import { createClient } from "@/utils/supabase/client";
 import {
   validatePassword,
   PASSWORD_REQUIREMENT_HINT,
 } from "@/lib/validation/password";
 
 function RegisterForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "";
   const initialEmail = searchParams.get("email") || "";
   const [isPending, startTransition] = useTransition();
   const [password, setPassword] = useState("");
   const [clientError, setClientError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/chats";
+        router.replace(target);
+      }
+    });
+  }, [next, router]);
 
   const loginQuery = new URLSearchParams({
     ...(next ? { next } : {}),

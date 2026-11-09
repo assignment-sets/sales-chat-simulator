@@ -299,6 +299,10 @@ describe("app/auth/actions.ts", () => {
         },
         error: null,
       });
+      mockClient.auth.signInWithPassword = vi.fn().mockResolvedValue({
+        data: { user: null, session: null },
+        error: { message: "Email not confirmed" },
+      });
 
       const formData = new FormData();
       formData.set("email", "unconfirmed@saleschat.io");
@@ -309,6 +313,35 @@ describe("app/auth/actions.ts", () => {
       expect(mockRedirect).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent("Account created! You can now sign in."))
       );
+    });
+
+    it("auto-signs in user when signUp does not attach session but signInWithPassword succeeds", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.signUp = vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "auto-login-user", email: "autologin@saleschat.io" },
+          session: null,
+        },
+        error: null,
+      });
+      mockClient.auth.signInWithPassword = vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "auto-login-user", email: "autologin@saleschat.io" },
+          session: { access_token: "auto-jwt" },
+        },
+        error: null,
+      });
+
+      const formData = new FormData();
+      formData.set("email", "autologin@saleschat.io");
+      formData.set("password", "SecurePass123!");
+
+      await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/chats");
+      expect(mockClient.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: "autologin@saleschat.io",
+        password: "SecurePass123!",
+      });
+      expect(mockRedirect).toHaveBeenCalledWith("/chats");
     });
 
     it("redirects to next invite URL on signup session without calling claim_pending_org_invitations", async () => {
@@ -339,6 +372,10 @@ describe("app/auth/actions.ts", () => {
           session: null,
         },
         error: null,
+      });
+      mockClient.auth.signInWithPassword = vi.fn().mockResolvedValue({
+        data: { user: null, session: null },
+        error: { message: "Email not confirmed" },
       });
 
       const formData = new FormData();

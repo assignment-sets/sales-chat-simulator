@@ -272,7 +272,31 @@ export async function signup(formData: FormData) {
     redirect(nextTarget);
   }
 
-  // If email confirmation is required
+  // Fallback: If user was created but session was not attached in signUp response,
+  // immediately sign in with credentials to provide seamless auto-sign-in
+  if (data?.user) {
+    const { data: signInData } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInData?.session) {
+      if (nextTarget.startsWith("/invite/")) {
+        cookieStore.delete(INVITATION_INTENT_COOKIE_NAME);
+      } else {
+        try {
+          await supabase.rpc("claim_pending_org_invitations");
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      revalidatePath("/", "layout");
+      redirect(nextTarget);
+    }
+  }
+
+  // If email confirmation is required by provider settings
   redirect(
     buildAuthRedirectUrl("/login", {
       message: "Account created! You can now sign in.",
