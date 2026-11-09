@@ -14,7 +14,7 @@ export function PublicFooter() {
               href="/"
               className="flex items-center gap-2 font-bold text-zinc-900 text-sm tracking-tight"
             >
-              <BrandLogo variant="icon" size={28} className="shrink-0" ariaHidden />
+              <BrandLogo variant="icon" size={30} className="shrink-0" ariaHidden />
               <span>Chat2Sell</span>
             </Link>
             <p className="text-xs text-zinc-500 leading-relaxed">

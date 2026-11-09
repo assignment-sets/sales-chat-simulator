@@ -81,7 +81,7 @@ export function Navbar({
           }}
           className="flex items-center gap-2 select-none shrink-0 [&_svg]:shrink-0"
         >
-          <BrandLogo variant="icon" size={32} className="shrink-0" priority ariaHidden />
+          <BrandLogo variant="icon" size={36} className="shrink-0" priority ariaHidden />
           <span className="font-semibold text-zinc-900 text-sm tracking-tight hidden xs:inline">
             Chat2Sell
           </span>

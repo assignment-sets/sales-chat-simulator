@@ -11,7 +11,7 @@ export function PublicHeader() {
           href="/"
           className="flex items-center gap-2.5 font-bold text-zinc-900 text-sm tracking-tight"
         >
-          <BrandLogo variant="icon" size={34} className="shrink-0" priority ariaHidden />
+          <BrandLogo variant="icon" size={40} className="shrink-0" priority ariaHidden />
           <span>Chat2Sell</span>
         </Link>
 

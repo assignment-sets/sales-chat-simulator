@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { notify } from "@/lib/toast";
 import { logout } from "@/app/auth/actions";
+import { AuthPageShell } from "@/components/auth/AuthPageShell";
 
 interface InvitationDetails {
   id: string;
@@ -149,8 +150,7 @@ export default function InvitePage({ params }: PageProps) {
       invitation.email?.toLowerCase().trim();
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-8 shadow-xs">
+    <AuthPageShell maxWidth="md">
         {/* Loading State */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
@@ -376,7 +376,6 @@ export default function InvitePage({ params }: PageProps) {
             )}
           </div>
         )}
-      </div>
-    </div>
+    </AuthPageShell>
   );
 }
