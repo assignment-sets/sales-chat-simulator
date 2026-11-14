@@ -7,7 +7,9 @@ import {
   requestPasswordReset,
   updatePassword,
   resendVerificationEmail,
+  setAccountPassword,
 } from "@/app/auth/actions";
+import { userHasPassword } from "@/lib/auth/has-password";
 import * as rateLimitModule from "@/lib/rate-limit";
 
 const mockRedirect = vi.fn((url: string) => {
@@ -262,6 +264,26 @@ describe("app/auth/actions.ts", () => {
       await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/register?error=");
       expect(mockRedirect).toHaveBeenCalledWith(
         expect.stringContaining(encodeURIComponent("Account already exists for this email"))
+      );
+    });
+
+    it("redirects to login with guidance when signUp returns obfuscated user (identities: []) for existing OAuth account", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.signUp = vi.fn().mockResolvedValue({
+        data: {
+          user: { id: "obfuscated-user", email: "oauth@saleschat.io", identities: [] },
+          session: null,
+        },
+        error: null,
+      });
+
+      const formData = new FormData();
+      formData.set("email", "oauth@saleschat.io");
+      formData.set("password", "SecurePass123!");
+
+      await expect(signup(formData)).rejects.toThrow("NEXT_REDIRECT:/login?message=");
+      expect(mockRedirect).toHaveBeenCalledWith(
+        expect.stringContaining(encodeURIComponent("Sign in with Google or use your password"))
       );
     });
 
@@ -597,6 +619,54 @@ describe("app/auth/actions.ts", () => {
       expect(mockClient.auth.signOut).toHaveBeenCalled();
       expect(mockRevalidatePath).toHaveBeenCalledWith("/", "layout");
       expect(mockRedirect).toHaveBeenCalledWith("/login");
+    });
+  });
+
+  describe("setAccountPassword action", () => {
+    it("rejects mismatched passwords", async () => {
+      const res = await setAccountPassword("SecurePass123!", "Different123!");
+      expect(res).toEqual({ success: false, error: "Passwords do not match." });
+    });
+
+    it("rejects weak passwords", async () => {
+      const res = await setAccountPassword("weak", "weak");
+      expect(res.success).toBe(false);
+    });
+
+    it("sets password and has_password metadata for authenticated user", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.updateUser = vi.fn().mockResolvedValue({ error: null });
+
+      const res = await setAccountPassword("SecurePass123!", "SecurePass123!");
+      expect(res).toEqual({ success: true });
+      expect(mockClient.auth.updateUser).toHaveBeenCalledWith({
+        password: "SecurePass123!",
+        data: { has_password: true },
+      });
+      expect(mockRevalidatePath).toHaveBeenCalledWith("/", "layout");
+    });
+
+    it("prompts re-login when Supabase requires recent authentication", async () => {
+      const { mockClient } = setupMockAuth();
+      mockClient.auth.updateUser = vi.fn().mockResolvedValue({
+        error: { message: "Password update requires reauthentication" },
+      });
+
+      const res = await setAccountPassword("SecurePass123!", "SecurePass123!");
+      expect(res.success).toBe(false);
+      expect(res.error).toContain("sign out and sign back in");
+    });
+  });
+
+  describe("userHasPassword helper", () => {
+    it("returns true when user has email identity or has_password metadata", () => {
+      expect(userHasPassword({ identities: [{ provider: "email" } as any], user_metadata: {} })).toBe(true);
+      expect(userHasPassword({ identities: [{ provider: "google" } as any], user_metadata: { has_password: true } })).toBe(true);
+    });
+
+    it("returns false for OAuth-only user without has_password metadata", () => {
+      expect(userHasPassword({ identities: [{ provider: "google" } as any], user_metadata: {} })).toBe(false);
+      expect(userHasPassword(null)).toBe(false);
     });
   });
 });

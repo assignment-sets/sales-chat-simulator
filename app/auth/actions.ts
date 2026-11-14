@@ -239,7 +239,7 @@ export async function signup(formData: FormData) {
   if (error) {
     let msg = error.message;
     if (msg.toLowerCase().includes("already registered")) {
-      msg = "Account already exists for this email";
+      msg = "Account already exists for this email. Sign in with Google or your password.";
     } else if (
       msg.toLowerCase().includes("at least") ||
       msg.toLowerCase().includes("weak") ||
@@ -250,6 +250,22 @@ export async function signup(formData: FormData) {
     redirect(
       buildAuthRedirectUrl("/register", {
         error: msg,
+        next: rawNext,
+        email,
+      })
+    );
+  }
+
+  // Supabase returns an obfuscated user with empty identities[] when an
+  // account (e.g. Google OAuth) already exists for this email and confirmations are on.
+  if (
+    data?.user &&
+    Array.isArray(data.user.identities) &&
+    data.user.identities.length === 0
+  ) {
+    redirect(
+      buildAuthRedirectUrl("/login", {
+        message: "An account with this email already exists. Sign in with Google or use your password.",
         next: rawNext,
         email,
       })
@@ -478,6 +494,66 @@ export async function updateProfile(fullName: string) {
 
   if (error) {
     return { success: false, error: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: true };
+}
+
+export async function setAccountPassword(password: string, confirmPassword: string) {
+  if (!password || !confirmPassword) {
+    return { success: false, error: "Please fill in both password fields." };
+  }
+
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
+    return {
+      success: false,
+      error: passwordValidation.errors[0] || PASSWORD_REQUIREMENT_HINT,
+    };
+  }
+
+  if (password !== confirmPassword) {
+    return { success: false, error: "Passwords do not match." };
+  }
+
+  const clientIp = await getClientIp();
+  const ipLimit = await enforceRateLimit("auth.password_update.ip", `ip:${clientIp}`);
+  if (!ipLimit.ok) {
+    return {
+      success: false,
+      error: "Too many password update attempts. Please try again later.",
+    };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  // ponytail: relies on active session; if secure_password_change rejects stale sessions (>24h), prompt re-login instead of building a custom nonce flow.
+  const { error } = await supabase.auth.updateUser({
+    password,
+    data: { has_password: true },
+  });
+
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes("reauthentication") || msg.includes("recent")) {
+      return {
+        success: false,
+        error: "For security, please sign out and sign back in before setting your password.",
+      };
+    }
+    return {
+      success: false,
+      error: msg.includes("password") ? PASSWORD_REQUIREMENT_HINT : error.message,
+    };
   }
 
   revalidatePath("/", "layout");

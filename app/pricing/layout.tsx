@@ -3,6 +3,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { getActiveOrganization } from "@/lib/tenant";
+import { userHasPassword } from "@/lib/auth/has-password";
 
 export default async function PricingLayout({
   children,
@@ -55,6 +56,7 @@ export default async function PricingLayout({
       <Navbar
         userEmail={user.email}
         userName={userName}
+        hasPassword={userHasPassword(user)}
         activeOrg={activeContext.organization}
         activeRole={activeContext.role}
         organizations={activeContext.allOrganizations}

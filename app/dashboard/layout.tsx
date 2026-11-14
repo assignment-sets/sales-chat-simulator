@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { Navbar } from "@/components/layout/Navbar";
 import { getActiveOrganization } from "@/lib/tenant";
+import { userHasPassword } from "@/lib/auth/has-password";
 import { constructPrivateMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = constructPrivateMetadata(
@@ -51,6 +52,7 @@ export default async function DashboardLayout({
       <Navbar
         userEmail={user.email}
         userName={userName}
+        hasPassword={userHasPassword(user)}
         activeOrg={activeContext.organization}
         activeRole={activeContext.role}
         organizations={activeContext.allOrganizations}

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { getActiveOrganization } from "@/lib/tenant";
+import { userHasPassword } from "@/lib/auth/has-password";
 import { constructPrivateMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = constructPrivateMetadata(
@@ -57,6 +58,7 @@ export default async function ChatsLayout({
     <AppShell
       userEmail={user.email}
       userName={userName}
+      hasPassword={userHasPassword(user)}
       chats={chats || []}
       activeOrg={activeContext?.organization}
       activeRole={activeContext?.role}

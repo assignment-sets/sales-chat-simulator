@@ -13,6 +13,7 @@ import { Organization, OrganizationMembership, OrgRole } from "@/lib/tenant";
 export interface NavbarProps {
   userEmail?: string;
   userName?: string;
+  hasPassword?: boolean;
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
   activeOrg?: Organization;
@@ -24,6 +25,7 @@ export interface NavbarProps {
 export function Navbar({
   userEmail,
   userName,
+  hasPassword = true,
   onToggleSidebar,
   isSidebarOpen,
   activeOrg,
@@ -133,6 +135,7 @@ export function Navbar({
           <UserProfileMenu
             userName={userName}
             userEmail={userEmail}
+            hasPassword={hasPassword}
           />
         )}
       </div>

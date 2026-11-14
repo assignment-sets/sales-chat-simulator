@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Settings, Download, Trash2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { X, Settings, Download, Trash2, AlertTriangle, ShieldCheck, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Avatar } from "@/components/ui/Avatar";
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import { setAccountPassword } from "@/app/auth/actions";
+import { validatePassword, PASSWORD_REQUIREMENT_HINT } from "@/lib/validation/password";
 import { notify } from "@/lib/toast";
 import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
@@ -13,6 +17,7 @@ export interface AccountSettingsModalProps {
   onClose: () => void;
   userEmail?: string;
   userName?: string;
+  hasPassword?: boolean;
 }
 
 export function AccountSettingsModal({
@@ -20,7 +25,14 @@ export function AccountSettingsModal({
   onClose,
   userEmail = "",
   userName = "",
+  hasPassword = true,
 }: AccountSettingsModalProps) {
+  const router = useRouter();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [localPasswordSet, setLocalPasswordSet] = useState(false);
+  const passwordConfigured = hasPassword || localPasswordSet;
   const [isExporting, setIsExporting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmationInput, setDeleteConfirmationInput] = useState("");
@@ -38,6 +50,41 @@ export function AccountSettingsModal({
   if (!isOpen) return null;
 
   const displayName = userName || (userEmail ? userEmail.split("@")[0] : "Account");
+
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { isValid, errors } = validatePassword(newPassword);
+    if (!isValid) {
+      notify.error(errors[0] || PASSWORD_REQUIREMENT_HINT);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      notify.error("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setIsUpdatingPassword(true);
+      const res = await setAccountPassword(newPassword, confirmPassword);
+      if (!res.success) {
+        notify.error(res.error || "Failed to update password");
+        return;
+      }
+      setLocalPasswordSet(true);
+      setNewPassword("");
+      setConfirmPassword("");
+      notify.success(
+        passwordConfigured
+          ? "Password updated successfully"
+          : "Password set! You can now sign in with email and password."
+      );
+      router.refresh();
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : "Failed to update password");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
 
   const handleExportData = async () => {
     try {
@@ -166,6 +213,52 @@ export function AccountSettingsModal({
                 {userEmail || "No email linked"}
               </p>
             </div>
+          </div>
+
+          {/* Password & Sign-In */}
+          <div className="p-4 border border-zinc-200 rounded-2xl bg-white space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-900 flex items-center gap-1.5">
+                <KeyRound className="w-4 h-4 text-zinc-700" />
+                <span>{passwordConfigured ? "Change Password" : "Set a Password"}</span>
+              </h3>
+              <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+                {passwordConfigured
+                  ? "Update your account password for email sign-in."
+                  : "You signed in with Google. Add a password so you can also sign in with your email."}
+              </p>
+            </div>
+            <form onSubmit={handleSavePassword} className="space-y-3 pt-1">
+              <Input
+                label={passwordConfigured ? "New password" : "Password"}
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                required
+              />
+              <PasswordRequirements password={newPassword} />
+              <Input
+                label="Confirm password"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                required
+              />
+              <div>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  isLoading={isUpdatingPassword}
+                >
+                  {passwordConfigured ? "Update Password" : "Set Password"}
+                </Button>
+              </div>
+            </form>
           </div>
 
           {/* Data Portability (GDPR Art. 20) */}

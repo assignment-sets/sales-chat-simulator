@@ -23,11 +23,13 @@ import {
 export interface UserProfileMenuProps {
   userEmail?: string;
   userName?: string;
+  hasPassword?: boolean;
 }
 
 export function UserProfileMenu({
   userEmail = "",
   userName = "",
+  hasPassword = true,
 }: UserProfileMenuProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -217,6 +219,11 @@ export function UserProfileMenu({
                 <Settings className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Settings</span>
               </div>
+              {!hasPassword && (
+                <span className="text-[10px] font-medium text-zinc-500">
+                  Set password
+                </span>
+              )}
             </button>
 
             {/* Help & Support */}
@@ -253,6 +260,7 @@ export function UserProfileMenu({
         onClose={() => setIsSettingsOpen(false)}
         userEmail={userEmail}
         userName={displayName}
+        hasPassword={hasPassword}
       />
     </div>
   );

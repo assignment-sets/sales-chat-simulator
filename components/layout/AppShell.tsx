@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { notify } from "@/lib/toast";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar, ChatSummary } from "@/components/layout/Sidebar";
 import { NewChatDialog } from "@/components/chat/NewChatDialog";
@@ -12,6 +13,7 @@ import { PanelLeftOpen } from "lucide-react";
 export interface AppShellProps {
   userEmail?: string;
   userName?: string;
+  hasPassword?: boolean;
   chats: ChatSummary[];
   activeOrg?: Organization;
   activeRole?: OrgRole;
@@ -22,6 +24,7 @@ export interface AppShellProps {
 function AppShellContent({
   userEmail,
   userName,
+  hasPassword = true,
   chats,
   activeOrg,
   activeRole,
@@ -31,6 +34,18 @@ function AppShellContent({
   const { isOpen, toggleSidebar, closeMobile } = useSidebar();
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (hasPassword !== false) return;
+    const key = "chat2sell_pwd_prompt_shown";
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // Ignore storage errors in restricted contexts
+    }
+    notify.info("You signed in with Google. Set a password anytime in Settings.");
+  }, [hasPassword]);
 
   const handleCreateChat = async (data: {
     productName: string;
@@ -61,6 +76,7 @@ function AppShellContent({
       <Navbar
         userEmail={userEmail}
         userName={userName}
+        hasPassword={hasPassword}
         onToggleSidebar={toggleSidebar}
         isSidebarOpen={isOpen}
         activeOrg={activeOrg}
